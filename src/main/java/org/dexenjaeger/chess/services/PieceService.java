@@ -2,6 +2,8 @@ package org.dexenjaeger.chess.services;
 
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.dexenjaeger.chess.models.board.File;
 import org.dexenjaeger.chess.models.board.Rank;
 import org.dexenjaeger.chess.models.pieces.Piece;
@@ -12,6 +14,24 @@ import org.dexenjaeger.chess.services.moves.PawnMoveExtractor;
 import org.dexenjaeger.chess.utils.Pair;
 
 public class PieceService {
+    private static final List<Pair<Integer, Integer>> BISHOP_DIRECTIONS = List.of(
+        new Pair<>(-1, -1),
+        new Pair<>(-1, 1),
+        new Pair<>(1, -1),
+        new Pair<>(1, 1)
+    );
+    private static final List<Pair<Integer, Integer>> ROOK_DIRECTIONS = List.of(
+        new Pair<>(-1, 0),
+        new Pair<>(0, -1),
+        new Pair<>(0, 1),
+        new Pair<>(1, 0)
+    );
+    private static List<Pair<Integer, Integer>> queenDirections() {
+        return Stream.concat(
+            BISHOP_DIRECTIONS.stream(),
+            ROOK_DIRECTIONS.stream()
+        ).collect(Collectors.toList());
+    }
 
     public Set<Pair<File, Rank>> getMoves(
         Piece piece,
@@ -40,54 +60,26 @@ public class PieceService {
             case KING:
                 return new FixedMoveExtractor(
                     piece.getSide(), starting,
-                    List.of(
-                        new Pair<>(-1, 0),
-                        new Pair<>(0, -1),
-                        new Pair<>(0, 1),
-                        new Pair<>(1, 0),
-                        new Pair<>(-1, -1),
-                        new Pair<>(-1, 1),
-                        new Pair<>(1, -1),
-                        new Pair<>(1, 1)
-                    ), evaluateOccupyingSide
+                    queenDirections(), evaluateOccupyingSide
                 ).moveSet();
             case BISHOP:
                 return new DirectionalMoveExtractor(
                     piece.getSide(),
-                    List.of(
-                        new Pair<>(-1, -1),
-                        new Pair<>(-1, 1),
-                        new Pair<>(1, -1),
-                        new Pair<>(1, 1)
-                    ),
+                    BISHOP_DIRECTIONS,
                     starting,
                     evaluateOccupyingSide
                 ).moveSet();
             case ROOK:
                 return new DirectionalMoveExtractor(
                     piece.getSide(),
-                    List.of(
-                        new Pair<>(-1, 0),
-                        new Pair<>(0, -1),
-                        new Pair<>(0, 1),
-                        new Pair<>(1, 0)
-                    ),
+                    ROOK_DIRECTIONS,
                     starting,
                     evaluateOccupyingSide
                 ).moveSet();
             case QUEEN:
                 return new DirectionalMoveExtractor(
                     piece.getSide(),
-                    List.of(
-                        new Pair<>(-1, 0),
-                        new Pair<>(0, -1),
-                        new Pair<>(0, 1),
-                        new Pair<>(1, 0),
-                        new Pair<>(-1, -1),
-                        new Pair<>(-1, 1),
-                        new Pair<>(1, -1),
-                        new Pair<>(1, 1)
-                    ),
+                    queenDirections(),
                     starting,
                     evaluateOccupyingSide
                 ).moveSet();
