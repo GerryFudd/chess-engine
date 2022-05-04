@@ -7,18 +7,20 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.dexenjaeger.chess.models.Side;
 import org.dexenjaeger.chess.models.board.File;
+import org.dexenjaeger.chess.models.board.Move;
 import org.dexenjaeger.chess.models.board.Rank;
+import org.dexenjaeger.chess.models.board.Square;
 import org.dexenjaeger.chess.utils.Pair;
 
 public class FixedMoveExtractor implements MoveExtractor {
     private final Side side;
-    private final Pair<File, Rank> starting;
+    private final Square starting;
     private final List<Pair<Integer, Integer>> fixedMoves;
     private final EvaluateOccupyingSide evaluateOccupyingSide;
 
     public FixedMoveExtractor(
         Side side,
-        Pair<File, Rank> starting,
+        Square starting,
         List<Pair<Integer, Integer>> fixedMoves,
         EvaluateOccupyingSide evaluateOccupyingSide
     ) {
@@ -30,18 +32,18 @@ public class FixedMoveExtractor implements MoveExtractor {
 
 
     @Override
-    public Set<Pair<File, Rank>> moveSet() {
+    public Set<Move> moveSet() {
 
         return fixedMoves.stream()
             .map(
                 shifts -> starting
-                    .getLeft()
+                    .getFile()
                     .shift(shifts.getLeft())
-                    .flatMap(f -> starting.getRight().shift(shifts.getRight()).map(r -> new Pair<>(f, r)))
+                    .flatMap(f -> starting.getRank().shift(shifts.getRight()).map(r -> new Move(starting, new Square(f, r))))
             )
             .filter(Optional::isPresent)
             .map(Optional::get)
-            .filter(sq -> evaluateOccupyingSide.getOccupyingSide(sq).filter(s -> s == side).isEmpty())
+            .filter(mv -> evaluateOccupyingSide.getOccupyingSide(mv.getTo()).filter(s -> s == side).isEmpty())
             .collect(Collectors.toSet());
     }
 }

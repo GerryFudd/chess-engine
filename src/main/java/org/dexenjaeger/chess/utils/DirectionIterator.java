@@ -5,28 +5,29 @@ import java.util.Optional;
 import java.util.function.Predicate;
 import org.dexenjaeger.chess.models.board.File;
 import org.dexenjaeger.chess.models.board.Rank;
+import org.dexenjaeger.chess.models.board.Square;
 
-public class DirectionIterator implements Iterator<Pair<File, Rank>> {
+public class DirectionIterator implements Iterator<Square> {
     private final Pair<Integer, Integer> direction;
-    private final Predicate<Pair<File, Rank>> tester;
-    private Pair<File, Rank> current;
+    private final Predicate<Square> tester;
+    private Square current;
 
     public DirectionIterator(
         Pair<Integer, Integer> direction,
-        Predicate<Pair<File, Rank>> tester,
-        Pair<File, Rank> initial
+        Predicate<Square> tester,
+        Square initial
     ) {
         this.direction = direction;
         this.tester = tester;
         this.current = initial;
     }
 
-    private Optional<Pair<File, Rank>> getNextIfPresent() {
-        return current.getLeft()
+    private Optional<Square> getNextIfPresent() {
+        return current.getFile()
             .shift(direction.getLeft())
-            .flatMap(f -> current.getRight()
+            .flatMap(f -> current.getRank()
                 .shift(direction.getRight())
-                .map(r -> new Pair<>(f, r)))
+                .map(r -> new Square(f, r)))
             .filter(tester);
     }
 
@@ -36,7 +37,7 @@ public class DirectionIterator implements Iterator<Pair<File, Rank>> {
     }
 
     @Override
-    public Pair<File, Rank> next() {
+    public Square next() {
         current = getNextIfPresent().orElseThrow();
         return current;
     }

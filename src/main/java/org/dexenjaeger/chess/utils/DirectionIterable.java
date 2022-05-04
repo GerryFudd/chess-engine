@@ -4,18 +4,17 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import org.dexenjaeger.chess.models.board.File;
-import org.dexenjaeger.chess.models.board.Rank;
+import org.dexenjaeger.chess.models.board.Square;
 
-public class DirectionIterable implements Iterable<Pair<File, Rank>>{
+public class DirectionIterable implements Iterable<Square>{
     private final List<Pair<Integer, Integer>> directions;
-    private final Pair<File, Rank> starting;
-    private final Predicate<Pair<File, Rank>> isAvailable;
+    private final Square starting;
+    private final Predicate<Square> isAvailable;
 
     public DirectionIterable(
         List<Pair<Integer, Integer>> directions,
-        Pair<File, Rank> starting,
-        Predicate<Pair<File, Rank>> isAvailable
+        Square starting,
+        Predicate<Square> isAvailable
     ) {
         this.directions = directions;
         this.starting = starting;
@@ -23,7 +22,7 @@ public class DirectionIterable implements Iterable<Pair<File, Rank>>{
     }
 
     @Override
-    public Iterator<Pair<File, Rank>> iterator() {
+    public Iterator<Square> iterator() {
         return new ChainedIterator<>(
             directions.stream()
                 .map(d -> new DirectionIterator(d, isAvailable, starting))

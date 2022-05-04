@@ -5,7 +5,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.dexenjaeger.chess.models.board.File;
+import org.dexenjaeger.chess.models.board.Move;
 import org.dexenjaeger.chess.models.board.Rank;
+import org.dexenjaeger.chess.models.board.Square;
 import org.dexenjaeger.chess.models.pieces.Piece;
 import org.dexenjaeger.chess.services.moves.DirectionalMoveExtractor;
 import org.dexenjaeger.chess.services.moves.EvaluateOccupyingSide;
@@ -33,9 +35,9 @@ public class PieceService {
         ).collect(Collectors.toList());
     }
 
-    public Set<Pair<File, Rank>> getMoves(
+    public Set<Move> getMoves(
         Piece piece,
-        Pair<File, Rank> starting,
+        Square starting,
         EvaluateOccupyingSide evaluateOccupyingSide
     ) {
         switch (piece.getType()) {

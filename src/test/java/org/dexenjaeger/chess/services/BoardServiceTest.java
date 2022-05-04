@@ -16,7 +16,9 @@ import java.util.Set;
 import java.util.stream.Stream;
 import org.dexenjaeger.chess.models.board.Board;
 import org.dexenjaeger.chess.models.board.File;
+import org.dexenjaeger.chess.models.board.Move;
 import org.dexenjaeger.chess.models.board.Rank;
+import org.dexenjaeger.chess.models.board.Square;
 import org.dexenjaeger.chess.models.pieces.Piece;
 import org.dexenjaeger.chess.utils.Pair;
 import org.junit.jupiter.api.Test;
@@ -121,160 +123,160 @@ class BoardServiceTest {
 
         assertEquals(
             Set.of(
-                new Pair<>(File.A, Rank.THREE),
-                new Pair<>(File.A, Rank.FOUR)
+                new Move(new Square(File.A, Rank.TWO), new Square(File.A, Rank.THREE)),
+                new Move(new Square(File.A, Rank.TWO), new Square(File.A, Rank.FOUR))
             ),
             service.getMoves(board, File.A, Rank.TWO)
         );
 
         assertEquals(
             Set.of(
-                new Pair<>(File.A, Rank.THREE),
-                new Pair<>(File.C, Rank.THREE)
+                new Move(new Square(File.B, Rank.ONE), new Square(File.A, Rank.THREE)),
+                new Move(new Square(File.B, Rank.ONE), new Square(File.C, Rank.THREE))
             ),
             service.getMoves(board, File.B, Rank.ONE)
         );
 
         assertEquals(
             Set.of(
-                new Pair<>(File.B, Rank.THREE),
-                new Pair<>(File.B, Rank.FOUR)
+                new Move(new Square(File.B, Rank.TWO), new Square(File.B, Rank.THREE)),
+                new Move(new Square(File.B, Rank.TWO), new Square(File.B, Rank.FOUR))
             ),
             service.getMoves(board, File.B, Rank.TWO)
         );
 
         assertEquals(
             Set.of(
-                new Pair<>(File.C, Rank.THREE),
-                new Pair<>(File.C, Rank.FOUR)
+                new Move(new Square(File.C, Rank.TWO), new Square(File.C, Rank.THREE)),
+                new Move(new Square(File.C, Rank.TWO), new Square(File.C, Rank.FOUR))
             ),
             service.getMoves(board, File.C, Rank.TWO)
         );
 
         assertEquals(
             Set.of(
-                new Pair<>(File.D, Rank.THREE),
-                new Pair<>(File.D, Rank.FOUR)
+                new Move(new Square(File.D, Rank.TWO), new Square(File.D, Rank.THREE)),
+                new Move(new Square(File.D, Rank.TWO), new Square(File.D, Rank.FOUR))
             ),
             service.getMoves(board, File.D, Rank.TWO)
         );
 
         assertEquals(
             Set.of(
-                new Pair<>(File.E, Rank.THREE),
-                new Pair<>(File.E, Rank.FOUR)
+                new Move(new Square(File.E, Rank.TWO), new Square(File.E, Rank.THREE)),
+                new Move(new Square(File.E, Rank.TWO), new Square(File.E, Rank.FOUR))
             ),
             service.getMoves(board, File.E, Rank.TWO)
         );
 
         assertEquals(
             Set.of(
-                new Pair<>(File.F, Rank.THREE),
-                new Pair<>(File.F, Rank.FOUR)
+                new Move(new Square(File.F, Rank.TWO), new Square(File.F, Rank.THREE)),
+                new Move(new Square(File.F, Rank.TWO), new Square(File.F, Rank.FOUR))
             ),
             service.getMoves(board, File.F, Rank.TWO)
         );
 
         assertEquals(
             Set.of(
-                new Pair<>(File.G, Rank.THREE),
-                new Pair<>(File.G, Rank.FOUR)
+                new Move(new Square(File.G, Rank.TWO), new Square(File.G, Rank.THREE)),
+                new Move(new Square(File.G, Rank.TWO), new Square(File.G, Rank.FOUR))
             ),
             service.getMoves(board, File.G, Rank.TWO)
         );
 
         assertEquals(
             Set.of(
-                new Pair<>(File.F, Rank.THREE),
-                new Pair<>(File.H, Rank.THREE)
+                new Move(new Square(File.G, Rank.ONE), new Square(File.F, Rank.THREE)),
+                new Move(new Square(File.G, Rank.ONE), new Square(File.H, Rank.THREE))
             ),
             service.getMoves(board, File.G, Rank.ONE)
         );
 
         assertEquals(
             Set.of(
-                new Pair<>(File.H, Rank.THREE),
-                new Pair<>(File.H, Rank.FOUR)
+                new Move(new Square(File.H, Rank.TWO), new Square(File.H, Rank.THREE)),
+                new Move(new Square(File.H, Rank.TWO), new Square(File.H, Rank.FOUR))
             ),
             service.getMoves(board, File.H, Rank.TWO)
         );
 
         assertEquals(
             Set.of(
-                new Pair<>(File.A, Rank.SIX),
-                new Pair<>(File.A, Rank.FIVE)
+                new Move(new Square(File.A, Rank.SEVEN), new Square(File.A, Rank.SIX)),
+                new Move(new Square(File.A, Rank.SEVEN), new Square(File.A, Rank.FIVE))
             ),
             service.getMoves(board, File.A, Rank.SEVEN)
         );
 
         assertEquals(
             Set.of(
-                new Pair<>(File.A, Rank.SIX),
-                new Pair<>(File.C, Rank.SIX)
+                new Move(new Square(File.B, Rank.EIGHT), new Square(File.A, Rank.SIX)),
+                new Move(new Square(File.B, Rank.EIGHT), new Square(File.C, Rank.SIX))
             ),
             service.getMoves(board, File.B, Rank.EIGHT)
         );
 
         assertEquals(
             Set.of(
-                new Pair<>(File.B, Rank.SIX),
-                new Pair<>(File.B, Rank.FIVE)
+                new Move(new Square(File.B, Rank.SEVEN), new Square(File.B, Rank.SIX)),
+                new Move(new Square(File.B, Rank.SEVEN), new Square(File.B, Rank.FIVE))
             ),
             service.getMoves(board, File.B, Rank.SEVEN)
         );
 
         assertEquals(
             Set.of(
-                new Pair<>(File.C, Rank.SIX),
-                new Pair<>(File.C, Rank.FIVE)
+                new Move(new Square(File.C, Rank.SEVEN), new Square(File.C, Rank.SIX)),
+                new Move(new Square(File.C, Rank.SEVEN), new Square(File.C, Rank.FIVE))
             ),
             service.getMoves(board, File.C, Rank.SEVEN)
         );
 
         assertEquals(
             Set.of(
-                new Pair<>(File.D, Rank.SIX),
-                new Pair<>(File.D, Rank.FIVE)
+                new Move(new Square(File.D, Rank.SEVEN), new Square(File.D, Rank.SIX)),
+                new Move(new Square(File.D, Rank.SEVEN), new Square(File.D, Rank.FIVE))
             ),
             service.getMoves(board, File.D, Rank.SEVEN)
         );
 
         assertEquals(
             Set.of(
-                new Pair<>(File.E, Rank.SIX),
-                new Pair<>(File.E, Rank.FIVE)
+                new Move(new Square(File.E, Rank.SEVEN), new Square(File.E, Rank.SIX)),
+                new Move(new Square(File.E, Rank.SEVEN), new Square(File.E, Rank.FIVE))
             ),
             service.getMoves(board, File.E, Rank.SEVEN)
         );
 
         assertEquals(
             Set.of(
-                new Pair<>(File.F, Rank.SIX),
-                new Pair<>(File.F, Rank.FIVE)
+                new Move(new Square(File.F, Rank.SEVEN), new Square(File.F, Rank.SIX)),
+                new Move(new Square(File.F, Rank.SEVEN), new Square(File.F, Rank.FIVE))
             ),
             service.getMoves(board, File.F, Rank.SEVEN)
         );
 
         assertEquals(
             Set.of(
-                new Pair<>(File.G, Rank.SIX),
-                new Pair<>(File.G, Rank.FIVE)
+                new Move(new Square(File.G, Rank.SEVEN), new Square(File.G, Rank.SIX)),
+                new Move(new Square(File.G, Rank.SEVEN), new Square(File.G, Rank.FIVE))
             ),
             service.getMoves(board, File.G, Rank.SEVEN)
         );
 
         assertEquals(
             Set.of(
-                new Pair<>(File.F, Rank.SIX),
-                new Pair<>(File.H, Rank.SIX)
+                new Move(new Square(File.G, Rank.EIGHT), new Square(File.F, Rank.SIX)),
+                new Move(new Square(File.G, Rank.EIGHT), new Square(File.H, Rank.SIX))
             ),
             service.getMoves(board, File.G, Rank.EIGHT)
         );
 
         assertEquals(
             Set.of(
-                new Pair<>(File.H, Rank.SIX),
-                new Pair<>(File.H, Rank.FIVE)
+                new Move(new Square(File.H, Rank.SEVEN), new Square(File.H, Rank.SIX)),
+                new Move(new Square(File.H, Rank.SEVEN), new Square(File.H, Rank.FIVE))
             ),
             service.getMoves(board, File.H, Rank.SEVEN)
         );
@@ -286,54 +288,54 @@ class BoardServiceTest {
         BoardService service = new BoardService(new PieceService());
 
         Stream.of(
-            new Pair<>(File.A, Rank.ONE),
-            new Pair<>(File.C, Rank.ONE),
-            new Pair<>(File.D, Rank.ONE),
-            new Pair<>(File.E, Rank.ONE),
-            new Pair<>(File.F, Rank.ONE),
-            new Pair<>(File.H, Rank.ONE),
-            new Pair<>(File.A, Rank.THREE),
-            new Pair<>(File.B, Rank.THREE),
-            new Pair<>(File.C, Rank.THREE),
-            new Pair<>(File.D, Rank.THREE),
-            new Pair<>(File.E, Rank.THREE),
-            new Pair<>(File.F, Rank.THREE),
-            new Pair<>(File.G, Rank.THREE),
-            new Pair<>(File.H, Rank.THREE),
-            new Pair<>(File.A, Rank.FOUR),
-            new Pair<>(File.B, Rank.FOUR),
-            new Pair<>(File.C, Rank.FOUR),
-            new Pair<>(File.D, Rank.FOUR),
-            new Pair<>(File.E, Rank.FOUR),
-            new Pair<>(File.F, Rank.FOUR),
-            new Pair<>(File.G, Rank.FOUR),
-            new Pair<>(File.H, Rank.FOUR),
-            new Pair<>(File.A, Rank.FIVE),
-            new Pair<>(File.B, Rank.FIVE),
-            new Pair<>(File.C, Rank.FIVE),
-            new Pair<>(File.D, Rank.FIVE),
-            new Pair<>(File.E, Rank.FIVE),
-            new Pair<>(File.F, Rank.FIVE),
-            new Pair<>(File.G, Rank.FIVE),
-            new Pair<>(File.H, Rank.FIVE),
-            new Pair<>(File.A, Rank.SIX),
-            new Pair<>(File.B, Rank.SIX),
-            new Pair<>(File.C, Rank.SIX),
-            new Pair<>(File.D, Rank.SIX),
-            new Pair<>(File.E, Rank.SIX),
-            new Pair<>(File.F, Rank.SIX),
-            new Pair<>(File.G, Rank.SIX),
-            new Pair<>(File.H, Rank.SIX),
-            new Pair<>(File.A, Rank.EIGHT),
-            new Pair<>(File.C, Rank.EIGHT),
-            new Pair<>(File.D, Rank.EIGHT),
-            new Pair<>(File.E, Rank.EIGHT),
-            new Pair<>(File.F, Rank.EIGHT),
-            new Pair<>(File.H, Rank.EIGHT)
+            new Square(File.A, Rank.ONE),
+            new Square(File.C, Rank.ONE),
+            new Square(File.D, Rank.ONE),
+            new Square(File.E, Rank.ONE),
+            new Square(File.F, Rank.ONE),
+            new Square(File.H, Rank.ONE),
+            new Square(File.A, Rank.THREE),
+            new Square(File.B, Rank.THREE),
+            new Square(File.C, Rank.THREE),
+            new Square(File.D, Rank.THREE),
+            new Square(File.E, Rank.THREE),
+            new Square(File.F, Rank.THREE),
+            new Square(File.G, Rank.THREE),
+            new Square(File.H, Rank.THREE),
+            new Square(File.A, Rank.FOUR),
+            new Square(File.B, Rank.FOUR),
+            new Square(File.C, Rank.FOUR),
+            new Square(File.D, Rank.FOUR),
+            new Square(File.E, Rank.FOUR),
+            new Square(File.F, Rank.FOUR),
+            new Square(File.G, Rank.FOUR),
+            new Square(File.H, Rank.FOUR),
+            new Square(File.A, Rank.FIVE),
+            new Square(File.B, Rank.FIVE),
+            new Square(File.C, Rank.FIVE),
+            new Square(File.D, Rank.FIVE),
+            new Square(File.E, Rank.FIVE),
+            new Square(File.F, Rank.FIVE),
+            new Square(File.G, Rank.FIVE),
+            new Square(File.H, Rank.FIVE),
+            new Square(File.A, Rank.SIX),
+            new Square(File.B, Rank.SIX),
+            new Square(File.C, Rank.SIX),
+            new Square(File.D, Rank.SIX),
+            new Square(File.E, Rank.SIX),
+            new Square(File.F, Rank.SIX),
+            new Square(File.G, Rank.SIX),
+            new Square(File.H, Rank.SIX),
+            new Square(File.A, Rank.EIGHT),
+            new Square(File.C, Rank.EIGHT),
+            new Square(File.D, Rank.EIGHT),
+            new Square(File.E, Rank.EIGHT),
+            new Square(File.F, Rank.EIGHT),
+            new Square(File.H, Rank.EIGHT)
         )
             .forEach(sq -> assertEquals(
                 Set.of(),
-                service.getMoves(board, sq.getLeft(), sq.getRight())
+                service.getMoves(board, sq.getFile(), sq.getRank())
             ));
     }
 }

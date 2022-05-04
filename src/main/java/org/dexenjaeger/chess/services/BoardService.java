@@ -6,91 +6,93 @@ import java.util.Set;
 import org.dexenjaeger.chess.models.Side;
 import org.dexenjaeger.chess.models.board.Board;
 import org.dexenjaeger.chess.models.board.File;
+import org.dexenjaeger.chess.models.board.Move;
 import org.dexenjaeger.chess.models.board.Rank;
+import org.dexenjaeger.chess.models.board.Square;
 import org.dexenjaeger.chess.models.pieces.Piece;
 import org.dexenjaeger.chess.models.pieces.PieceType;
 import org.dexenjaeger.chess.utils.Pair;
 
 public class BoardService {
 
-    private static Map<Pair<File, Rank>, Piece> defaultBoardState() {
-        Map<Pair<File, Rank>, Piece> pieceMap = new HashMap<>();
+    private static Map<Square, Piece> defaultBoardState() {
+        Map<Square, Piece> pieceMap = new HashMap<>();
         for (File file:File.values()) {
             pieceMap.put(
-                new Pair<>(file, Rank.TWO),
+                new Square(file, Rank.TWO),
                 new Piece(Side.WHITE, PieceType.PAWN)
             );
             pieceMap.put(
-                new Pair<>(file, Rank.SEVEN),
+                new Square(file, Rank.SEVEN),
                 new Piece(Side.BLACK, PieceType.PAWN)
             );
         }
 
         pieceMap.put(
-            new Pair<>(File.A, Rank.ONE),
+            new Square(File.A, Rank.ONE),
             new Piece(Side.WHITE, PieceType.ROOK)
         );
         pieceMap.put(
-            new Pair<>(File.H, Rank.ONE),
+            new Square(File.H, Rank.ONE),
             new Piece(Side.WHITE, PieceType.ROOK)
         );
         pieceMap.put(
-            new Pair<>(File.A, Rank.EIGHT),
+            new Square(File.A, Rank.EIGHT),
             new Piece(Side.BLACK, PieceType.ROOK)
         );
         pieceMap.put(
-            new Pair<>(File.H, Rank.EIGHT),
+            new Square(File.H, Rank.EIGHT),
             new Piece(Side.BLACK, PieceType.ROOK)
         );
 
         pieceMap.put(
-            new Pair<>(File.B, Rank.ONE),
+            new Square(File.B, Rank.ONE),
             new Piece(Side.WHITE, PieceType.KNIGHT)
         );
         pieceMap.put(
-            new Pair<>(File.G, Rank.ONE),
+            new Square(File.G, Rank.ONE),
             new Piece(Side.WHITE, PieceType.KNIGHT)
         );
         pieceMap.put(
-            new Pair<>(File.B, Rank.EIGHT),
+            new Square(File.B, Rank.EIGHT),
             new Piece(Side.BLACK, PieceType.KNIGHT)
         );
         pieceMap.put(
-            new Pair<>(File.G, Rank.EIGHT),
+            new Square(File.G, Rank.EIGHT),
             new Piece(Side.BLACK, PieceType.KNIGHT)
         );
 
         pieceMap.put(
-            new Pair<>(File.C, Rank.ONE),
+            new Square(File.C, Rank.ONE),
             new Piece(Side.WHITE, PieceType.BISHOP)
         );
         pieceMap.put(
-            new Pair<>(File.F, Rank.ONE),
+            new Square(File.F, Rank.ONE),
             new Piece(Side.WHITE, PieceType.BISHOP)
         );
         pieceMap.put(
-            new Pair<>(File.C, Rank.EIGHT),
+            new Square(File.C, Rank.EIGHT),
             new Piece(Side.BLACK, PieceType.BISHOP)
         );
         pieceMap.put(
-            new Pair<>(File.F, Rank.EIGHT),
+            new Square(File.F, Rank.EIGHT),
             new Piece(Side.BLACK, PieceType.BISHOP)
         );
 
         pieceMap.put(
-            new Pair<>(File.D, Rank.ONE),
+            new Square(File.D, Rank.ONE),
             new Piece(Side.WHITE, PieceType.QUEEN)
         );
         pieceMap.put(
-            new Pair<>(File.E, Rank.ONE),
+            new Square(File.E, Rank.ONE),
             new Piece(Side.WHITE, PieceType.KING)
         );
         pieceMap.put(
-            new Pair<>(File.D, Rank.EIGHT),
+            new Square(File.D, Rank.EIGHT),
             new Piece(Side.BLACK, PieceType.QUEEN)
         );
         pieceMap.put(
-            new Pair<>(File.E, Rank.EIGHT),
+            new Square(File.E, Rank.EIGHT),
             new Piece(Side.BLACK, PieceType.KING)
         );
 
@@ -107,9 +109,9 @@ public class BoardService {
         this.pieceService = pieceService;
     }
 
-    public Set<Pair<File, Rank>> getMoves(Board board, File f, Rank r) {
+    public Set<Move> getMoves(Board board, File f, Rank r) {
         return board.getPiece(f, r)
-            .map(p -> pieceService.getMoves(p, new Pair<>(f, r), sq -> board.getPiece(sq).map(Piece::getSide)))
+            .map(p -> pieceService.getMoves(p, new Square(f, r), sq -> board.getPiece(sq).map(Piece::getSide)))
             .orElse(Set.of());
     }
 }
