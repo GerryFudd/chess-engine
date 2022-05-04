@@ -13,6 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 import org.dexenjaeger.chess.models.board.Board;
 import org.dexenjaeger.chess.models.board.File;
 import org.dexenjaeger.chess.models.board.Rank;
@@ -114,7 +115,7 @@ class BoardServiceTest {
     }
 
     @Test
-    void getAvailableMoves() {
+    void getAvailableMoves_whereAvailable() {
         Board board = BoardService.standardGameBoard();
         BoardService service = new BoardService(new PieceService());
 
@@ -277,5 +278,62 @@ class BoardServiceTest {
             ),
             service.getMoves(board, File.H, Rank.SEVEN)
         );
+    }
+
+    @Test
+    void getAvailableMoves_whereEmpty() {
+        Board board = BoardService.standardGameBoard();
+        BoardService service = new BoardService(new PieceService());
+
+        Stream.of(
+            new Pair<>(File.A, Rank.ONE),
+            new Pair<>(File.C, Rank.ONE),
+            new Pair<>(File.D, Rank.ONE),
+            new Pair<>(File.E, Rank.ONE),
+            new Pair<>(File.F, Rank.ONE),
+            new Pair<>(File.H, Rank.ONE),
+            new Pair<>(File.A, Rank.THREE),
+            new Pair<>(File.B, Rank.THREE),
+            new Pair<>(File.C, Rank.THREE),
+            new Pair<>(File.D, Rank.THREE),
+            new Pair<>(File.E, Rank.THREE),
+            new Pair<>(File.F, Rank.THREE),
+            new Pair<>(File.G, Rank.THREE),
+            new Pair<>(File.H, Rank.THREE),
+            new Pair<>(File.A, Rank.FOUR),
+            new Pair<>(File.B, Rank.FOUR),
+            new Pair<>(File.C, Rank.FOUR),
+            new Pair<>(File.D, Rank.FOUR),
+            new Pair<>(File.E, Rank.FOUR),
+            new Pair<>(File.F, Rank.FOUR),
+            new Pair<>(File.G, Rank.FOUR),
+            new Pair<>(File.H, Rank.FOUR),
+            new Pair<>(File.A, Rank.FIVE),
+            new Pair<>(File.B, Rank.FIVE),
+            new Pair<>(File.C, Rank.FIVE),
+            new Pair<>(File.D, Rank.FIVE),
+            new Pair<>(File.E, Rank.FIVE),
+            new Pair<>(File.F, Rank.FIVE),
+            new Pair<>(File.G, Rank.FIVE),
+            new Pair<>(File.H, Rank.FIVE),
+            new Pair<>(File.A, Rank.SIX),
+            new Pair<>(File.B, Rank.SIX),
+            new Pair<>(File.C, Rank.SIX),
+            new Pair<>(File.D, Rank.SIX),
+            new Pair<>(File.E, Rank.SIX),
+            new Pair<>(File.F, Rank.SIX),
+            new Pair<>(File.G, Rank.SIX),
+            new Pair<>(File.H, Rank.SIX),
+            new Pair<>(File.A, Rank.EIGHT),
+            new Pair<>(File.C, Rank.EIGHT),
+            new Pair<>(File.D, Rank.EIGHT),
+            new Pair<>(File.E, Rank.EIGHT),
+            new Pair<>(File.F, Rank.EIGHT),
+            new Pair<>(File.H, Rank.EIGHT)
+        )
+            .forEach(sq -> assertEquals(
+                Set.of(),
+                service.getMoves(board, sq.getLeft(), sq.getRight())
+            ));
     }
 }

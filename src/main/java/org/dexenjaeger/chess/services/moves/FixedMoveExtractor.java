@@ -1,6 +1,5 @@
 package org.dexenjaeger.chess.services.moves;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -11,18 +10,21 @@ import org.dexenjaeger.chess.models.board.File;
 import org.dexenjaeger.chess.models.board.Rank;
 import org.dexenjaeger.chess.utils.Pair;
 
-public class KnightMoveExtractor implements MoveExtractor {
+public class FixedMoveExtractor implements MoveExtractor {
     private final Side side;
     private final Pair<File, Rank> starting;
+    private final List<Pair<Integer, Integer>> fixedMoves;
     private final EvaluateOccupyingSide evaluateOccupyingSide;
 
-    public KnightMoveExtractor(
+    public FixedMoveExtractor(
         Side side,
         Pair<File, Rank> starting,
+        List<Pair<Integer, Integer>> fixedMoves,
         EvaluateOccupyingSide evaluateOccupyingSide
     ) {
         this.side = side;
         this.starting = starting;
+        this.fixedMoves = fixedMoves;
         this.evaluateOccupyingSide = evaluateOccupyingSide;
     }
 
@@ -30,16 +32,7 @@ public class KnightMoveExtractor implements MoveExtractor {
     @Override
     public Set<Pair<File, Rank>> moveSet() {
 
-        return Stream.of(
-            new Pair<>(-2, -1),
-            new Pair<>(-2, 1),
-            new Pair<>(-1, -2),
-            new Pair<>(-1, 2),
-            new Pair<>(2, -1),
-            new Pair<>(2, 1),
-            new Pair<>(1, -2),
-            new Pair<>(1, 2)
-        )
+        return fixedMoves.stream()
             .map(
                 shifts -> starting
                     .getLeft()
