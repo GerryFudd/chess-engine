@@ -2,6 +2,7 @@ package org.dexenjaeger.chess.services;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import org.dexenjaeger.chess.models.Side;
 import org.dexenjaeger.chess.models.board.Board;
 import org.dexenjaeger.chess.models.board.File;
@@ -11,6 +12,7 @@ import org.dexenjaeger.chess.models.pieces.PieceType;
 import org.dexenjaeger.chess.utils.Pair;
 
 public class BoardService {
+
     private static Map<Pair<File, Rank>, Piece> defaultBoardState() {
         Map<Pair<File, Rank>, Piece> pieceMap = new HashMap<>();
         for (File file:File.values()) {
@@ -97,5 +99,17 @@ public class BoardService {
 
     public static Board standardGameBoard() {
         return new Board(defaultBoardState());
+    }
+
+    private final PieceService pieceService;
+
+    public BoardService(PieceService pieceService) {
+        this.pieceService = pieceService;
+    }
+
+    public Set<Pair<File, Rank>> getMoves(Board board, File f, Rank r) {
+        return board.getPiece(f, r)
+            .map(p -> pieceService.getMoves(p, new Pair<>(f, r), sq -> board.getPiece(sq).map(Piece::getSide)))
+            .orElse(Set.of());
     }
 }

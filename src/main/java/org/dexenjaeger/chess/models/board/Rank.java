@@ -1,5 +1,6 @@
 package org.dexenjaeger.chess.models.board;
 
+import java.util.Optional;
 import lombok.Getter;
 
 public enum Rank {
@@ -9,6 +10,15 @@ public enum Rank {
 
     @Getter
     private final int asNumber;
+
+    public Optional<Rank> shift(int rows) {
+        int newOrdinal = ordinal() + rows;
+        Rank[] ranks = Rank.values();
+        if (newOrdinal < 0 || newOrdinal >= ranks.length) {
+            return Optional.empty();
+        }
+        return Optional.of(ranks[newOrdinal]);
+    }
 
     Rank(int asNumber) {
         this.asNumber = asNumber;
