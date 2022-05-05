@@ -44,9 +44,10 @@ public class Board {
         return this;
     }
 
-    public void movePiece(SimpleMove move) {
+    public Board movePiece(SimpleMove move) {
         Piece piece = Optional.ofNullable(pieces.remove(move.getFrom())).orElseThrow();
         pieces.put(move.getTo(), piece);
+        return this;
     }
 
     public Set<Square> getBySideAndType(Side side, PieceType type) {

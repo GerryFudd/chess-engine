@@ -129,4 +129,11 @@ public class BoardService {
             )
             .findAny();
     }
+
+    public Board applySimpleMove(Board board, SimpleMove move) {
+        if (!getMoves(board, move.getFrom().getFile(), move.getFrom().getRank()).contains(move)) {
+            throw new ServiceException(String.format("The move %s is not available on this board.\n%s", move, board));
+        }
+        return board.movePiece(move);
+    }
 }

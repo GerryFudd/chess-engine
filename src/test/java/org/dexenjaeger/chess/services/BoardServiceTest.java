@@ -24,6 +24,8 @@ import org.dexenjaeger.chess.models.pieces.Piece;
 import org.junit.jupiter.api.Test;
 
 class BoardServiceTest {
+    private final BoardService boardService = new BoardService(new PieceService());
+
     void assertPiece(Board board, FileType x, RankType y, Piece expected) {
         Optional<Piece> p = board.getPiece(x, y);
         assertTrue(
@@ -337,5 +339,33 @@ class BoardServiceTest {
                 Set.of(),
                 service.getMoves(board, sq.getFile(), sq.getRank())
             ));
+    }
+
+    @Test
+    void applySimpleMoveTest_applySimplePawnMove() {
+        Board board = boardService.applySimpleMove(
+            BoardService.standardGameBoard(),
+            new SimpleMove(new Square(FileType.D, RankType.TWO), new Square(FileType.D, RankType.FOUR), PAWN, WHITE)
+        );
+
+        assertEmpty(board, FileType.D, RankType.TWO);
+        assertPiece(
+            board, FileType.D, RankType.FOUR,
+            new Piece(WHITE, PAWN)
+        );
+    }
+
+    @Test
+    void applySimpleMoveTest_applySimpleKnightMove() {
+        Board board = boardService.applySimpleMove(
+            BoardService.standardGameBoard(),
+            new SimpleMove(new Square(FileType.G, RankType.ONE), new Square(FileType.F, RankType.THREE), KNIGHT, WHITE)
+        );
+
+        assertEmpty(board, FileType.G, RankType.ONE);
+        assertPiece(
+            board, FileType.F, RankType.THREE,
+            new Piece(WHITE, KNIGHT)
+        );
     }
 }
