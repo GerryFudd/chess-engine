@@ -9,6 +9,7 @@ import static org.dexenjaeger.chess.models.pieces.PieceType.PAWN;
 import static org.dexenjaeger.chess.models.pieces.PieceType.QUEEN;
 import static org.dexenjaeger.chess.models.pieces.PieceType.ROOK;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Optional;
@@ -366,6 +367,27 @@ class BoardServiceTest {
         assertPiece(
             board, FileType.F, RankType.THREE,
             new Piece(WHITE, KNIGHT)
+        );
+    }
+
+    @Test
+    void applySimpleMoveTest_unavailableMove() {
+        ServiceException e = assertThrows(ServiceException.class, () -> boardService.applySimpleMove(
+            BoardService.standardGameBoard(),
+            new SimpleMove(new Square(FileType.D, RankType.ONE), new Square(FileType.D, RankType.EIGHT), QUEEN, WHITE)
+        ));
+
+        assertEquals(
+            "The move Qd1d8 is not available on this board.\n"
+                + "bRbNbBbQbKbBbNbR\n"
+                + "bpbpbpbpbpbpbpbp\n"
+                + "                \n"
+                + "                \n"
+                + "                \n"
+                + "                \n"
+                + "wpwpwpwpwpwpwpwp\n"
+                + "wRwNwBwQwKwBwNwR",
+            e.getMessage()
         );
     }
 }

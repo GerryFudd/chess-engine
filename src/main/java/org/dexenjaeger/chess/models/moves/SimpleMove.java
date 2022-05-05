@@ -13,6 +13,6 @@ public class SimpleMove implements Move {
     Side side;
 
     public String toString() {
-        return String.format("%s%s%s", type, from, to);
+        return String.format("%s%s%s", type.getRepresentation(), from, to);
     }
 }

@@ -2,6 +2,8 @@ package org.dexenjaeger.chess.models.board;
 
 import static org.dexenjaeger.chess.models.Side.WHITE;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -19,6 +21,19 @@ public class Board {
 
     public Board(Map<Square, Piece> pieces) {
         this.pieces = pieces;
+    }
+
+    public String toString() {
+        LinkedList<String> result = new LinkedList<>();
+        for (RankType rank:RankType.values()) {
+            StringBuilder rankRep = new StringBuilder();
+            for (FileType file:FileType.values()) {
+                rankRep.append(getPiece(file, rank).map(Piece::toString).orElse("  "));
+            }
+            result.addFirst(rankRep.toString());
+        }
+
+        return String.join("\n", result);
     }
 
     public Optional<Piece> getPiece(FileType file, RankType rank) {
