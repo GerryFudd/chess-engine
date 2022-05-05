@@ -4,6 +4,10 @@ import lombok.Value;
 
 @Value
 public class Square {
-    File file;
-    Rank rank;
+    FileType file;
+    RankType rank;
+
+    public String toString() {
+        return String.format("%s%s", file, rank);
+    }
 }

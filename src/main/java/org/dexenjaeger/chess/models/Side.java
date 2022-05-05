@@ -1,5 +1,9 @@
 package org.dexenjaeger.chess.models;
 
 public enum Side {
-    WHITE, BLACK
+    WHITE, BLACK;
+
+    public Side other() {
+        return Side.values()[(ordinal() + 1) % 2];
+    }
 }

@@ -1,13 +1,18 @@
 package org.dexenjaeger.chess.services;
 
+import static org.dexenjaeger.chess.models.pieces.PieceType.BISHOP;
+import static org.dexenjaeger.chess.models.pieces.PieceType.KING;
+import static org.dexenjaeger.chess.models.pieces.PieceType.KNIGHT;
+import static org.dexenjaeger.chess.models.pieces.PieceType.QUEEN;
+import static org.dexenjaeger.chess.models.pieces.PieceType.ROOK;
+
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.dexenjaeger.chess.models.board.File;
-import org.dexenjaeger.chess.models.board.Move;
-import org.dexenjaeger.chess.models.board.Rank;
+import org.dexenjaeger.chess.models.moves.Move;
 import org.dexenjaeger.chess.models.board.Square;
+import org.dexenjaeger.chess.models.moves.SimpleMove;
 import org.dexenjaeger.chess.models.pieces.Piece;
 import org.dexenjaeger.chess.services.moves.DirectionalMoveExtractor;
 import org.dexenjaeger.chess.services.moves.EvaluateOccupyingSide;
@@ -35,7 +40,7 @@ public class PieceService {
         ).collect(Collectors.toList());
     }
 
-    public Set<Move> getMoves(
+    public Set<SimpleMove> getMoves(
         Piece piece,
         Square starting,
         EvaluateOccupyingSide evaluateOccupyingSide
@@ -47,7 +52,7 @@ public class PieceService {
                 ).moveSet();
             case KNIGHT:
                 return new FixedMoveExtractor(
-                    piece.getSide(), starting,
+                    piece.getSide(), KNIGHT, starting,
                     List.of(
                         new Pair<>(-2, -1),
                         new Pair<>(-2, 1),
@@ -61,27 +66,27 @@ public class PieceService {
                 ).moveSet();
             case KING:
                 return new FixedMoveExtractor(
-                    piece.getSide(), starting,
+                    piece.getSide(), KING, starting,
                     queenDirections(), evaluateOccupyingSide
                 ).moveSet();
             case BISHOP:
                 return new DirectionalMoveExtractor(
                     piece.getSide(),
-                    BISHOP_DIRECTIONS,
+                    BISHOP, BISHOP_DIRECTIONS,
                     starting,
                     evaluateOccupyingSide
                 ).moveSet();
             case ROOK:
                 return new DirectionalMoveExtractor(
                     piece.getSide(),
-                    ROOK_DIRECTIONS,
+                    ROOK, ROOK_DIRECTIONS,
                     starting,
                     evaluateOccupyingSide
                 ).moveSet();
             case QUEEN:
                 return new DirectionalMoveExtractor(
                     piece.getSide(),
-                    queenDirections(),
+                    QUEEN, queenDirections(),
                     starting,
                     evaluateOccupyingSide
                 ).moveSet();

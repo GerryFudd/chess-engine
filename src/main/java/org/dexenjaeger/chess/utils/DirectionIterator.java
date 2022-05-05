@@ -3,8 +3,6 @@ package org.dexenjaeger.chess.utils;
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.function.Predicate;
-import org.dexenjaeger.chess.models.board.File;
-import org.dexenjaeger.chess.models.board.Rank;
 import org.dexenjaeger.chess.models.board.Square;
 
 public class DirectionIterator implements Iterator<Square> {

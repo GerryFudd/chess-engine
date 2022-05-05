@@ -1,8 +1,8 @@
 package org.dexenjaeger.chess.services.moves;
 
 import java.util.Set;
-import org.dexenjaeger.chess.models.board.Move;
+import org.dexenjaeger.chess.models.moves.SimpleMove;
 
 public interface MoveExtractor {
-    Set<Move> moveSet();
+    Set<SimpleMove> moveSet();
 }
