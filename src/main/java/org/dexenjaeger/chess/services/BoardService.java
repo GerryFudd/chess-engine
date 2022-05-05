@@ -1,20 +1,19 @@
 package org.dexenjaeger.chess.services;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.dexenjaeger.chess.models.Side;
 import org.dexenjaeger.chess.models.board.Board;
 import org.dexenjaeger.chess.models.board.FileType;
-import org.dexenjaeger.chess.models.moves.Move;
 import org.dexenjaeger.chess.models.board.RankType;
 import org.dexenjaeger.chess.models.board.Square;
 import org.dexenjaeger.chess.models.moves.SimpleMove;
 import org.dexenjaeger.chess.models.pieces.Piece;
 import org.dexenjaeger.chess.models.pieces.PieceType;
-import org.dexenjaeger.chess.utils.Pair;
 
 public class BoardService {
 
@@ -113,12 +112,16 @@ public class BoardService {
     }
 
     public Set<SimpleMove> getMoves(Board board, FileType f, RankType r) {
-        return board.getPiece(f, r)
-            .map(p -> pieceService.getMoves(p, new Square(f, r), sq -> board.getPiece(sq).map(Piece::getSide)))
+        return getMoves(board, new Square(f, r));
+    }
+
+    public Set<SimpleMove> getMoves(Board board, Square sq) {
+        return board.getPiece(sq)
+            .map(p -> pieceService.getMoves(p, sq, board::getOccupyingSide))
             .orElse(Set.of());
     }
 
-    public Optional<Square> getOtherPieceLocation(SimpleMove simpleMove, Board board) {
+    public Optional<Square> lookupAlternateStartForMove(SimpleMove simpleMove, Board board) {
         return board.getBySideAndType(simpleMove.getSide(), simpleMove.getType())
             .stream()
             .filter(sq -> getMoves(
@@ -130,10 +133,26 @@ public class BoardService {
             .findAny();
     }
 
-    public Board applySimpleMove(Board board, SimpleMove move) {
-        if (!getMoves(board, move.getFrom().getFile(), move.getFrom().getRank()).contains(move)) {
+    private Board applySingleSimpleMove(Board board, SimpleMove move) {
+        if (!getMoves(board, move.getFrom()).contains(move)) {
             throw new ServiceException(String.format("The move %s is not available on this board.\n%s", move, board));
         }
         return board.movePiece(move);
+    }
+
+    public Board applySimpleMove(Board board, SimpleMove...moves) {
+        Board result = board;
+        for (SimpleMove move:moves) {
+            result = applySingleSimpleMove(board, move);
+        }
+        return result;
+    }
+
+    public Set<SimpleMove> getMovesBySideAndTarget(Board board, Side side, Square target) {
+        return board.getBySide(side)
+            .stream()
+            .map(sq -> new SimpleMove(sq, target, board.getPiece(sq).orElseThrow()))
+            .filter(mo -> pieceService.isLegal(mo, board::getOccupyingSide))
+            .collect(Collectors.toSet());
     }
 }

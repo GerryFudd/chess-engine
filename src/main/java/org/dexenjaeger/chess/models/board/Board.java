@@ -44,6 +44,10 @@ public class Board {
         return Optional.ofNullable(pieces.get(square));
     }
 
+    public Optional<Side> getOccupyingSide(Square square) {
+        return getPiece(square).map(Piece::getSide);
+    }
+
     public Board castle(Castle castle) {
         Side side = castle.getSide();
         CastleType castleType = castle.getType();
@@ -69,6 +73,14 @@ public class Board {
         return pieces.entrySet()
             .stream()
             .filter(ent -> ent.getValue().getType() == type && ent.getValue().getSide() == side)
+            .map(Entry::getKey)
+            .collect(Collectors.toSet());
+    }
+
+    public Set<Square> getBySide(Side side) {
+        return pieces.entrySet()
+            .stream()
+            .filter(ent -> ent.getValue().getSide() == side)
             .map(Entry::getKey)
             .collect(Collectors.toSet());
     }

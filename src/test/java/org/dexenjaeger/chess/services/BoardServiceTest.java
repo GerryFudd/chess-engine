@@ -122,14 +122,13 @@ class BoardServiceTest {
     @Test
     void getAvailableMoves_whereAvailable() {
         Board board = BoardService.standardGameBoard();
-        BoardService service = new BoardService(new PieceService());
 
         assertEquals(
             Set.of(
                 new SimpleMove(new Square(FileType.A, RankType.TWO), new Square(FileType.A, RankType.THREE), PAWN, WHITE),
                 new SimpleMove(new Square(FileType.A, RankType.TWO), new Square(FileType.A, RankType.FOUR), PAWN, WHITE)
             ),
-            service.getMoves(board, FileType.A, RankType.TWO)
+            boardService.getMoves(board, FileType.A, RankType.TWO)
         );
 
         assertEquals(
@@ -137,7 +136,7 @@ class BoardServiceTest {
                 new SimpleMove(new Square(FileType.B, RankType.ONE), new Square(FileType.A, RankType.THREE), KNIGHT, WHITE),
                 new SimpleMove(new Square(FileType.B, RankType.ONE), new Square(FileType.C, RankType.THREE), KNIGHT, WHITE)
             ),
-            service.getMoves(board, FileType.B, RankType.ONE)
+            boardService.getMoves(board, FileType.B, RankType.ONE)
         );
 
         assertEquals(
@@ -145,7 +144,7 @@ class BoardServiceTest {
                 new SimpleMove(new Square(FileType.B, RankType.TWO), new Square(FileType.B, RankType.THREE), PAWN, WHITE),
                 new SimpleMove(new Square(FileType.B, RankType.TWO), new Square(FileType.B, RankType.FOUR), PAWN, WHITE)
             ),
-            service.getMoves(board, FileType.B, RankType.TWO)
+            boardService.getMoves(board, FileType.B, RankType.TWO)
         );
 
         assertEquals(
@@ -153,7 +152,7 @@ class BoardServiceTest {
                 new SimpleMove(new Square(FileType.C, RankType.TWO), new Square(FileType.C, RankType.THREE), PAWN, WHITE),
                 new SimpleMove(new Square(FileType.C, RankType.TWO), new Square(FileType.C, RankType.FOUR), PAWN, WHITE)
             ),
-            service.getMoves(board, FileType.C, RankType.TWO)
+            boardService.getMoves(board, FileType.C, RankType.TWO)
         );
 
         assertEquals(
@@ -161,7 +160,7 @@ class BoardServiceTest {
                 new SimpleMove(new Square(FileType.D, RankType.TWO), new Square(FileType.D, RankType.THREE), PAWN, WHITE),
                 new SimpleMove(new Square(FileType.D, RankType.TWO), new Square(FileType.D, RankType.FOUR), PAWN, WHITE)
             ),
-            service.getMoves(board, FileType.D, RankType.TWO)
+            boardService.getMoves(board, FileType.D, RankType.TWO)
         );
 
         assertEquals(
@@ -169,7 +168,7 @@ class BoardServiceTest {
                 new SimpleMove(new Square(FileType.E, RankType.TWO), new Square(FileType.E, RankType.THREE), PAWN, WHITE),
                 new SimpleMove(new Square(FileType.E, RankType.TWO), new Square(FileType.E, RankType.FOUR), PAWN, WHITE)
             ),
-            service.getMoves(board, FileType.E, RankType.TWO)
+            boardService.getMoves(board, FileType.E, RankType.TWO)
         );
 
         assertEquals(
@@ -177,7 +176,7 @@ class BoardServiceTest {
                 new SimpleMove(new Square(FileType.F, RankType.TWO), new Square(FileType.F, RankType.THREE), PAWN, WHITE),
                 new SimpleMove(new Square(FileType.F, RankType.TWO), new Square(FileType.F, RankType.FOUR), PAWN, WHITE)
             ),
-            service.getMoves(board, FileType.F, RankType.TWO)
+            boardService.getMoves(board, FileType.F, RankType.TWO)
         );
 
         assertEquals(
@@ -185,7 +184,7 @@ class BoardServiceTest {
                 new SimpleMove(new Square(FileType.G, RankType.TWO), new Square(FileType.G, RankType.THREE), PAWN, WHITE),
                 new SimpleMove(new Square(FileType.G, RankType.TWO), new Square(FileType.G, RankType.FOUR), PAWN, WHITE)
             ),
-            service.getMoves(board, FileType.G, RankType.TWO)
+            boardService.getMoves(board, FileType.G, RankType.TWO)
         );
 
         assertEquals(
@@ -193,7 +192,7 @@ class BoardServiceTest {
                 new SimpleMove(new Square(FileType.G, RankType.ONE), new Square(FileType.F, RankType.THREE), KNIGHT, WHITE),
                 new SimpleMove(new Square(FileType.G, RankType.ONE), new Square(FileType.H, RankType.THREE), KNIGHT, WHITE)
             ),
-            service.getMoves(board, FileType.G, RankType.ONE)
+            boardService.getMoves(board, FileType.G, RankType.ONE)
         );
 
         assertEquals(
@@ -201,7 +200,7 @@ class BoardServiceTest {
                 new SimpleMove(new Square(FileType.H, RankType.TWO), new Square(FileType.H, RankType.THREE), PAWN, WHITE),
                 new SimpleMove(new Square(FileType.H, RankType.TWO), new Square(FileType.H, RankType.FOUR), PAWN, WHITE)
             ),
-            service.getMoves(board, FileType.H, RankType.TWO)
+            boardService.getMoves(board, FileType.H, RankType.TWO)
         );
 
         assertEquals(
@@ -209,7 +208,7 @@ class BoardServiceTest {
                 new SimpleMove(new Square(FileType.A, RankType.SEVEN), new Square(FileType.A, RankType.SIX), PAWN, BLACK),
                 new SimpleMove(new Square(FileType.A, RankType.SEVEN), new Square(FileType.A, RankType.FIVE), PAWN, BLACK)
             ),
-            service.getMoves(board, FileType.A, RankType.SEVEN)
+            boardService.getMoves(board, FileType.A, RankType.SEVEN)
         );
 
         assertEquals(
@@ -217,7 +216,7 @@ class BoardServiceTest {
                 new SimpleMove(new Square(FileType.B, RankType.EIGHT), new Square(FileType.A, RankType.SIX), KNIGHT, BLACK),
                 new SimpleMove(new Square(FileType.B, RankType.EIGHT), new Square(FileType.C, RankType.SIX), KNIGHT, BLACK)
             ),
-            service.getMoves(board, FileType.B, RankType.EIGHT)
+            boardService.getMoves(board, FileType.B, RankType.EIGHT)
         );
 
         assertEquals(
@@ -225,7 +224,7 @@ class BoardServiceTest {
                 new SimpleMove(new Square(FileType.B, RankType.SEVEN), new Square(FileType.B, RankType.SIX), PAWN, BLACK),
                 new SimpleMove(new Square(FileType.B, RankType.SEVEN), new Square(FileType.B, RankType.FIVE), PAWN, BLACK)
             ),
-            service.getMoves(board, FileType.B, RankType.SEVEN)
+            boardService.getMoves(board, FileType.B, RankType.SEVEN)
         );
 
         assertEquals(
@@ -233,7 +232,7 @@ class BoardServiceTest {
                 new SimpleMove(new Square(FileType.C, RankType.SEVEN), new Square(FileType.C, RankType.SIX), PAWN, BLACK),
                 new SimpleMove(new Square(FileType.C, RankType.SEVEN), new Square(FileType.C, RankType.FIVE), PAWN, BLACK)
             ),
-            service.getMoves(board, FileType.C, RankType.SEVEN)
+            boardService.getMoves(board, FileType.C, RankType.SEVEN)
         );
 
         assertEquals(
@@ -241,7 +240,7 @@ class BoardServiceTest {
                 new SimpleMove(new Square(FileType.D, RankType.SEVEN), new Square(FileType.D, RankType.SIX), PAWN, BLACK),
                 new SimpleMove(new Square(FileType.D, RankType.SEVEN), new Square(FileType.D, RankType.FIVE), PAWN, BLACK)
             ),
-            service.getMoves(board, FileType.D, RankType.SEVEN)
+            boardService.getMoves(board, FileType.D, RankType.SEVEN)
         );
 
         assertEquals(
@@ -249,7 +248,7 @@ class BoardServiceTest {
                 new SimpleMove(new Square(FileType.E, RankType.SEVEN), new Square(FileType.E, RankType.SIX), PAWN, BLACK),
                 new SimpleMove(new Square(FileType.E, RankType.SEVEN), new Square(FileType.E, RankType.FIVE), PAWN, BLACK)
             ),
-            service.getMoves(board, FileType.E, RankType.SEVEN)
+            boardService.getMoves(board, FileType.E, RankType.SEVEN)
         );
 
         assertEquals(
@@ -257,7 +256,7 @@ class BoardServiceTest {
                 new SimpleMove(new Square(FileType.F, RankType.SEVEN), new Square(FileType.F, RankType.SIX), PAWN, BLACK),
                 new SimpleMove(new Square(FileType.F, RankType.SEVEN), new Square(FileType.F, RankType.FIVE), PAWN, BLACK)
             ),
-            service.getMoves(board, FileType.F, RankType.SEVEN)
+            boardService.getMoves(board, FileType.F, RankType.SEVEN)
         );
 
         assertEquals(
@@ -265,7 +264,7 @@ class BoardServiceTest {
                 new SimpleMove(new Square(FileType.G, RankType.SEVEN), new Square(FileType.G, RankType.SIX), PAWN, BLACK),
                 new SimpleMove(new Square(FileType.G, RankType.SEVEN), new Square(FileType.G, RankType.FIVE), PAWN, BLACK)
             ),
-            service.getMoves(board, FileType.G, RankType.SEVEN)
+            boardService.getMoves(board, FileType.G, RankType.SEVEN)
         );
 
         assertEquals(
@@ -273,7 +272,7 @@ class BoardServiceTest {
                 new SimpleMove(new Square(FileType.G, RankType.EIGHT), new Square(FileType.F, RankType.SIX), KNIGHT, BLACK),
                 new SimpleMove(new Square(FileType.G, RankType.EIGHT), new Square(FileType.H, RankType.SIX), KNIGHT, BLACK)
             ),
-            service.getMoves(board, FileType.G, RankType.EIGHT)
+            boardService.getMoves(board, FileType.G, RankType.EIGHT)
         );
 
         assertEquals(
@@ -281,14 +280,13 @@ class BoardServiceTest {
                 new SimpleMove(new Square(FileType.H, RankType.SEVEN), new Square(FileType.H, RankType.SIX), PAWN, BLACK),
                 new SimpleMove(new Square(FileType.H, RankType.SEVEN), new Square(FileType.H, RankType.FIVE), PAWN, BLACK)
             ),
-            service.getMoves(board, FileType.H, RankType.SEVEN)
+            boardService.getMoves(board, FileType.H, RankType.SEVEN)
         );
     }
 
     @Test
     void getAvailableMoves_whereEmpty() {
         Board board = BoardService.standardGameBoard();
-        BoardService service = new BoardService(new PieceService());
 
         Stream.of(
             new Square(FileType.A, RankType.ONE),
@@ -338,7 +336,7 @@ class BoardServiceTest {
         )
             .forEach(sq -> assertEquals(
                 Set.of(),
-                service.getMoves(board, sq.getFile(), sq.getRank())
+                boardService.getMoves(board, sq.getFile(), sq.getRank())
             ));
     }
 
@@ -371,6 +369,37 @@ class BoardServiceTest {
     }
 
     @Test
+    void applySuccessiveMoveTest_applySuccessiveMoves() {
+        Board board = boardService.applySimpleMove(
+            BoardService.standardGameBoard(),
+            new SimpleMove(new Square(FileType.G, RankType.ONE), new Square(FileType.F, RankType.THREE), KNIGHT, WHITE),
+            new SimpleMove(new Square(FileType.B, RankType.SEVEN), new Square(FileType.B, RankType.SIX), PAWN, BLACK),
+            new SimpleMove(new Square(FileType.G, RankType.TWO), new Square(FileType.G, RankType.THREE), PAWN, WHITE),
+            new SimpleMove(new Square(FileType.C, RankType.EIGHT), new Square(FileType.B, RankType.SEVEN), BISHOP, BLACK)
+        );
+
+        assertPiece(
+            board, FileType.B, RankType.SEVEN,
+            new Piece(BLACK, BISHOP)
+        );
+        assertPiece(
+            board, FileType.B, RankType.SIX,
+            new Piece(BLACK, PAWN)
+        );
+        assertEmpty(board, FileType.C, RankType.EIGHT);
+
+        assertPiece(
+            board, FileType.F, RankType.THREE,
+            new Piece(WHITE, KNIGHT)
+        );
+        assertPiece(
+            board, FileType.G, RankType.THREE,
+            new Piece(WHITE, PAWN)
+        );
+        assertEmpty(board, FileType.G, RankType.TWO);
+    }
+
+    @Test
     void applySimpleMoveTest_unavailableMove() {
         ServiceException e = assertThrows(ServiceException.class, () -> boardService.applySimpleMove(
             BoardService.standardGameBoard(),
@@ -388,6 +417,19 @@ class BoardServiceTest {
                 + "wpwpwpwpwpwpwpwp\n"
                 + "wRwNwBwQwKwBwNwR",
             e.getMessage()
+        );
+    }
+
+    @Test
+    void getMovesBySideAndTargetTest_fromOpening() {
+        assertEquals(
+            Set.of(
+                new SimpleMove(new Square(FileType.C, RankType.TWO), new Square(FileType.C, RankType.THREE), PAWN, WHITE),
+                new SimpleMove(new Square(FileType.B, RankType.ONE), new Square(FileType.C, RankType.THREE), KNIGHT, WHITE)
+            ),
+            boardService.getMovesBySideAndTarget(
+                BoardService.standardGameBoard(), WHITE, new Square(FileType.C, RankType.THREE)
+            )
         );
     }
 }

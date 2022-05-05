@@ -30,12 +30,11 @@ public class PgnService {
 
         StringBuilder result = new StringBuilder(move.getType().getRepresentation());
         boardService
-            .getOtherPieceLocation(move, board)
+            .lookupAlternateStartForMove(move, board)
             .ifPresent(sq -> {
                 if (sq.getFile() != move.getFrom().getFile()) {
                     result.append(move.getFrom().getFile());
-                }
-                if (sq.getRank() != move.getFrom().getRank()) {
+                } else if (sq.getRank() != move.getFrom().getRank()) {
                     result.append(move.getFrom().getRank());
                 }
             });

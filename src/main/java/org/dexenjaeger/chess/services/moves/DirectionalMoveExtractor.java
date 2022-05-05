@@ -3,6 +3,7 @@ package org.dexenjaeger.chess.services.moves;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 import org.dexenjaeger.chess.models.Side;
 import org.dexenjaeger.chess.models.board.Square;
 import org.dexenjaeger.chess.models.moves.SimpleMove;
@@ -14,26 +15,29 @@ public class DirectionalMoveExtractor implements MoveExtractor {
     private final Side side;
     private final PieceType pieceType;
     private final List<Pair<Integer, Integer>> directions;
-    private final Square starting;
-    private final EvaluateOccupyingSide evaluateOccupyingSide;
+    private final Predicate<Square> checkAvailability;
 
     public DirectionalMoveExtractor(Side side, PieceType pieceType, List<Pair<Integer, Integer>> directions,
-        Square starting, EvaluateOccupyingSide evaluateOccupyingSide) {
+        Predicate<Square> checkAvailability) {
         this.side = side;
         this.pieceType = pieceType;
         this.directions = directions;
-        this.starting = starting;
-        this.evaluateOccupyingSide = evaluateOccupyingSide;
+        this.checkAvailability = checkAvailability;
     }
 
     @Override
-    public Set<SimpleMove> moveSet() {
+    public Set<SimpleMove> moveSet(Square starting) {
         Set<SimpleMove> moves = new HashSet<>();
         for (Square square:new DirectionIterable(
-            directions, starting, sq -> evaluateOccupyingSide.getOccupyingSide(sq).filter(s -> s == side).isEmpty()
+            directions, starting, checkAvailability
         )) {
             moves.add(new SimpleMove(starting, square, pieceType, side));
         }
         return moves;
+    }
+
+    @Override
+    public boolean canMove(Square from, Square to) {
+        return false;
     }
 }

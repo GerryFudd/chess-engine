@@ -5,62 +5,72 @@ import static org.dexenjaeger.chess.models.pieces.PieceType.PAWN;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.dexenjaeger.chess.models.Side;
+import org.dexenjaeger.chess.models.board.FileType;
 import org.dexenjaeger.chess.models.board.RankType;
 import org.dexenjaeger.chess.models.board.Square;
 import org.dexenjaeger.chess.models.moves.SimpleMove;
 
 public class PawnMoveExtractor implements MoveExtractor {
     private final Side side;
-    private final Square starting;
     private final EvaluateOccupyingSide evaluateOccupyingSide;
 
     public PawnMoveExtractor(
         Side side,
-        Square starting,
         EvaluateOccupyingSide evaluateOccupyingSide
     ) {
         this.side = side;
-        this.starting = starting;
         this.evaluateOccupyingSide = evaluateOccupyingSide;
     }
 
-    private Optional<Square> nextForward(RankType rank, int direction) {
-        Optional<RankType> nextRank = rank.shift(direction);
+    private int getDirection() {
+        return side == Side.WHITE ? 1 : -1;
+    }
+
+    private Optional<Square> nextForward(Square square) {
+        Optional<RankType> nextRank = square.getRank().shift(getDirection());
         if (
             nextRank.isPresent()
-                && evaluateOccupyingSide.getOccupyingSide(
-                new Square(starting.getFile(), nextRank.get())
-            ).isEmpty()
+            && evaluateOccupyingSide.getOccupyingSide(new Square(square.getFile(), nextRank.get())).isEmpty()
         ) {
-            return Optional.of(new Square(starting.getFile(), nextRank.get()));
+            return Optional.of(new Square(square.getFile(), nextRank.get()));
         }
         return Optional.empty();
     }
 
-    private Set<SimpleMove> forwardMoves(int direction) {
-        Set<SimpleMove> moves = new HashSet<>();
-        nextForward(starting.getRank(), direction)
+    private Set<Square> forwardSquares(Square starting) {
+        Set<Square> squares = new HashSet<>();
+        nextForward(starting)
             .flatMap(square -> {
-                moves.add(new SimpleMove(starting, square, PAWN, side));
-                return nextForward(square.getRank(), direction);
+                squares.add(square);
+                return nextForward(square);
             })
-            .map(sq -> new SimpleMove(starting, sq, PAWN, side))
-            .ifPresent(moves::add);
-        return moves;
+            .ifPresent(squares::add);
+        return squares;
     }
 
-    private Set<SimpleMove> capturingMoves(int direction) {
+    private Set<SimpleMove> forwardMoves(Square starting) {
+        return forwardSquares(starting).stream()
+            .map(sq -> new SimpleMove(starting, sq, PAWN, side))
+            .collect(Collectors.toSet());
+    }
+
+    private boolean isCapture(Square target) {
+        return evaluateOccupyingSide.getOccupyingSide(target).filter(s -> s != side).isPresent();
+    }
+
+    private Set<SimpleMove> capturingMoves(Square starting) {
         Set<SimpleMove> moves = new HashSet<>();
         starting.getRank()
-            .shift(direction)
+            .shift(getDirection())
             .ifPresent(rank -> {
                 starting.getFile().shift(-1).map(f -> new Square(f, rank))
-                    .filter(sq -> evaluateOccupyingSide.getOccupyingSide(sq).filter(s -> s != side).isPresent())
+                    .filter(this::isCapture)
                     .map(sq -> new SimpleMove(starting, sq, PAWN, side))
                     .ifPresent(moves::add);
                 starting.getFile().shift(1).map(f -> new Square(f, rank))
-                    .filter(sq -> evaluateOccupyingSide.getOccupyingSide(sq).filter(s -> s != side).isPresent())
+                    .filter(this::isCapture)
                     .map(sq -> new SimpleMove(starting, sq, PAWN, side))
                     .ifPresent(moves::add);
             });
@@ -68,10 +78,20 @@ public class PawnMoveExtractor implements MoveExtractor {
     }
 
     @Override
-    public Set<SimpleMove> moveSet() {
-        int direction = side == Side.WHITE ? 1 : -1;
-        Set<SimpleMove> moves = forwardMoves(direction);
-        moves.addAll(capturingMoves(direction));
+    public Set<SimpleMove> moveSet(Square starting) {
+        Set<SimpleMove> moves = forwardMoves(starting);
+        moves.addAll(capturingMoves(starting));
         return moves;
+    }
+
+    @Override
+    public boolean canMove(Square from, Square to) {
+        if (from.getFile() == to.getFile()) {
+            return forwardSquares(from).contains(to);
+        }
+        if (to.getRank().ordinal() != from.getRank().ordinal() + 1 || !isCapture(to)) {
+            return false;
+        }
+        return Math.abs(from.getFile().ordinal() - to.getFile().ordinal()) == 1;
     }
 }
