@@ -432,4 +432,62 @@ class BoardServiceTest {
             )
         );
     }
+
+    @Test
+    void getMovesBySideTest_fromOpening() {
+        assertEquals(
+            Set.of(
+                new SimpleMove(new Square(FileType.B, RankType.ONE), new Square(FileType.A, RankType.THREE), KNIGHT, WHITE),
+                new SimpleMove(new Square(FileType.B, RankType.ONE), new Square(FileType.C, RankType.THREE), KNIGHT, WHITE),
+                new SimpleMove(new Square(FileType.G, RankType.ONE), new Square(FileType.F, RankType.THREE), KNIGHT, WHITE),
+                new SimpleMove(new Square(FileType.G, RankType.ONE), new Square(FileType.H, RankType.THREE), KNIGHT, WHITE),
+                new SimpleMove(new Square(FileType.A, RankType.TWO), new Square(FileType.A, RankType.THREE), PAWN, WHITE),
+                new SimpleMove(new Square(FileType.A, RankType.TWO), new Square(FileType.A, RankType.FOUR), PAWN, WHITE),
+                new SimpleMove(new Square(FileType.B, RankType.TWO), new Square(FileType.B, RankType.THREE), PAWN, WHITE),
+                new SimpleMove(new Square(FileType.B, RankType.TWO), new Square(FileType.B, RankType.FOUR), PAWN, WHITE),
+                new SimpleMove(new Square(FileType.C, RankType.TWO), new Square(FileType.C, RankType.THREE), PAWN, WHITE),
+                new SimpleMove(new Square(FileType.C, RankType.TWO), new Square(FileType.C, RankType.FOUR), PAWN, WHITE),
+                new SimpleMove(new Square(FileType.D, RankType.TWO), new Square(FileType.D, RankType.THREE), PAWN, WHITE),
+                new SimpleMove(new Square(FileType.D, RankType.TWO), new Square(FileType.D, RankType.FOUR), PAWN, WHITE),
+                new SimpleMove(new Square(FileType.E, RankType.TWO), new Square(FileType.E, RankType.THREE), PAWN, WHITE),
+                new SimpleMove(new Square(FileType.E, RankType.TWO), new Square(FileType.E, RankType.FOUR), PAWN, WHITE),
+                new SimpleMove(new Square(FileType.F, RankType.TWO), new Square(FileType.F, RankType.THREE), PAWN, WHITE),
+                new SimpleMove(new Square(FileType.F, RankType.TWO), new Square(FileType.F, RankType.FOUR), PAWN, WHITE),
+                new SimpleMove(new Square(FileType.G, RankType.TWO), new Square(FileType.G, RankType.THREE), PAWN, WHITE),
+                new SimpleMove(new Square(FileType.G, RankType.TWO), new Square(FileType.G, RankType.FOUR), PAWN, WHITE),
+                new SimpleMove(new Square(FileType.H, RankType.TWO), new Square(FileType.H, RankType.THREE), PAWN, WHITE),
+                new SimpleMove(new Square(FileType.H, RankType.TWO), new Square(FileType.H, RankType.FOUR), PAWN, WHITE)
+            ),
+            boardService.getMovesBySide(
+                BoardService.standardGameBoard(), WHITE
+            )
+        );
+        assertEquals(
+            Set.of(
+                new SimpleMove(new Square(FileType.B, RankType.EIGHT), new Square(FileType.A, RankType.SIX), KNIGHT, BLACK),
+                new SimpleMove(new Square(FileType.B, RankType.EIGHT), new Square(FileType.C, RankType.SIX), KNIGHT, BLACK),
+                new SimpleMove(new Square(FileType.G, RankType.EIGHT), new Square(FileType.F, RankType.SIX), KNIGHT, BLACK),
+                new SimpleMove(new Square(FileType.G, RankType.EIGHT), new Square(FileType.H, RankType.SIX), KNIGHT, BLACK),
+                new SimpleMove(new Square(FileType.A, RankType.SEVEN), new Square(FileType.A, RankType.SIX), PAWN, BLACK),
+                new SimpleMove(new Square(FileType.A, RankType.SEVEN), new Square(FileType.A, RankType.FIVE), PAWN, BLACK),
+                new SimpleMove(new Square(FileType.B, RankType.SEVEN), new Square(FileType.B, RankType.SIX), PAWN, BLACK),
+                new SimpleMove(new Square(FileType.B, RankType.SEVEN), new Square(FileType.B, RankType.FIVE), PAWN, BLACK),
+                new SimpleMove(new Square(FileType.C, RankType.SEVEN), new Square(FileType.C, RankType.SIX), PAWN, BLACK),
+                new SimpleMove(new Square(FileType.C, RankType.SEVEN), new Square(FileType.C, RankType.FIVE), PAWN, BLACK),
+                new SimpleMove(new Square(FileType.D, RankType.SEVEN), new Square(FileType.D, RankType.SIX), PAWN, BLACK),
+                new SimpleMove(new Square(FileType.D, RankType.SEVEN), new Square(FileType.D, RankType.FIVE), PAWN, BLACK),
+                new SimpleMove(new Square(FileType.E, RankType.SEVEN), new Square(FileType.E, RankType.SIX), PAWN, BLACK),
+                new SimpleMove(new Square(FileType.E, RankType.SEVEN), new Square(FileType.E, RankType.FIVE), PAWN, BLACK),
+                new SimpleMove(new Square(FileType.F, RankType.SEVEN), new Square(FileType.F, RankType.SIX), PAWN, BLACK),
+                new SimpleMove(new Square(FileType.F, RankType.SEVEN), new Square(FileType.F, RankType.FIVE), PAWN, BLACK),
+                new SimpleMove(new Square(FileType.G, RankType.SEVEN), new Square(FileType.G, RankType.SIX), PAWN, BLACK),
+                new SimpleMove(new Square(FileType.G, RankType.SEVEN), new Square(FileType.G, RankType.FIVE), PAWN, BLACK),
+                new SimpleMove(new Square(FileType.H, RankType.SEVEN), new Square(FileType.H, RankType.SIX), PAWN, BLACK),
+                new SimpleMove(new Square(FileType.H, RankType.SEVEN), new Square(FileType.H, RankType.FIVE), PAWN, BLACK)
+            ),
+            boardService.getMovesBySide(
+                BoardService.standardGameBoard(), BLACK
+            )
+        );
+    }
 }

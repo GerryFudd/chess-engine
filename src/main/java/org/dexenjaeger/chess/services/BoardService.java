@@ -1,6 +1,5 @@
 package org.dexenjaeger.chess.services;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -11,6 +10,7 @@ import org.dexenjaeger.chess.models.board.Board;
 import org.dexenjaeger.chess.models.board.FileType;
 import org.dexenjaeger.chess.models.board.RankType;
 import org.dexenjaeger.chess.models.board.Square;
+import org.dexenjaeger.chess.models.moves.Move;
 import org.dexenjaeger.chess.models.moves.SimpleMove;
 import org.dexenjaeger.chess.models.pieces.Piece;
 import org.dexenjaeger.chess.models.pieces.PieceType;
@@ -20,83 +20,33 @@ public class BoardService {
     private static Map<Square, Piece> defaultBoardState() {
         Map<Square, Piece> pieceMap = new HashMap<>();
         for (FileType file: FileType.values()) {
-            pieceMap.put(
-                new Square(file, RankType.TWO),
-                new Piece(Side.WHITE, PieceType.PAWN)
-            );
-            pieceMap.put(
-                new Square(file, RankType.SEVEN),
-                new Piece(Side.BLACK, PieceType.PAWN)
-            );
+            for (RankType rank:RankType.values()) {
+                if (rank.ordinal() > 1 && rank.ordinal() < 6) {
+                    continue;
+                }
+                Side side = rank.ordinal() <= 1
+                    ? Side.WHITE
+                    : Side.BLACK;
+                PieceType type;
+                if (rank == RankType.TWO || rank == RankType.SEVEN) {
+                    type = PieceType.PAWN;
+                } else if (file == FileType.A || file == FileType.H) {
+                    type = PieceType.ROOK;
+                } else if (file == FileType.B || file == FileType.G) {
+                    type = PieceType.KNIGHT;
+                } else if (file == FileType.C || file == FileType.F) {
+                    type = PieceType.BISHOP;
+                } else if (file == FileType.D) {
+                    type = PieceType.QUEEN;
+                } else {
+                    type = PieceType.KING;
+                }
+                pieceMap.put(
+                    new Square(file, rank),
+                    new Piece(side, type)
+                );
+            }
         }
-
-        pieceMap.put(
-            new Square(FileType.A, RankType.ONE),
-            new Piece(Side.WHITE, PieceType.ROOK)
-        );
-        pieceMap.put(
-            new Square(FileType.H, RankType.ONE),
-            new Piece(Side.WHITE, PieceType.ROOK)
-        );
-        pieceMap.put(
-            new Square(FileType.A, RankType.EIGHT),
-            new Piece(Side.BLACK, PieceType.ROOK)
-        );
-        pieceMap.put(
-            new Square(FileType.H, RankType.EIGHT),
-            new Piece(Side.BLACK, PieceType.ROOK)
-        );
-
-        pieceMap.put(
-            new Square(FileType.B, RankType.ONE),
-            new Piece(Side.WHITE, PieceType.KNIGHT)
-        );
-        pieceMap.put(
-            new Square(FileType.G, RankType.ONE),
-            new Piece(Side.WHITE, PieceType.KNIGHT)
-        );
-        pieceMap.put(
-            new Square(FileType.B, RankType.EIGHT),
-            new Piece(Side.BLACK, PieceType.KNIGHT)
-        );
-        pieceMap.put(
-            new Square(FileType.G, RankType.EIGHT),
-            new Piece(Side.BLACK, PieceType.KNIGHT)
-        );
-
-        pieceMap.put(
-            new Square(FileType.C, RankType.ONE),
-            new Piece(Side.WHITE, PieceType.BISHOP)
-        );
-        pieceMap.put(
-            new Square(FileType.F, RankType.ONE),
-            new Piece(Side.WHITE, PieceType.BISHOP)
-        );
-        pieceMap.put(
-            new Square(FileType.C, RankType.EIGHT),
-            new Piece(Side.BLACK, PieceType.BISHOP)
-        );
-        pieceMap.put(
-            new Square(FileType.F, RankType.EIGHT),
-            new Piece(Side.BLACK, PieceType.BISHOP)
-        );
-
-        pieceMap.put(
-            new Square(FileType.D, RankType.ONE),
-            new Piece(Side.WHITE, PieceType.QUEEN)
-        );
-        pieceMap.put(
-            new Square(FileType.E, RankType.ONE),
-            new Piece(Side.WHITE, PieceType.KING)
-        );
-        pieceMap.put(
-            new Square(FileType.D, RankType.EIGHT),
-            new Piece(Side.BLACK, PieceType.QUEEN)
-        );
-        pieceMap.put(
-            new Square(FileType.E, RankType.EIGHT),
-            new Piece(Side.BLACK, PieceType.KING)
-        );
 
         return pieceMap;
     }
@@ -153,6 +103,13 @@ public class BoardService {
             .stream()
             .map(sq -> new SimpleMove(sq, target, board.getPiece(sq).orElseThrow()))
             .filter(mo -> pieceService.isLegal(mo, board::getOccupyingSide))
+            .collect(Collectors.toSet());
+    }
+
+    public Set<Move> getMovesBySide(Board board, Side side) {
+        Set<Square> squaresForSide = board.getBySide(side);
+        return squaresForSide.stream()
+            .flatMap(sq -> getMoves(board, sq).stream())
             .collect(Collectors.toSet());
     }
 }
