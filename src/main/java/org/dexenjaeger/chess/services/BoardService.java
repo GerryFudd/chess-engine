@@ -88,7 +88,7 @@ public class BoardService {
     private boolean hasPiece(Board board, FileType file, RankType rank, Piece piece) {
         return board.getPiece(file, rank)
             .filter(p -> p.equals(piece))
-            .isEmpty();
+            .isPresent();
     }
 
     public boolean isLegal(Board board, Castle move) {
