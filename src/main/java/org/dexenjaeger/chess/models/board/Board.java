@@ -2,13 +2,14 @@ package org.dexenjaeger.chess.models.board;
 
 import static org.dexenjaeger.chess.models.Side.WHITE;
 
+import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.EqualsAndHashCode;
 import org.dexenjaeger.chess.models.Side;
 import org.dexenjaeger.chess.models.moves.Castle;
 import org.dexenjaeger.chess.models.moves.CastleType;
@@ -16,6 +17,7 @@ import org.dexenjaeger.chess.models.moves.SimpleMove;
 import org.dexenjaeger.chess.models.pieces.Piece;
 import org.dexenjaeger.chess.models.pieces.PieceType;
 
+@EqualsAndHashCode
 public class Board {
     private final Map<Square, Piece> pieces;
 
@@ -49,24 +51,26 @@ public class Board {
     }
 
     public Board castle(Castle castle) {
+        Map<Square, Piece> newBoardState = new HashMap<>(pieces);
         Side side = castle.getSide();
         CastleType castleType = castle.getType();
         FileType rookFileFrom = castleType.getRookFileFrom();
         RankType rank = side == WHITE ? RankType.ONE : RankType.EIGHT;
-        Piece rook = Optional.ofNullable(pieces.remove(new Square(rookFileFrom, rank))).orElseThrow();
-        Piece king = Optional.ofNullable(pieces.remove(new Square(FileType.E, rank))).orElseThrow();
+        Piece rook = Optional.ofNullable(newBoardState.remove(new Square(rookFileFrom, rank))).orElseThrow();
+        Piece king = Optional.ofNullable(newBoardState.remove(new Square(FileType.E, rank))).orElseThrow();
 
         FileType rookFileTo = castleType.getRookFileTo();
         FileType kingFileTo = castleType.getKingFileTo();
-        pieces.put(new Square(rookFileTo, rank), rook);
-        pieces.put(new Square(kingFileTo, rank), king);
-        return this;
+        newBoardState.put(new Square(rookFileTo, rank), rook);
+        newBoardState.put(new Square(kingFileTo, rank), king);
+        return new Board(newBoardState);
     }
 
     public Board movePiece(SimpleMove move) {
-        Piece piece = Optional.ofNullable(pieces.remove(move.getFrom())).orElseThrow();
-        pieces.put(move.getTo(), piece);
-        return this;
+        Map<Square, Piece> newBoardState = new HashMap<>(pieces);
+        Piece piece = Optional.ofNullable(newBoardState.remove(move.getFrom())).orElseThrow();
+        newBoardState.put(move.getTo(), piece);
+        return new Board(newBoardState);
     }
 
     public Set<Square> getBySideAndType(Side side, PieceType type) {

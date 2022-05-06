@@ -9,6 +9,7 @@ import static org.dexenjaeger.chess.models.pieces.PieceType.PAWN;
 import static org.dexenjaeger.chess.models.pieces.PieceType.QUEEN;
 import static org.dexenjaeger.chess.models.pieces.PieceType.ROOK;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -17,7 +18,6 @@ import java.util.Set;
 import java.util.stream.Stream;
 import org.dexenjaeger.chess.models.board.Board;
 import org.dexenjaeger.chess.models.board.FileType;
-import org.dexenjaeger.chess.models.moves.Move;
 import org.dexenjaeger.chess.models.board.RankType;
 import org.dexenjaeger.chess.models.board.Square;
 import org.dexenjaeger.chess.models.moves.SimpleMove;
@@ -31,7 +31,7 @@ class BoardServiceTest {
         Optional<Piece> p = board.getPiece(x, y);
         assertTrue(
             p.isPresent(),
-            String.format("Position %c%d should have a piece.", x.getVal(), y.getAsNumber())
+            String.format("Position %c%d should have a piece.", x.getCharVal(), y.getAsNumber())
         );
         assertEquals(
             expected,
@@ -42,7 +42,7 @@ class BoardServiceTest {
     void assertEmpty(Board board, FileType x, RankType y) {
         assertTrue(
             board.getPiece(x, y).isEmpty(),
-            String.format("Position %c%d should not have a piece.", x.getVal(), y.getAsNumber())
+            String.format("Position %c%d should not have a piece.", x.getCharVal(), y.getAsNumber())
         );
     }
 
@@ -341,8 +341,24 @@ class BoardServiceTest {
     }
 
     @Test
-    void applySimpleMoveTest_applySimplePawnMove() {
-        Board board = boardService.applySimpleMove(
+    void applyMoveTest_doesntMutateBoard() {
+        Board startingBoard = BoardService.standardGameBoard();
+        Board board = boardService.applyMove(
+            startingBoard,
+            new SimpleMove(new Square(FileType.D, RankType.TWO), new Square(FileType.D, RankType.FOUR), PAWN, WHITE)
+        );
+
+        assertNotEquals(
+            startingBoard, board, "Applying a move should not mutate the starting board."
+        );
+        assertEquals(
+            BoardService.standardGameBoard(), startingBoard
+        );
+    }
+
+    @Test
+    void applyMoveTest_applySimplePawnMove() {
+        Board board = boardService.applyMove(
             BoardService.standardGameBoard(),
             new SimpleMove(new Square(FileType.D, RankType.TWO), new Square(FileType.D, RankType.FOUR), PAWN, WHITE)
         );
@@ -355,8 +371,8 @@ class BoardServiceTest {
     }
 
     @Test
-    void applySimpleMoveTest_applySimpleKnightMove() {
-        Board board = boardService.applySimpleMove(
+    void applyMoveTest_applySimpleKnightMove() {
+        Board board = boardService.applyMove(
             BoardService.standardGameBoard(),
             new SimpleMove(new Square(FileType.G, RankType.ONE), new Square(FileType.F, RankType.THREE), KNIGHT, WHITE)
         );
@@ -370,7 +386,7 @@ class BoardServiceTest {
 
     @Test
     void applySuccessiveMoveTest_applySuccessiveMoves() {
-        Board board = boardService.applySimpleMove(
+        Board board = boardService.applyMove(
             BoardService.standardGameBoard(),
             new SimpleMove(new Square(FileType.G, RankType.ONE), new Square(FileType.F, RankType.THREE), KNIGHT, WHITE),
             new SimpleMove(new Square(FileType.B, RankType.SEVEN), new Square(FileType.B, RankType.SIX), PAWN, BLACK),
@@ -400,8 +416,8 @@ class BoardServiceTest {
     }
 
     @Test
-    void applySimpleMoveTest_unavailableMove() {
-        ServiceException e = assertThrows(ServiceException.class, () -> boardService.applySimpleMove(
+    void applyMoveTest_unavailableMove() {
+        ServiceException e = assertThrows(ServiceException.class, () -> boardService.applyMove(
             BoardService.standardGameBoard(),
             new SimpleMove(new Square(FileType.D, RankType.ONE), new Square(FileType.D, RankType.EIGHT), QUEEN, WHITE)
         ));

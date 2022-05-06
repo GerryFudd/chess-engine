@@ -10,6 +10,7 @@ import org.dexenjaeger.chess.models.board.Board;
 import org.dexenjaeger.chess.models.board.FileType;
 import org.dexenjaeger.chess.models.board.RankType;
 import org.dexenjaeger.chess.models.board.Square;
+import org.dexenjaeger.chess.models.moves.Castle;
 import org.dexenjaeger.chess.models.moves.Move;
 import org.dexenjaeger.chess.models.moves.SimpleMove;
 import org.dexenjaeger.chess.models.pieces.Piece;
@@ -83,6 +84,10 @@ public class BoardService {
             .findAny();
     }
 
+    private Board applySingleCastle(Board board, Castle move) {
+        return board.castle(move);
+    }
+
     private Board applySingleSimpleMove(Board board, SimpleMove move) {
         if (!getMoves(board, move.getFrom()).contains(move)) {
             throw new ServiceException(String.format("The move %s is not available on this board.\n%s", move, board));
@@ -94,6 +99,24 @@ public class BoardService {
         Board result = board;
         for (SimpleMove move:moves) {
             result = applySingleSimpleMove(board, move);
+        }
+        return result;
+    }
+
+    private Board applySingleMove(Board board, Move move) {
+        if (move instanceof SimpleMove) {
+            return applySingleSimpleMove(board, (SimpleMove) move);
+        }
+        if (move instanceof Castle) {
+            return applySingleCastle(board, (Castle) move);
+        }
+        throw new ServiceException(String.format("Not implemented for class %s", move.getClass().getName()));
+    }
+
+    public Board applyMove(Board board, Move...moves) {
+        Board result = board;
+        for (Move move:moves) {
+            result = applySingleMove(result, move);
         }
         return result;
     }

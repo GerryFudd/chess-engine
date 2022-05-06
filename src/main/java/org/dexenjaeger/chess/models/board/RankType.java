@@ -8,8 +8,19 @@ public enum RankType {
     FOUR(4), FIVE(5), SIX(6),
     SEVEN(7), EIGHT(8);
 
+    public static Optional<RankType> fromIntVal(int val) {
+        if (val < 1 || val > 8) {
+            return Optional.empty();
+        }
+        return Optional.of(RankType.values()[val - 1]);
+    }
+
     @Getter
     private final int asNumber;
+
+    RankType(int asNumber) {
+        this.asNumber = asNumber;
+    }
 
     public Optional<RankType> shift(int rows) {
         int newOrdinal = ordinal() + rows;
@@ -18,10 +29,6 @@ public enum RankType {
             return Optional.empty();
         }
         return Optional.of(ranks[newOrdinal]);
-    }
-
-    RankType(int asNumber) {
-        this.asNumber = asNumber;
     }
 
     public String toString() {
