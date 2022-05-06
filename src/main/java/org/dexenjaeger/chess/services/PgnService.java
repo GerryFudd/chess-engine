@@ -1,5 +1,6 @@
 package org.dexenjaeger.chess.services;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -20,7 +21,8 @@ import org.dexenjaeger.chess.utils.ConversionUtil;
 
 public class PgnService {
     private static final Pattern movePattern = Pattern.compile("([a-h]|[1-8])?x?([a-h][1-8])");
-    private static final Pattern turnPattern = Pattern.compile("(\\d+)\\.\\s*([^,]+),?\\s*([^\\s]+)?\\s*");
+    private static final Pattern turnPattern = Pattern.compile("(\\d+)\\.\\s*([^\\s]+)(?:\\s+([^\\s]+))?\\s*");
+    private static final Pattern turnStartPattern = Pattern.compile("\\d+\\.");
 
     private final BoardService boardService;
 
@@ -167,6 +169,9 @@ public class PgnService {
             .orElseThrow(() -> impossibleMoveException(pgnMove, side, board));
     }
 
+    public Turn fromPgnTurn(String pgnTurn) {
+        return fromPgnTurn(pgnTurn, BoardService.standardGameBoard());
+    }
     public Turn fromPgnTurn(String pgnTurn, Board board) {
         Matcher turnMatcher = turnPattern.matcher(pgnTurn);
         if (!turnMatcher.find()) {
@@ -181,10 +186,33 @@ public class PgnService {
             turnMatcher.group(3), Side.BLACK,
             boardService.applyMove(board, whiteMove)
         );
-        return new Turn(turnNumber, whiteMove, fromPgnMove(turnMatcher.group(3), Side.BLACK, board));
+        return new Turn(turnNumber, whiteMove, blackMove);
+    }
+
+    public List<Turn> fromPgnTurnList(String pgnTurnList) {
+        return fromPgnTurnList(pgnTurnList, BoardService.standardGameBoard());
     }
 
     public List<Turn> fromPgnTurnList(String pgnTurnList, Board board) {
-        return null;
+        int cursor = 0;
+        Matcher turnStartMatcher = turnStartPattern.matcher(pgnTurnList);
+        LinkedList<Turn> result = new LinkedList<>();
+        Board currentBoard = board;
+        while (turnStartMatcher.find(cursor)) {
+            cursor = turnStartMatcher.end();
+            Turn currentTurn = fromPgnTurn(
+                pgnTurnList.substring(turnStartMatcher.start()),
+                currentBoard
+            );
+            currentBoard = boardService.applyMove(
+                currentBoard,
+                currentTurn.getWhiteMove()
+            );
+            if (currentTurn.getBlackMove().isPresent()) {
+                currentBoard = boardService.applyMove(currentBoard, currentTurn.getBlackMove().get());
+            }
+            result.add(currentTurn);
+        }
+        return result;
     }
 }

@@ -89,18 +89,10 @@ public class BoardService {
     }
 
     private Board applySingleSimpleMove(Board board, SimpleMove move) {
-        if (!getMoves(board, move.getFrom()).contains(move)) {
+        if (!pieceService.isLegal(move, board::getOccupyingSide)) {
             throw new ServiceException(String.format("The move %s is not available on this board.\n%s", move, board));
         }
         return board.movePiece(move);
-    }
-
-    public Board applySimpleMove(Board board, SimpleMove...moves) {
-        Board result = board;
-        for (SimpleMove move:moves) {
-            result = applySingleSimpleMove(board, move);
-        }
-        return result;
     }
 
     private Board applySingleMove(Board board, Move move) {

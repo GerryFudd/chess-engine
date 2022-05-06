@@ -2,6 +2,7 @@ package org.dexenjaeger.chess.services;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.util.List;
 import org.dexenjaeger.chess.models.Side;
 import org.dexenjaeger.chess.models.board.Board;
 import org.dexenjaeger.chess.models.board.FileType;
@@ -101,7 +102,36 @@ class PgnServiceTest {
                 new SimpleMove(new Square(FileType.D, RankType.TWO), new Square(FileType.D, RankType.FOUR), PieceType.PAWN, Side.WHITE),
                 new SimpleMove(new Square(FileType.G, RankType.EIGHT), new Square(FileType.F, RankType.SIX), PieceType.KNIGHT, Side.BLACK)
             ),
-            pgnService.fromPgnTurn("1.d4,Nf6", BoardService.standardGameBoard())
+            pgnService.fromPgnTurn("1. d4 Nf6")
+        );
+    }
+
+    @Test
+    void fromPgnTurnList_appliesQGDClassical() {
+        assertEquals(
+            List.of(
+                new Turn(
+                    1,
+                    new SimpleMove(new Square(FileType.D, RankType.TWO), new Square(FileType.D, RankType.FOUR), PieceType.PAWN, Side.WHITE),
+                    new SimpleMove(new Square(FileType.D, RankType.SEVEN), new Square(FileType.D, RankType.FIVE), PieceType.PAWN, Side.BLACK)
+                ),
+                new Turn(
+                    2,
+                    new SimpleMove(new Square(FileType.C, RankType.TWO), new Square(FileType.C, RankType.FOUR), PieceType.PAWN, Side.WHITE),
+                    new SimpleMove(new Square(FileType.E, RankType.SEVEN), new Square(FileType.E, RankType.SIX), PieceType.PAWN, Side.BLACK)
+                ),
+                new Turn(
+                    3,
+                    new SimpleMove(new Square(FileType.B, RankType.ONE), new Square(FileType.C, RankType.THREE), PieceType.KNIGHT, Side.WHITE),
+                    new SimpleMove(new Square(FileType.G, RankType.EIGHT), new Square(FileType.F, RankType.SIX), PieceType.KNIGHT, Side.BLACK)
+                ),
+                new Turn(
+                    4,
+                    new SimpleMove(new Square(FileType.C, RankType.ONE), new Square(FileType.G, RankType.FIVE), PieceType.BISHOP, Side.WHITE),
+                    new SimpleMove(new Square(FileType.B, RankType.EIGHT), new Square(FileType.D, RankType.SEVEN), PieceType.KNIGHT, Side.BLACK)
+                )
+            ),
+            pgnService.fromPgnTurnList("1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Bg5 Nbd7")
         );
     }
 }

@@ -8,6 +8,7 @@ import org.dexenjaeger.chess.models.Side;
 import org.dexenjaeger.chess.models.board.Square;
 import org.dexenjaeger.chess.models.moves.SimpleMove;
 import org.dexenjaeger.chess.models.pieces.PieceType;
+import org.dexenjaeger.chess.utils.ConversionUtil;
 import org.dexenjaeger.chess.utils.DirectionIterable;
 import org.dexenjaeger.chess.utils.Pair;
 
@@ -38,6 +39,19 @@ public class DirectionalMoveExtractor implements MoveExtractor {
 
     @Override
     public boolean canMove(Square from, Square to) {
-        return false;
+        int fileShift = to.getFile().ordinal() - from.getFile().ordinal();
+        int rankShift = to.getRank().ordinal() - from.getRank().ordinal();
+        return ConversionUtil.directionFromShifts(fileShift, rankShift)
+            .map(dir -> {
+                for (Square square:new DirectionIterable(
+                    List.of(dir), from, checkAvailability
+                )) {
+                    if (square.equals(to)) {
+                        return true;
+                    }
+                }
+                return false;
+            })
+            .orElse(false);
     }
 }
