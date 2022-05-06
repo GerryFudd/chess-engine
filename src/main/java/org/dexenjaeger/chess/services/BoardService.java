@@ -69,7 +69,12 @@ public class BoardService {
 
     public Set<SimpleMove> getMoves(Board board, Square sq) {
         return board.getPiece(sq)
-            .map(p -> pieceService.getMoves(p, sq, board::getOccupyingSide))
+            .map(p -> pieceService
+                .getMoves(p, sq, board::getOccupyingSide)
+                .stream()
+                .filter(mo -> !isSideInCheck(board.movePiece(mo), mo.getSide()))
+                .collect(Collectors.toSet())
+            )
             .orElse(Set.of());
     }
 
@@ -105,6 +110,12 @@ public class BoardService {
         return hasPiece(board, FileType.E, rank, new Piece(move.getSide(), PieceType.KING));
     }
 
+    private boolean isSideInCheck(Board board, Side side) {
+        return board.getBySideAndType(side, PieceType.KING)
+            .stream()
+            .anyMatch(sq -> !getMovesBySideAndTarget(board, side.other(), sq).isEmpty());
+    }
+
     private Board applySingleCastle(Board board, Castle move) {
         if (!isLegal(board, move)) {
             throw new ServiceException(String.format("The move %s is not available on this board.\n%s", move, board));
@@ -133,6 +144,12 @@ public class BoardService {
         Board result = board;
         for (Move move:moves) {
             result = applySingleMove(result, move);
+            if (isSideInCheck(result, move.getSide())) {
+                throw new ServiceException(String.format(
+                    "The move %s is not allowed for %s because it would put %s in check.",
+                    move, move.getSide(), move.getSide()
+                ));
+            }
         }
         return result;
     }

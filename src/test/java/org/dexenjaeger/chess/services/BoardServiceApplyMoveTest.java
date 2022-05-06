@@ -25,6 +25,7 @@ import org.dexenjaeger.chess.models.moves.Castle;
 import org.dexenjaeger.chess.models.moves.CastleType;
 import org.dexenjaeger.chess.models.moves.SimpleMove;
 import org.dexenjaeger.chess.models.pieces.Piece;
+import org.dexenjaeger.chess.utils.PgnFileUtil;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -224,5 +225,21 @@ public class BoardServiceApplyMoveTest {
             "The move Castle(side=%s, type=SHORT) is not available on this board.\n%s",
             side.name(), board
         ), e.getMessage());
+    }
+
+    @Test
+    void applyMove_doesntAllowCheckAfterMove() {
+        Board nimzoIndianBoard = new PgnService(boardService)
+            .boardFromPgn(PgnFileUtil.readOpening("NimzoIndianDefenseKasparov.pgn"));
+
+        // The Knight on c3 is pinned and can't move
+        ServiceException e = assertThrows(ServiceException.class, () -> boardService.applyMove(
+            nimzoIndianBoard, new SimpleMove(new Square(FileType.C, RankType.THREE), new Square(FileType.D, RankType.FIVE), KNIGHT, WHITE)
+        ));
+
+        assertEquals(
+            "The move Nc3d5 is not allowed for WHITE because it would put WHITE in check.",
+            e.getMessage()
+        );
     }
 }

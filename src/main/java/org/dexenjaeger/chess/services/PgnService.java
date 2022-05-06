@@ -18,6 +18,7 @@ import org.dexenjaeger.chess.models.moves.SimpleMove;
 import org.dexenjaeger.chess.models.moves.Turn;
 import org.dexenjaeger.chess.models.pieces.PieceType;
 import org.dexenjaeger.chess.utils.ConversionUtil;
+import org.dexenjaeger.chess.utils.Pair;
 
 public class PgnService {
     private static final Pattern movePattern = Pattern.compile("([a-h]|[1-8])?x?([a-h][1-8])");
@@ -193,15 +194,15 @@ public class PgnService {
         return fromPgnTurnList(pgnTurnList, BoardService.standardGameBoard());
     }
 
-    public List<Turn> fromPgnTurnList(String pgnTurnList, Board board) {
+    private Pair<Board, List<Turn>> allFromPgn(String pgn, Board board) {
         int cursor = 0;
-        Matcher turnStartMatcher = turnStartPattern.matcher(pgnTurnList);
-        LinkedList<Turn> result = new LinkedList<>();
+        Matcher turnStartMatcher = turnStartPattern.matcher(pgn);
+        LinkedList<Turn> turnList = new LinkedList<>();
         Board currentBoard = board;
         while (turnStartMatcher.find(cursor)) {
             cursor = turnStartMatcher.end();
             Turn currentTurn = fromPgnTurn(
-                pgnTurnList.substring(turnStartMatcher.start()),
+                pgn.substring(turnStartMatcher.start()),
                 currentBoard
             );
             currentBoard = boardService.applyMove(
@@ -211,8 +212,20 @@ public class PgnService {
             if (currentTurn.getBlackMove().isPresent()) {
                 currentBoard = boardService.applyMove(currentBoard, currentTurn.getBlackMove().get());
             }
-            result.add(currentTurn);
+            turnList.add(currentTurn);
         }
-        return result;
+        return new Pair<>(currentBoard, turnList);
+    }
+
+    public List<Turn> fromPgnTurnList(String pgnTurnList, Board board) {
+        return allFromPgn(pgnTurnList, board).getRight();
+    }
+
+    public Board boardFromPgn(String pgn) {
+        return boardFromPgn(pgn, BoardService.standardGameBoard());
+    }
+
+    public Board boardFromPgn(String pgn, Board board) {
+        return allFromPgn(pgn, board).getLeft();
     }
 }
