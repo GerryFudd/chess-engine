@@ -8,9 +8,12 @@ import org.dexenjaeger.chess.models.board.Board;
 import org.dexenjaeger.chess.models.board.FileType;
 import org.dexenjaeger.chess.models.board.RankType;
 import org.dexenjaeger.chess.models.board.Square;
+import org.dexenjaeger.chess.models.moves.Castle;
+import org.dexenjaeger.chess.models.moves.CastleType;
 import org.dexenjaeger.chess.models.moves.SimpleMove;
 import org.dexenjaeger.chess.models.moves.Turn;
 import org.dexenjaeger.chess.models.pieces.PieceType;
+import org.dexenjaeger.chess.utils.PgnFileUtil;
 import org.junit.jupiter.api.Test;
 
 class PgnServiceTest {
@@ -131,7 +134,36 @@ class PgnServiceTest {
                     new SimpleMove(new Square(FileType.B, RankType.EIGHT), new Square(FileType.D, RankType.SEVEN), PieceType.KNIGHT, Side.BLACK)
                 )
             ),
-            pgnService.fromPgnTurnList("1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Bg5 Nbd7")
+            pgnService.fromPgnTurnList(PgnFileUtil.readOpening("QGDClassical.pgn"))
+        );
+    }
+
+    @Test
+    void fromPgnTurnList_appliesNimzoIndian() {
+        assertEquals(
+            List.of(
+                new Turn(
+                    1,
+                    new SimpleMove(new Square(FileType.D, RankType.TWO), new Square(FileType.D, RankType.FOUR), PieceType.PAWN, Side.WHITE),
+                    new SimpleMove(new Square(FileType.G, RankType.EIGHT), new Square(FileType.F, RankType.SIX), PieceType.KNIGHT, Side.BLACK)
+                ),
+                new Turn(
+                    2,
+                    new SimpleMove(new Square(FileType.C, RankType.TWO), new Square(FileType.C, RankType.FOUR), PieceType.PAWN, Side.WHITE),
+                    new SimpleMove(new Square(FileType.E, RankType.SEVEN), new Square(FileType.E, RankType.SIX), PieceType.PAWN, Side.BLACK)
+                ),
+                new Turn(
+                    3,
+                    new SimpleMove(new Square(FileType.B, RankType.ONE), new Square(FileType.C, RankType.THREE), PieceType.KNIGHT, Side.WHITE),
+                    new SimpleMove(new Square(FileType.F, RankType.EIGHT), new Square(FileType.B, RankType.FOUR), PieceType.BISHOP, Side.BLACK)
+                ),
+                new Turn(
+                    4,
+                    new SimpleMove(new Square(FileType.G, RankType.ONE), new Square(FileType.F, RankType.THREE), PieceType.KNIGHT, Side.WHITE),
+                    new Castle(Side.BLACK, CastleType.SHORT)
+                )
+            ),
+            pgnService.fromPgnTurnList(PgnFileUtil.readOpening("NimzoIndianDefenseKasparov.pgn"))
         );
     }
 }

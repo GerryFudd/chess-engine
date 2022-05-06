@@ -11,6 +11,7 @@ import org.dexenjaeger.chess.models.board.FileType;
 import org.dexenjaeger.chess.models.board.RankType;
 import org.dexenjaeger.chess.models.board.Square;
 import org.dexenjaeger.chess.models.moves.Castle;
+import org.dexenjaeger.chess.models.moves.CastleType;
 import org.dexenjaeger.chess.models.moves.Move;
 import org.dexenjaeger.chess.models.moves.SimpleMove;
 import org.dexenjaeger.chess.models.pieces.Piece;
@@ -84,7 +85,30 @@ public class BoardService {
             .findAny();
     }
 
+    private boolean hasPiece(Board board, FileType file, RankType rank, Piece piece) {
+        return board.getPiece(file, rank)
+            .filter(p -> p.equals(piece))
+            .isEmpty();
+    }
+
+    public boolean isLegal(Board board, Castle move) {
+        RankType rank = move.getSide() == Side.WHITE ? RankType.ONE : RankType.EIGHT;
+        Set<FileType> middleFiles = move.getType() == CastleType.LONG
+            ? Set.of(FileType.B, FileType.C, FileType.D)
+            : Set.of(FileType.F, FileType.G);
+        if (middleFiles.stream().anyMatch(f -> board.getPiece(f, rank).isPresent())) {
+            return false;
+        }
+        if (!hasPiece(board, move.getType().getRookFileFrom(), rank, new Piece(move.getSide(), PieceType.ROOK))) {
+            return false;
+        }
+        return hasPiece(board, FileType.E, rank, new Piece(move.getSide(), PieceType.KING));
+    }
+
     private Board applySingleCastle(Board board, Castle move) {
+        if (!isLegal(board, move)) {
+            throw new ServiceException(String.format("The move %s is not available on this board.\n%s", move, board));
+        }
         return board.castle(move);
     }
 

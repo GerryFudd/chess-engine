@@ -20,6 +20,8 @@ import org.dexenjaeger.chess.models.board.Board;
 import org.dexenjaeger.chess.models.board.FileType;
 import org.dexenjaeger.chess.models.board.RankType;
 import org.dexenjaeger.chess.models.board.Square;
+import org.dexenjaeger.chess.models.moves.Castle;
+import org.dexenjaeger.chess.models.moves.CastleType;
 import org.dexenjaeger.chess.models.moves.SimpleMove;
 import org.dexenjaeger.chess.models.pieces.Piece;
 import org.junit.jupiter.api.Test;
@@ -504,6 +506,66 @@ class BoardServiceTest {
             boardService.getMovesBySide(
                 BoardService.standardGameBoard(), BLACK
             )
+        );
+    }
+
+    @Test
+    void applyMove_castleNotAvailable() {
+        ServiceException whiteShort = assertThrows(ServiceException.class, () -> boardService.applyMove(
+            BoardService.standardGameBoard(), new Castle(WHITE, CastleType.SHORT)
+        ));
+        assertEquals(
+            "The move Castle(side=WHITE, type=SHORT) is not available on this board.\n"
+                + "bRbNbBbQbKbBbNbR\n"
+                + "bpbpbpbpbpbpbpbp\n"
+                + "                \n"
+                + "                \n"
+                + "                \n"
+                + "                \n"
+                + "wpwpwpwpwpwpwpwp\n"
+                + "wRwNwBwQwKwBwNwR", whiteShort.getMessage()
+        );
+        ServiceException whiteLong = assertThrows(ServiceException.class, () -> boardService.applyMove(
+            BoardService.standardGameBoard(), new Castle(WHITE, CastleType.LONG)
+        ));
+        assertEquals(
+            "The move Castle(side=WHITE, type=LONG) is not available on this board.\n"
+                + "bRbNbBbQbKbBbNbR\n"
+                + "bpbpbpbpbpbpbpbp\n"
+                + "                \n"
+                + "                \n"
+                + "                \n"
+                + "                \n"
+                + "wpwpwpwpwpwpwpwp\n"
+                + "wRwNwBwQwKwBwNwR", whiteLong.getMessage()
+        );
+        ServiceException blackShort = assertThrows(ServiceException.class, () -> boardService.applyMove(
+            BoardService.standardGameBoard(), new Castle(BLACK, CastleType.SHORT)
+        ));
+        assertEquals(
+            "The move Castle(side=BLACK, type=SHORT) is not available on this board.\n"
+                + "bRbNbBbQbKbBbNbR\n"
+                + "bpbpbpbpbpbpbpbp\n"
+                + "                \n"
+                + "                \n"
+                + "                \n"
+                + "                \n"
+                + "wpwpwpwpwpwpwpwp\n"
+                + "wRwNwBwQwKwBwNwR", blackShort.getMessage()
+        );
+        ServiceException blackLong = assertThrows(ServiceException.class, () -> boardService.applyMove(
+            BoardService.standardGameBoard(), new Castle(BLACK, CastleType.LONG)
+        ));
+        assertEquals(
+            "The move Castle(side=BLACK, type=LONG) is not available on this board.\n"
+                + "bRbNbBbQbKbBbNbR\n"
+                + "bpbpbpbpbpbpbpbp\n"
+                + "                \n"
+                + "                \n"
+                + "                \n"
+                + "                \n"
+                + "wpwpwpwpwpwpwpwp\n"
+                + "wRwNwBwQwKwBwNwR", blackLong.getMessage()
         );
     }
 }
