@@ -68,7 +68,7 @@ public class PgnService {
         if (move instanceof SimpleMove) {
             return simpleToPgnMove((SimpleMove) move, board);
         }
-        throw new ServiceException(String.format("Not implemented for class %s", move.getClass().getName()));
+        throw new NotImplementedException(move.getClass());
     }
     
     private PieceType typeFromIndicator(char indicator) {

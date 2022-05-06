@@ -13,6 +13,7 @@ import lombok.EqualsAndHashCode;
 import org.dexenjaeger.chess.models.Side;
 import org.dexenjaeger.chess.models.moves.Castle;
 import org.dexenjaeger.chess.models.moves.CastleType;
+import org.dexenjaeger.chess.models.moves.PromotionMove;
 import org.dexenjaeger.chess.models.moves.SimpleMove;
 import org.dexenjaeger.chess.models.pieces.Piece;
 import org.dexenjaeger.chess.models.pieces.PieceType;
@@ -70,6 +71,13 @@ public class Board {
         Map<Square, Piece> newBoardState = new HashMap<>(pieces);
         Piece piece = Optional.ofNullable(newBoardState.remove(move.getFrom())).orElseThrow();
         newBoardState.put(move.getTo(), piece);
+        return new Board(newBoardState);
+    }
+
+    public Board promote(PromotionMove move) {
+        Map<Square, Piece> newBoardState = new HashMap<>(pieces);
+        Optional.ofNullable(newBoardState.remove(move.getFrom())).orElseThrow();
+        newBoardState.put(move.getTo(), new Piece(move.getSide(), move.getResult()));
         return new Board(newBoardState);
     }
 

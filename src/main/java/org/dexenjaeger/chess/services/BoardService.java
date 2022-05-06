@@ -13,7 +13,9 @@ import org.dexenjaeger.chess.models.board.Square;
 import org.dexenjaeger.chess.models.moves.Castle;
 import org.dexenjaeger.chess.models.moves.CastleType;
 import org.dexenjaeger.chess.models.moves.Move;
+import org.dexenjaeger.chess.models.moves.PromotionMove;
 import org.dexenjaeger.chess.models.moves.SimpleMove;
+import org.dexenjaeger.chess.models.moves.SinglePieceMove;
 import org.dexenjaeger.chess.models.pieces.Piece;
 import org.dexenjaeger.chess.models.pieces.PieceType;
 
@@ -63,16 +65,26 @@ public class BoardService {
         this.pieceService = pieceService;
     }
 
-    public Set<SimpleMove> getMoves(Board board, FileType f, RankType r) {
+    public Set<SinglePieceMove> getMoves(Board board, FileType f, RankType r) {
         return getMoves(board, new Square(f, r));
     }
 
-    public Set<SimpleMove> getMoves(Board board, Square sq) {
+    public Set<SinglePieceMove> getMoves(Board board, Square sq) {
         return board.getPiece(sq)
             .map(p -> pieceService
                 .getMoves(p, sq, board::getOccupyingSide)
                 .stream()
-                .filter(mo -> !isSideInCheck(board.movePiece(mo), mo.getSide()))
+                .filter(mo -> {
+                    Board testBoard;
+                    if (mo instanceof SimpleMove) {
+                        testBoard = board.movePiece((SimpleMove) mo);
+                    } else if (mo instanceof PromotionMove) {
+                        testBoard = board.promote((PromotionMove) mo);
+                    } else {
+                        throw new NotImplementedException(mo.getClass());
+                    }
+                    return !isSideInCheck(testBoard, mo.getSide());
+                })
                 .collect(Collectors.toSet())
             )
             .orElse(Set.of());
@@ -123,21 +135,24 @@ public class BoardService {
         return board.castle(move);
     }
 
-    private Board applySingleSimpleMove(Board board, SimpleMove move) {
+    private Board applySinglePieceMove(Board board, SinglePieceMove move) {
         if (!pieceService.isLegal(move, board::getOccupyingSide)) {
             throw new ServiceException(String.format("The move %s is not available on this board.\n%s", move, board));
         }
-        return board.movePiece(move);
+        if (move instanceof SimpleMove) {
+            return board.movePiece((SimpleMove) move);
+        }
+        return board.promote((PromotionMove) move);
     }
 
     private Board applySingleMove(Board board, Move move) {
-        if (move instanceof SimpleMove) {
-            return applySingleSimpleMove(board, (SimpleMove) move);
+        if (move instanceof SinglePieceMove) {
+            return applySinglePieceMove(board, (SinglePieceMove) move);
         }
         if (move instanceof Castle) {
             return applySingleCastle(board, (Castle) move);
         }
-        throw new ServiceException(String.format("Not implemented for class %s", move.getClass().getName()));
+        throw new NotImplementedException(move.getClass());
     }
 
     public Board applyMove(Board board, Move...moves) {

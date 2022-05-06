@@ -7,7 +7,7 @@ import org.dexenjaeger.chess.models.pieces.Piece;
 import org.dexenjaeger.chess.models.pieces.PieceType;
 
 @Value
-public class SimpleMove implements Move {
+public class SimpleMove implements SinglePieceMove {
     Square from;
     Square to;
     Piece piece;

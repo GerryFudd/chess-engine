@@ -1,16 +1,23 @@
 package org.dexenjaeger.chess.services.moves;
 
+import static org.dexenjaeger.chess.models.pieces.PieceType.BISHOP;
+import static org.dexenjaeger.chess.models.pieces.PieceType.KNIGHT;
 import static org.dexenjaeger.chess.models.pieces.PieceType.PAWN;
+import static org.dexenjaeger.chess.models.pieces.PieceType.QUEEN;
+import static org.dexenjaeger.chess.models.pieces.PieceType.ROOK;
 
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.dexenjaeger.chess.models.Side;
-import org.dexenjaeger.chess.models.board.FileType;
 import org.dexenjaeger.chess.models.board.RankType;
 import org.dexenjaeger.chess.models.board.Square;
+import org.dexenjaeger.chess.models.moves.PromotionMove;
 import org.dexenjaeger.chess.models.moves.SimpleMove;
+import org.dexenjaeger.chess.models.moves.SinglePieceMove;
+import org.dexenjaeger.chess.models.pieces.PieceType;
 
 public class PawnMoveExtractor implements MoveExtractor {
     private final Side side;
@@ -26,6 +33,10 @@ public class PawnMoveExtractor implements MoveExtractor {
 
     private int getDirection() {
         return side == Side.WHITE ? 1 : -1;
+    }
+
+    private RankType getPromotionRank() {
+        return side == Side.WHITE ? RankType.EIGHT : RankType.ONE;
     }
 
     private Optional<Square> nextForward(Square square) {
@@ -50,9 +61,16 @@ public class PawnMoveExtractor implements MoveExtractor {
         return squares;
     }
 
-    private Set<SimpleMove> forwardMoves(Square starting) {
+    private Stream<PieceType> promotionCandidates() {
+        return Stream.of(ROOK, KNIGHT, BISHOP, QUEEN);
+    }
+
+    private Set<SinglePieceMove> forwardMoves(Square starting) {
         return forwardSquares(starting).stream()
-            .map(sq -> new SimpleMove(starting, sq, PAWN, side))
+            .flatMap(sq -> sq.getRank() == getPromotionRank()
+                ? promotionCandidates().map(t -> new PromotionMove(side, sq.getFile(), t))
+                : Stream.of(new SimpleMove(starting, sq, PAWN, side))
+            )
             .collect(Collectors.toSet());
     }
 
@@ -60,26 +78,34 @@ public class PawnMoveExtractor implements MoveExtractor {
         return evaluateOccupyingSide.getOccupyingSide(target).filter(s -> s != side).isPresent();
     }
 
-    private Set<SimpleMove> capturingMoves(Square starting) {
-        Set<SimpleMove> moves = new HashSet<>();
+    private Set<SinglePieceMove> capturingMoves(Square starting) {
+        Set<SinglePieceMove> moves = new HashSet<>();
         starting.getRank()
             .shift(getDirection())
             .ifPresent(rank -> {
                 starting.getFile().shift(-1).map(f -> new Square(f, rank))
                     .filter(this::isCapture)
-                    .map(sq -> new SimpleMove(starting, sq, PAWN, side))
-                    .ifPresent(moves::add);
+                    .stream()
+                    .flatMap(sq -> sq.getRank() == getPromotionRank()
+                        ? promotionCandidates().map(t -> new PromotionMove(side, starting.getFile(), sq.getFile(), t))
+                        : Stream.of(new SimpleMove(starting, sq, PAWN, side))
+                    )
+                    .forEach(moves::add);
                 starting.getFile().shift(1).map(f -> new Square(f, rank))
                     .filter(this::isCapture)
-                    .map(sq -> new SimpleMove(starting, sq, PAWN, side))
-                    .ifPresent(moves::add);
+                    .stream()
+                    .flatMap(sq -> sq.getRank() == getPromotionRank()
+                        ? promotionCandidates().map(t -> new PromotionMove(side, starting.getFile(), sq.getFile(), t))
+                        : Stream.of(new SimpleMove(starting, sq, PAWN, side))
+                    )
+                    .forEach(moves::add);
             });
         return moves;
     }
 
     @Override
-    public Set<SimpleMove> moveSet(Square starting) {
-        Set<SimpleMove> moves = forwardMoves(starting);
+    public Set<SinglePieceMove> moveSet(Square starting) {
+        Set<SinglePieceMove> moves = forwardMoves(starting);
         moves.addAll(capturingMoves(starting));
         return moves;
     }

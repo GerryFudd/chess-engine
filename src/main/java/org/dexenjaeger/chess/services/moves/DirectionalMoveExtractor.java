@@ -6,6 +6,7 @@ import java.util.Set;
 import org.dexenjaeger.chess.models.Side;
 import org.dexenjaeger.chess.models.board.Square;
 import org.dexenjaeger.chess.models.moves.SimpleMove;
+import org.dexenjaeger.chess.models.moves.SinglePieceMove;
 import org.dexenjaeger.chess.models.pieces.PieceType;
 import org.dexenjaeger.chess.utils.ConversionUtil;
 import org.dexenjaeger.chess.utils.DirectionIterable;
@@ -27,8 +28,8 @@ public class DirectionalMoveExtractor implements MoveExtractor {
     }
 
     @Override
-    public Set<SimpleMove> moveSet(Square starting) {
-        Set<SimpleMove> moves = new HashSet<>();
+    public Set<SinglePieceMove> moveSet(Square starting) {
+        Set<SinglePieceMove> moves = new HashSet<>();
         for (Square square:new DirectionIterable(
             directions, starting, checkAvailability
         )) {

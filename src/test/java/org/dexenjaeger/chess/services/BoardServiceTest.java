@@ -1,8 +1,18 @@
 package org.dexenjaeger.chess.services;
 
+import static org.dexenjaeger.chess.models.Side.BLACK;
+import static org.dexenjaeger.chess.models.Side.WHITE;
+import static org.dexenjaeger.chess.models.pieces.PieceType.BISHOP;
+import static org.dexenjaeger.chess.models.pieces.PieceType.KING;
+import static org.dexenjaeger.chess.models.pieces.PieceType.KNIGHT;
+import static org.dexenjaeger.chess.models.pieces.PieceType.PAWN;
+import static org.dexenjaeger.chess.models.pieces.PieceType.QUEEN;
+import static org.dexenjaeger.chess.models.pieces.PieceType.ROOK;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import org.dexenjaeger.chess.models.Side;
@@ -10,6 +20,7 @@ import org.dexenjaeger.chess.models.board.Board;
 import org.dexenjaeger.chess.models.board.FileType;
 import org.dexenjaeger.chess.models.board.RankType;
 import org.dexenjaeger.chess.models.board.Square;
+import org.dexenjaeger.chess.models.moves.PromotionMove;
 import org.dexenjaeger.chess.models.moves.SimpleMove;
 import org.dexenjaeger.chess.models.pieces.Piece;
 import org.dexenjaeger.chess.models.pieces.PieceType;
@@ -17,7 +28,9 @@ import org.dexenjaeger.chess.utils.PgnFileUtil;
 import org.junit.jupiter.api.Test;
 
 class BoardServiceTest {
-    private final BoardService boardService = new BoardService(new PieceService());
+    private static final BoardService boardService = new BoardService(new PieceService());
+    private static final PgnService pgnService = new PgnService(boardService);
+
     public static void assertPiece(Board board, FileType x, RankType y, Piece expected) {
         Optional<Piece> p = board.getPiece(x, y);
         assertTrue(
@@ -37,9 +50,17 @@ class BoardServiceTest {
         );
     }
 
-    private Board nimzoIndianBoard() {
-        return new PgnService(boardService)
+    public static Board nimzoIndianBoard() {
+        return pgnService
             .boardFromPgn(PgnFileUtil.readOpening("NimzoIndianDefenseKasparov.pgn"));
+    }
+
+    public static Board simpleEndgameWithCFilePromotion() {
+        Map<Square, Piece> newBoardState = new HashMap<>();
+        newBoardState.put(new Square(FileType.C, RankType.SEVEN), new Piece(WHITE, PAWN));
+        newBoardState.put(new Square(FileType.D, RankType.SEVEN), new Piece(WHITE, KING));
+        newBoardState.put(new Square(FileType.B, RankType.SEVEN), new Piece(BLACK, KING));
+        return new Board(newBoardState);
     }
 
     @Test
@@ -72,6 +93,19 @@ class BoardServiceTest {
                 new SimpleMove(new Square(FileType.F, RankType.THREE), new Square(FileType.D, RankType.TWO), PieceType.KNIGHT, Side.WHITE)
             ),
             boardService.getMovesBySide(board, Side.WHITE)
+        );
+    }
+
+    @Test
+    void getMoves_pawnPromotion() {
+        assertEquals(
+            Set.of(
+                new PromotionMove(WHITE, FileType.C, ROOK),
+                new PromotionMove(WHITE, FileType.C, KNIGHT),
+                new PromotionMove(WHITE, FileType.C, BISHOP),
+                new PromotionMove(WHITE, FileType.C, QUEEN)
+            ),
+            boardService.getMoves(simpleEndgameWithCFilePromotion(), FileType.C, RankType.SEVEN)
         );
     }
 }

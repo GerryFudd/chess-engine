@@ -23,9 +23,9 @@ import org.dexenjaeger.chess.models.board.RankType;
 import org.dexenjaeger.chess.models.board.Square;
 import org.dexenjaeger.chess.models.moves.Castle;
 import org.dexenjaeger.chess.models.moves.CastleType;
+import org.dexenjaeger.chess.models.moves.PromotionMove;
 import org.dexenjaeger.chess.models.moves.SimpleMove;
 import org.dexenjaeger.chess.models.pieces.Piece;
-import org.dexenjaeger.chess.utils.PgnFileUtil;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -229,8 +229,7 @@ public class BoardServiceApplyMoveTest {
 
     @Test
     void applyMove_doesntAllowCheckAfterMove() {
-        Board nimzoIndianBoard = new PgnService(boardService)
-            .boardFromPgn(PgnFileUtil.readOpening("NimzoIndianDefenseKasparov.pgn"));
+        Board nimzoIndianBoard = BoardServiceTest.nimzoIndianBoard();
 
         // The Knight on c3 is pinned and can't move
         ServiceException e = assertThrows(ServiceException.class, () -> boardService.applyMove(
@@ -241,5 +240,14 @@ public class BoardServiceApplyMoveTest {
             "The move Nc3d5 is not allowed for WHITE because it would put WHITE in check.",
             e.getMessage()
         );
+    }
+
+    @Test
+    void applyMove_pawnPromotion() {
+        Board result = boardService.applyMove(
+            BoardServiceTest.simpleEndgameWithCFilePromotion(), new PromotionMove(WHITE, FileType.C, QUEEN)
+        );
+        assertPiece(result, FileType.C, RankType.EIGHT, new Piece(WHITE, QUEEN));
+        assertEmpty(result, FileType.C, RankType.SEVEN);
     }
 }

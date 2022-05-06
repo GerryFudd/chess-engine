@@ -10,7 +10,7 @@ import org.dexenjaeger.chess.models.moves.CastleType;
 import org.dexenjaeger.chess.models.moves.Move;
 import org.dexenjaeger.chess.models.moves.SimpleMove;
 import org.dexenjaeger.chess.models.pieces.Piece;
-import org.dexenjaeger.chess.services.ServiceException;
+import org.dexenjaeger.chess.services.NotImplementedException;
 
 public class Game {
 
@@ -36,9 +36,7 @@ public class Game {
         } else if (move instanceof Castle) {
             board.castle((Castle) move);
         } else {
-            throw new ServiceException(String.format(
-                "Not supported for move subtype %s", move.getClass().getName()
-            ));
+            throw new NotImplementedException(move.getClass());
         }
         moveHistory.add(move);
         return this;
