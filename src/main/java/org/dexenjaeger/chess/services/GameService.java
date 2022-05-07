@@ -1,5 +1,8 @@
 package org.dexenjaeger.chess.services;
 
+import static org.dexenjaeger.chess.models.Side.BLACK;
+import static org.dexenjaeger.chess.models.Side.WHITE;
+
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -28,25 +31,20 @@ public class GameService {
     }
 
     public Game startGame() {
-        Game result = new Game()
-            .addBoard(BoardService.standardGameBoard());
-
-        result.getCastlingRights().addAll(getCastlingTypes());
-
-        return result;
+        return new Game()
+            .addBoard(BoardService.standardGameBoard())
+            .addCastlingRights(getCastlingTypes());
     }
 
     public Side currentSide(Game game) {
-        if (game.getTurnHistory().isEmpty()) {
-            return Side.WHITE;
-        }
-        return game.getTurnHistory().getLast().getBlackMove().isPresent()
-            ? Side.WHITE
-            : Side.BLACK;
+        return game.lastTurn()
+            .filter(t -> t.getBlackMove().isEmpty())
+            .map(t -> BLACK)
+            .orElse(WHITE);
     }
 
     public Set<Move> getAvailableMoves(Game game) {
-        Board board = game.getBoardHistory().getLast();
+        Board board = game.currentBoard();
         Set<Move> result = boardService.getMovesBySide(
             board,
             currentSide(game)
@@ -63,24 +61,24 @@ public class GameService {
         Side side = currentSide(game);
         if (getAvailableMoves(game).isEmpty()) {
             if (boardService.isSideInCheck(
-                game.getBoardHistory().getLast(), side
+                game.currentBoard(), side
             )) {
-                return side == Side.WHITE ? GameStatus.BLACK_WON : GameStatus.WHITE_WON;
+                return side == WHITE ? GameStatus.BLACK_WON : GameStatus.WHITE_WON;
             }
             return GameStatus.STALEMATE;
         }
-        return side == Side.WHITE ? GameStatus.WHITE_TO_MOVE : GameStatus.BLACK_TO_MOVE;
+        return side == WHITE ? GameStatus.WHITE_TO_MOVE : GameStatus.BLACK_TO_MOVE;
     }
 
     public void applyTurn(Game game, Turn turn) {
         Board currentBoard = boardService.applyMove(
-            game.getBoardHistory().getLast(),
+            game.currentBoard(),
             turn.getWhiteMove()
         );
         game.addBoard(currentBoard);
         turn.getBlackMove().ifPresent(m -> game.addBoard(
             boardService.applyMove(currentBoard, m)
         ));
-        game.getTurnHistory().add(turn);
+        game.addTurn(turn);
     }
 }

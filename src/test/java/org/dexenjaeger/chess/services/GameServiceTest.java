@@ -1,5 +1,6 @@
 package org.dexenjaeger.chess.services;
 
+import static org.dexenjaeger.chess.models.GameStatus.WHITE_WON;
 import static org.dexenjaeger.chess.models.Side.WHITE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -24,7 +25,7 @@ class GameServiceTest {
         Game initializedGame = gameService.startGame();
         assertEquals(
             BoardService.standardGameBoard(),
-            initializedGame.getBoardHistory().getFirst()
+            initializedGame.currentBoard()
         );
         assertEquals(
             List.of(),
@@ -55,6 +56,15 @@ class GameServiceTest {
         assertTrue(
             availableMoves.contains(new Castle(WHITE, CastleType.SHORT)),
             "Available moves should include castling."
+        );
+    }
+
+    @Test
+    void getGameStatusTest_recognizesCheckmate() {
+        Game game = pgnService.gameFromPgn("1. e4 e5 2. Bc4 Nc6 3. Qf3 d6 4. Qf7");
+        assertEquals(
+            WHITE_WON,
+            gameService.getGameStatus(game)
         );
     }
 }

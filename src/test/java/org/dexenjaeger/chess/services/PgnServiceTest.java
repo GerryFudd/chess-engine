@@ -15,10 +15,13 @@ import org.dexenjaeger.chess.models.moves.CastleType;
 import org.dexenjaeger.chess.models.moves.SimpleMove;
 import org.dexenjaeger.chess.models.moves.Turn;
 import org.dexenjaeger.chess.models.pieces.PieceType;
+import org.dexenjaeger.chess.utils.Pair;
 import org.dexenjaeger.chess.utils.PgnFileUtil;
 import org.junit.jupiter.api.Test;
 
 class PgnServiceTest {
+    // The PGN service needs to read text files that follow this spec:
+    // http://www.saremba.de/chessgml/standards/pgn/pgn-complete.htm#c2
     private final ServiceProvider serviceProvider = new ServiceProvider();
     private final PgnService pgnService = serviceProvider.getInstance(PgnService.class);
     private final BoardService boardService = serviceProvider.getInstance(BoardService.class);
@@ -171,17 +174,53 @@ class PgnServiceTest {
         Game expectedGame = gameService.startGame();
         for (Turn expectedTurn:nimzoIndianTurns) {
             expectedGame.addBoard(boardService.applyMove(
-                expectedGame.getBoardHistory().getLast(), expectedTurn.getWhiteMove()
+                expectedGame.currentBoard(), expectedTurn.getWhiteMove()
             ));
             expectedTurn.getBlackMove()
                 .ifPresent(m -> expectedGame.addBoard(boardService.applyMove(
-                    expectedGame.getBoardHistory().getLast(), m
+                    expectedGame.currentBoard(), m
                 )));
-            expectedGame.getTurnHistory().add(expectedTurn);
+            expectedGame.addTurn(expectedTurn);
         }
         assertEquals(
             expectedGame,
             pgnService.gameFromPgn(PgnFileUtil.readOpening("NimzoIndianDefenseKasparov.pgn"))
+        );
+    }
+
+    @Test
+    void gameFromPgnTest_tags() {
+        // A PGN contains the following tags
+        // Event (the name of the tournament or match event)
+        // Site (the location of the event)
+        // Date (the starting date of the game)
+        // Round (the playing round ordinal of the game)
+        // White (the player of the white pieces)
+        // Black (the player of the black pieces)
+        // Result (the result of the game)
+        String withTags = "[Event \"This is the event description\"]\n"
+            + "[Foo \"This is the foo tag\"]\n"
+            + "[Site \"This is the site\"]\n"
+            + "[Black \"Calvin MacBrittishname\"]\n"
+            + "[Date \"2022.05.07\"]\n"
+            + "[White \"Smythe Smootnovitch\"]\n"
+            + "[Result \"1-0\"]\n"
+            + "[Round \"2.1.2\"]\n"
+            + "\n"
+            + "1. d4 d5";
+        assertEquals(
+            List.of(
+                // These tags need to be exported in this order
+                new Pair<>("Event", "This is the event description"),
+                new Pair<>("Site", "This is the site"),
+                new Pair<>("Date", "2022.05.07"),
+                new Pair<>("Round", "2.1.2"),
+                new Pair<>("White", "Smythe Smootnovitch"),
+                new Pair<>("Black", "Calvin MacBrittishname"),
+                new Pair<>("Result", "1-0"),
+                new Pair<>("Foo", "This is the foo tag")
+            ),
+            pgnService.gameFromPgn(withTags).getTags()
         );
     }
 }

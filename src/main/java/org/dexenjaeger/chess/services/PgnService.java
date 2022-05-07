@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import org.dexenjaeger.chess.config.Inject;
 import org.dexenjaeger.chess.models.Game;
 import org.dexenjaeger.chess.models.Side;
+import org.dexenjaeger.chess.models.TagType;
 import org.dexenjaeger.chess.models.board.Board;
 import org.dexenjaeger.chess.models.board.FileType;
 import org.dexenjaeger.chess.models.board.RankType;
@@ -24,6 +25,7 @@ public class PgnService {
     private static final Pattern movePattern = Pattern.compile("([a-h]|[1-8])?x?([a-h][1-8])");
     private static final Pattern turnPattern = Pattern.compile("(\\d+)\\.\\s*([^\\s]+)(?:\\s+([^\\s]+))?\\s*");
     private static final Pattern turnStartPattern = Pattern.compile("\\d+\\.");
+    private static final Pattern tagPattern = Pattern.compile("\\[(\\w+) \"([^\"]+)\"]");
 
     private final BoardService boardService;
     private final GameService gameService;
@@ -193,12 +195,22 @@ public class PgnService {
     public Game gameFromPgn(String pgn) {
         Game game = gameService.startGame();
         int cursor = 0;
+        Matcher tagMatcher = tagPattern.matcher(pgn);
+        while (tagMatcher.find()) {
+            cursor = tagMatcher.end();
+            String tagLabel = tagMatcher.group(1);
+            TagType.fromLabel(tagLabel)
+                .ifPresentOrElse(
+                    tagType -> game.addTag(tagType, tagMatcher.group(2)),
+                    () -> game.addTag(tagLabel, tagMatcher.group(2))
+                );
+        }
         Matcher turnStartMatcher = turnStartPattern.matcher(pgn);
         while (turnStartMatcher.find(cursor)) {
             cursor = turnStartMatcher.end();
             gameService.applyTurn(game, fromPgnTurn(
                 pgn.substring(turnStartMatcher.start()),
-                game.getBoardHistory().getLast()
+                game.currentBoard()
             ));
         }
         return game;
@@ -209,6 +221,6 @@ public class PgnService {
     }
 
     public Board boardFromPgn(String pgn) {
-        return gameFromPgn(pgn).getBoardHistory().getLast();
+        return gameFromPgn(pgn).currentBoard();
     }
 }
