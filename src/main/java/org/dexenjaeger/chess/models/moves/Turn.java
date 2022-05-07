@@ -13,13 +13,31 @@ import lombok.ToString;
 public class Turn {
     @Getter
     private final int turnNumber;
+
     @Getter
     private final Move whiteMove;
+
     @Setter
     private Move blackMove;
 
+    @Getter
+    @Setter
+    private String whiteMoveCommentary;
+
+    @Getter
+    @Setter
+    private String blackMoveCommentary;
+
     public Turn(int turnNumber, Move whiteMove) {
-        this(turnNumber, whiteMove, null);
+        this(turnNumber, whiteMove, null, null, null);
+    }
+
+    public Turn(int turnNumber, Move whiteMove, String whiteMoveCommentary) {
+        this(turnNumber, whiteMove, null, whiteMoveCommentary, null);
+    }
+
+    public Turn(int turnNumber, Move whiteMove, Move blackMove) {
+        this(turnNumber, whiteMove, blackMove, null, null);
     }
 
     public Optional<Move> getBlackMove() {

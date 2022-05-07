@@ -22,10 +22,70 @@ import org.dexenjaeger.chess.models.pieces.PieceType;
 import org.dexenjaeger.chess.utils.ConversionUtil;
 
 public class PgnService {
+    // 8.2: Movetext section
+    // The movetext section is composed of chess moves, move number indications, optional
+    // annotations, and a single concluding game termination marker.
+    // Because illegal moves are not real chess moves, they are not permitted in PGN
+    // movetext. They may appear in commentary, however. One would hope that illegal moves
+    // are relatively rare in games worthy of recording.
+    // TODO: match movetext that includes annotations and the game termination marker.
+
+    // The below regex matches
+    //   - an optional character indicating either a starting file or a rank followed by
+    //   - an optional x to indicate a capture followed by
+    //   - a file indicating character followed by
+    //   - a rank indicating character.
+    // This regex captures the optional starting location indicator and the destination square
+    // rank and file indicators.
     private static final Pattern movePattern = Pattern.compile("([a-h]|[1-8])?x?([a-h][1-8])");
-    private static final Pattern turnPattern = Pattern.compile("(\\d+)\\.\\s*([^\\s]+)(?:\\s+([^\\s]+))?\\s*");
-    private static final Pattern turnStartPattern = Pattern.compile("\\d+\\.");
-    private static final Pattern tagPattern = Pattern.compile("\\[(\\w+) \"([^\"]+)\"]");
+
+    // 8.2.2: Movetext move number indications
+    // A move number indication is composed of one or more adjacent digits (an integer token)
+    // followed by zero or more periods. The integer portion of the indication gives the
+    // move number of the immediately following white move (if present) and also the
+    // immediately following black move (if present).
+    // 8.2.2.1: Import format move number indications
+    // PGN import format does not require move number indications. It does not prohibit
+    // superfluous move number indications anywhere in the movetext as long as the move
+    // numbers are correct.
+    // TODO: handle PGN imports that omit move number indicators
+    // PGN import format move number indications may have zero or more period characters
+    // following the digit sequence that gives the move number; one or more white space
+    // characters may appear between the digit sequence and the period(s).
+
+    // The below regex for a turn number will match
+    //   - a number that is not preceded by letters or "-" followed by
+    //   - zero or more whitespace characters followed by
+    //   - zero or more periods followed by
+    //   - one or more white space characters.
+    private static final Pattern turnPattern = Pattern.compile("(?<![\\w\\-])(\\d+)\\s*\\.*\\s+([^\\s]+)(?:\\s+([^\\s]+))?\\s*");
+    private static final Pattern turnStartPattern = Pattern.compile("(?<![\\w\\-])\\d+\\s*\\.*\\s+");
+
+    // 8.1: Tag pair section
+    // The tag pair section is composed of a series of zero or more tag pairs.
+    // A tag pair is composed of four consecutive tokens:
+    //   - a left bracket token,
+    //   - a symbol token,
+    //   - a string token, and
+    //   - a right bracket token.
+    // The symbol token is the tag name and the string token is the tag value associated with
+    // the tag name.
+    // For PGN import format, there may be zero or more white space characters between any
+    // adjacent pair of tokens in a tag pair.
+    // PGN import format may have multiple tag pairs on the same line and may even have a tag
+    // pair spanning more than a single line.
+    // TODO: determine whether newlines may appear within the text token in the import format.
+
+    // The following regex matches
+    //   - a left bracket followed by
+    //   - zero or more whitespace characters followed by
+    //   - one or more letters followed by
+    //   - zero or more whitespace characters followed by
+    //   - a series of characters surrounded by quotation marks followed by
+    //   - zero or more whitespace characters followed by
+    //   - a right bracket.
+    // It captures the "symbol token" and the "string token".
+    private static final Pattern tagPattern = Pattern.compile("\\[(\\w+)\\s*\"(.+)\"\\s*]");
 
     private final BoardService boardService;
     private final GameService gameService;
