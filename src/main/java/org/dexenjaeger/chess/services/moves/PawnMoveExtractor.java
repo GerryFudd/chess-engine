@@ -14,9 +14,9 @@ import java.util.stream.Stream;
 import org.dexenjaeger.chess.models.Side;
 import org.dexenjaeger.chess.models.board.RankType;
 import org.dexenjaeger.chess.models.board.Square;
+import org.dexenjaeger.chess.models.moves.NormalMove;
 import org.dexenjaeger.chess.models.moves.PromotionMove;
 import org.dexenjaeger.chess.models.moves.SimpleMove;
-import org.dexenjaeger.chess.models.moves.SinglePieceMove;
 import org.dexenjaeger.chess.models.pieces.PieceType;
 
 public class PawnMoveExtractor implements MoveExtractor {
@@ -70,7 +70,7 @@ public class PawnMoveExtractor implements MoveExtractor {
         return Stream.of(ROOK, KNIGHT, BISHOP, QUEEN);
     }
 
-    private Set<SinglePieceMove> forwardMoves(Square starting) {
+    private Set<NormalMove> forwardMoves(Square starting) {
         return forwardSquares(starting).stream()
             .flatMap(sq -> sq.getRank() == getPromotionRank()
                 ? promotionCandidates().map(t -> new PromotionMove(side, sq.getFile(), t))
@@ -83,8 +83,8 @@ public class PawnMoveExtractor implements MoveExtractor {
         return evaluateOccupyingSide.getOccupyingSide(target).filter(s -> s != side).isPresent();
     }
 
-    private Set<SinglePieceMove> capturingMoves(Square starting) {
-        Set<SinglePieceMove> moves = new HashSet<>();
+    private Set<NormalMove> capturingMoves(Square starting) {
+        Set<NormalMove> moves = new HashSet<>();
         starting.getRank()
             .shift(getDirection())
             .ifPresent(rank -> {
@@ -109,8 +109,8 @@ public class PawnMoveExtractor implements MoveExtractor {
     }
 
     @Override
-    public Set<SinglePieceMove> moveSet(Square starting) {
-        Set<SinglePieceMove> moves = forwardMoves(starting);
+    public Set<NormalMove> moveSet(Square starting) {
+        Set<NormalMove> moves = forwardMoves(starting);
         moves.addAll(capturingMoves(starting));
         return moves;
     }

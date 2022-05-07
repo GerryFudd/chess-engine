@@ -13,7 +13,9 @@ import org.dexenjaeger.chess.models.board.RankType;
 import org.dexenjaeger.chess.models.board.Square;
 import org.dexenjaeger.chess.models.moves.Castle;
 import org.dexenjaeger.chess.models.moves.CastleType;
+import org.dexenjaeger.chess.models.moves.EnPassantCapture;
 import org.dexenjaeger.chess.models.moves.Move;
+import org.dexenjaeger.chess.models.moves.NormalMove;
 import org.dexenjaeger.chess.models.moves.PromotionMove;
 import org.dexenjaeger.chess.models.moves.SimpleMove;
 import org.dexenjaeger.chess.models.moves.SinglePieceMove;
@@ -67,11 +69,11 @@ public class BoardService {
         this.pieceService = pieceService;
     }
 
-    public Set<SinglePieceMove> getMoves(Board board, FileType f, RankType r) {
+    public Set<NormalMove> getMoves(Board board, FileType f, RankType r) {
         return getMoves(board, new Square(f, r));
     }
 
-    public Set<SinglePieceMove> getMoves(Board board, Square sq) {
+    public Set<NormalMove> getMoves(Board board, Square sq) {
         return board.getPiece(sq)
             .map(p -> pieceService
                 .getMoves(p, sq, board::getOccupyingSide)
@@ -110,7 +112,7 @@ public class BoardService {
             .isPresent();
     }
 
-    public boolean isLegal(Board board, Castle move) {
+    private boolean isLegalCastle(Board board, Castle move) {
         RankType rank = move.getSide() == Side.WHITE ? RankType.ONE : RankType.EIGHT;
         Set<FileType> middleFiles = move.getType() == CastleType.LONG
             ? Set.of(FileType.B, FileType.C, FileType.D)
@@ -122,6 +124,37 @@ public class BoardService {
             return false;
         }
         return hasPiece(board, FileType.E, rank, new Piece(move.getSide(), PieceType.KING));
+    }
+
+    private boolean isLegalEnPassant(Board board, EnPassantCapture move) {
+        if (board.getPiece(move.getTo()).isPresent()) {
+            return false;
+        }
+        if (board.getPiece(move.getCapturedSquare())
+            .filter(p -> p.equals(new Piece(move.getSide().other(), PieceType.PAWN)))
+            .isEmpty()) {
+            return false;
+        }
+        return board.getPiece(move.getFrom())
+            .filter(p -> p.equals(move.getPiece()))
+            .isPresent();
+    }
+
+    private boolean isLegalNormal(Board board, NormalMove move) {
+        return pieceService.isLegal(move, board::getOccupyingSide);
+    }
+
+    public boolean isLegal(Board board, Move move) {
+        if (move instanceof NormalMove) {
+            return isLegalNormal(board, (NormalMove) move);
+        }
+        if (move instanceof Castle) {
+            return isLegalCastle(board, (Castle) move);
+        }
+        if (move instanceof EnPassantCapture) {
+            return isLegalEnPassant(board, (EnPassantCapture) move);
+        }
+        throw new NotImplementedException(move.getClass());
     }
 
     public boolean isSideInCheck(Board board, Side side) {
@@ -138,13 +171,20 @@ public class BoardService {
     }
 
     private Board applySinglePieceMove(Board board, SinglePieceMove move) {
-        if (!pieceService.isLegal(move, board::getOccupyingSide)) {
+        if (!isLegal(board, move)) {
             throw new ServiceException(String.format("The move %s is not available on this board.\n%s", move, board));
         }
         if (move instanceof SimpleMove) {
             return board.movePiece((SimpleMove) move);
         }
-        return board.promote((PromotionMove) move);
+        if (move instanceof PromotionMove) {
+            return board.promote((PromotionMove) move);
+        }
+        if (move instanceof EnPassantCapture) {
+            return board.captureEnPassant((EnPassantCapture) move);
+        }
+
+        throw new NotImplementedException(move.getClass());
     }
 
     private Board applySingleMove(Board board, Move move) {

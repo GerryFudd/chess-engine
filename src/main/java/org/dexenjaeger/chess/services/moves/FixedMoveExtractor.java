@@ -7,8 +7,8 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import org.dexenjaeger.chess.models.Side;
 import org.dexenjaeger.chess.models.board.Square;
+import org.dexenjaeger.chess.models.moves.NormalMove;
 import org.dexenjaeger.chess.models.moves.SimpleMove;
-import org.dexenjaeger.chess.models.moves.SinglePieceMove;
 import org.dexenjaeger.chess.models.pieces.PieceType;
 import org.dexenjaeger.chess.utils.Pair;
 
@@ -31,7 +31,7 @@ public class FixedMoveExtractor implements MoveExtractor {
     }
 
     @Override
-    public Set<SinglePieceMove> moveSet(Square starting) {
+    public Set<NormalMove> moveSet(Square starting) {
 
         return fixedMoves.stream()
             .map(

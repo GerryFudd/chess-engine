@@ -23,6 +23,7 @@ import org.dexenjaeger.chess.models.board.RankType;
 import org.dexenjaeger.chess.models.board.Square;
 import org.dexenjaeger.chess.models.moves.Castle;
 import org.dexenjaeger.chess.models.moves.CastleType;
+import org.dexenjaeger.chess.models.moves.EnPassantCapture;
 import org.dexenjaeger.chess.models.moves.PromotionMove;
 import org.dexenjaeger.chess.models.moves.SimpleMove;
 import org.dexenjaeger.chess.models.pieces.Piece;
@@ -251,5 +252,15 @@ public class BoardServiceApplyMoveTest {
         );
         assertPiece(result, FileType.C, RankType.EIGHT, new Piece(WHITE, QUEEN));
         assertEmpty(result, FileType.C, RankType.SEVEN);
+    }
+
+    @Test
+    void applyMove_enPassantCapture() {
+        Board result = boardService.applyMove(
+            BoardServiceTest.simpleEndgameWithEnPassantConfiguration(),
+            new EnPassantCapture(WHITE, FileType.C, FileType.B)
+        );
+        assertPiece(result, FileType.B, RankType.SIX, new Piece(WHITE, PAWN));
+        assertEmpty(result, FileType.B, RankType.FIVE);
     }
 }

@@ -11,7 +11,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.dexenjaeger.chess.models.board.Square;
-import org.dexenjaeger.chess.models.moves.SinglePieceMove;
+import org.dexenjaeger.chess.models.moves.NormalMove;
 import org.dexenjaeger.chess.models.pieces.Piece;
 import org.dexenjaeger.chess.services.moves.CheckAvailability;
 import org.dexenjaeger.chess.services.moves.DirectionalMoveExtractor;
@@ -90,7 +90,7 @@ public class PieceService {
         }
     }
 
-    public Set<SinglePieceMove> getMoves(
+    public Set<NormalMove> getMoves(
         Piece piece,
         Square starting,
         EvaluateOccupyingSide evaluateOccupyingSide
@@ -98,7 +98,7 @@ public class PieceService {
         return getMoveExtractor(piece, evaluateOccupyingSide).moveSet(starting);
     }
 
-    public boolean isLegal(SinglePieceMove move, EvaluateOccupyingSide evaluateOccupyingSide) {
+    public boolean isLegal(NormalMove move, EvaluateOccupyingSide evaluateOccupyingSide) {
         return getMoveExtractor(move.getPiece(), evaluateOccupyingSide)
             .canMove(move.getFrom(), move.getTo());
     }

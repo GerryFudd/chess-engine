@@ -10,7 +10,7 @@ import org.dexenjaeger.chess.models.pieces.Piece;
 import org.dexenjaeger.chess.models.pieces.PieceType;
 
 @EqualsAndHashCode
-public class PromotionMove implements SinglePieceMove {
+public class PromotionMove implements NormalMove {
     @Getter
     private final Side side;
     private final FileType fileFrom;

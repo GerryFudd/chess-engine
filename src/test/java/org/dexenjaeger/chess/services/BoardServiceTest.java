@@ -73,6 +73,17 @@ class BoardServiceTest {
         return new Board(newBoardState);
     }
 
+    public static Board simpleEndgameWithEnPassantConfiguration() {
+        Map<Square, Piece> newBoardState = new HashMap<>();
+        newBoardState.put(new Square(FileType.C, RankType.FIVE), new Piece(WHITE, PAWN));
+        newBoardState.put(new Square(FileType.D, RankType.FIVE), new Piece(WHITE, KING));
+        newBoardState.put(new Square(FileType.B, RankType.FIVE), new Piece(BLACK, PAWN));
+        newBoardState.put(new Square(FileType.D, RankType.SEVEN), new Piece(BLACK, PAWN));
+        newBoardState.put(new Square(FileType.C, RankType.SIX), new Piece(BLACK, KNIGHT));
+        newBoardState.put(new Square(FileType.D, RankType.EIGHT), new Piece(BLACK, KING));
+        return new Board(newBoardState);
+    }
+
     @Test
     void getMoves_pinnedPiece() {
         Board board = nimzoIndianBoard();
