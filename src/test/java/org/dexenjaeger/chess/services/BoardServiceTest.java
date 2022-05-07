@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import org.dexenjaeger.chess.config.ServiceProvider;
 import org.dexenjaeger.chess.models.Side;
 import org.dexenjaeger.chess.models.board.Board;
 import org.dexenjaeger.chess.models.board.FileType;
@@ -28,8 +29,7 @@ import org.dexenjaeger.chess.utils.PgnFileUtil;
 import org.junit.jupiter.api.Test;
 
 class BoardServiceTest {
-    private static final BoardService boardService = new BoardService(new PieceService());
-    private static final PgnService pgnService = new PgnService(boardService);
+    public static final ServiceProvider serviceProvider = new ServiceProvider();
 
     public static void assertPiece(Board board, FileType x, RankType y, Piece expected) {
         Optional<Piece> p = board.getPiece(x, y);
@@ -51,7 +51,7 @@ class BoardServiceTest {
     }
 
     public static Board nimzoIndianBoard() {
-        return pgnService
+        return serviceProvider.getInstance(PgnService.class)
             .boardFromPgn(PgnFileUtil.readOpening("NimzoIndianDefenseKasparov.pgn"));
     }
 
@@ -70,17 +70,19 @@ class BoardServiceTest {
         // The knight on C3 is pinned
         assertEquals(
             Set.of(),
-            boardService.getMoves(board, FileType.C, RankType.THREE)
+            serviceProvider.getInstance(BoardService.class)
+                .getMoves(board, FileType.C, RankType.THREE)
         );
     }
 
     @Test
     void getMovesForSide_inCheck() {
-        Board board = boardService.applyMove(
-            nimzoIndianBoard(),
-            new SimpleMove(new Square(FileType.D, RankType.ONE), new Square(FileType.C, RankType.TWO), PieceType.QUEEN, Side.WHITE),
-            new SimpleMove(new Square(FileType.B, RankType.FOUR), new Square(FileType.C, RankType.THREE), PieceType.BISHOP, Side.BLACK)
-        );
+        Board board = serviceProvider.getInstance(BoardService.class)
+            .applyMove(
+                nimzoIndianBoard(),
+                new SimpleMove(new Square(FileType.D, RankType.ONE), new Square(FileType.C, RankType.TWO), PieceType.QUEEN, Side.WHITE),
+                new SimpleMove(new Square(FileType.B, RankType.FOUR), new Square(FileType.C, RankType.THREE), PieceType.BISHOP, Side.BLACK)
+            );
 
         // White is in check and must address this
         assertEquals(
@@ -92,7 +94,7 @@ class BoardServiceTest {
                 new SimpleMove(new Square(FileType.C, RankType.ONE), new Square(FileType.D, RankType.TWO), PieceType.BISHOP, Side.WHITE),
                 new SimpleMove(new Square(FileType.F, RankType.THREE), new Square(FileType.D, RankType.TWO), PieceType.KNIGHT, Side.WHITE)
             ),
-            boardService.getMovesBySide(board, Side.WHITE)
+            serviceProvider.getInstance(BoardService.class).getMovesBySide(board, Side.WHITE)
         );
     }
 
@@ -105,7 +107,9 @@ class BoardServiceTest {
                 new PromotionMove(WHITE, FileType.C, BISHOP),
                 new PromotionMove(WHITE, FileType.C, QUEEN)
             ),
-            boardService.getMoves(simpleEndgameWithCFilePromotion(), FileType.C, RankType.SEVEN)
+            serviceProvider
+                .getInstance(BoardService.class)
+                .getMoves(simpleEndgameWithCFilePromotion(), FileType.C, RankType.SEVEN)
         );
     }
 }

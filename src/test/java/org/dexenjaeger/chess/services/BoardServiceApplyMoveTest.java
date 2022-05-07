@@ -32,7 +32,9 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
 
 public class BoardServiceApplyMoveTest {
-    private final BoardService boardService = new BoardService(new PieceService());
+    private final BoardService boardService = BoardServiceTest
+        .serviceProvider
+        .getInstance(BoardService.class);
 
     @Test
     void applyMoveTest_doesntMutateBoard() {

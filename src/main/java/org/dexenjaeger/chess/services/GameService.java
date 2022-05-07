@@ -1,6 +1,7 @@
 package org.dexenjaeger.chess.services;
 
 import java.util.Set;
+import org.dexenjaeger.chess.config.Inject;
 import org.dexenjaeger.chess.models.Game;
 import org.dexenjaeger.chess.models.Side;
 import org.dexenjaeger.chess.models.moves.Castle;
@@ -10,6 +11,7 @@ import org.dexenjaeger.chess.models.moves.Move;
 public class GameService {
     private final BoardService boardService;
 
+    @Inject
     public GameService(BoardService boardService) {
         this.boardService = boardService;
     }

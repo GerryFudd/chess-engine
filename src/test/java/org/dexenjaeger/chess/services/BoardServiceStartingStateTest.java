@@ -23,7 +23,8 @@ import org.dexenjaeger.chess.models.pieces.Piece;
 import org.junit.jupiter.api.Test;
 
 public class BoardServiceStartingStateTest {
-    private final BoardService boardService = new BoardService(new PieceService());
+    private final BoardService boardService = BoardServiceTest.serviceProvider
+        .getInstance(BoardService.class);
 
     @Test
     void standardGameBoard_hasCorrectPieces() {

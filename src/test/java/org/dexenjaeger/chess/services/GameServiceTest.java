@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.List;
 import java.util.Set;
+import org.dexenjaeger.chess.config.ServiceProvider;
 import org.dexenjaeger.chess.models.Game;
 import org.dexenjaeger.chess.models.Side;
 import org.dexenjaeger.chess.models.moves.Castle;
@@ -13,8 +14,8 @@ import org.dexenjaeger.chess.models.moves.Move;
 import org.junit.jupiter.api.Test;
 
 class GameServiceTest {
-    private final BoardService boardService = new BoardService(new PieceService());
-    private final GameService gameService = new GameService(boardService);
+    private final ServiceProvider serviceProvider = new ServiceProvider();
+    private final GameService gameService = serviceProvider.getInstance(GameService.class);
 
     @Test
     void startGameTest() {

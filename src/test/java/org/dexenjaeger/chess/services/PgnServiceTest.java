@@ -3,6 +3,7 @@ package org.dexenjaeger.chess.services;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.List;
+import org.dexenjaeger.chess.config.ServiceProvider;
 import org.dexenjaeger.chess.models.Side;
 import org.dexenjaeger.chess.models.board.Board;
 import org.dexenjaeger.chess.models.board.FileType;
@@ -17,7 +18,7 @@ import org.dexenjaeger.chess.utils.PgnFileUtil;
 import org.junit.jupiter.api.Test;
 
 class PgnServiceTest {
-    private final PgnService pgnService = new PgnService(new BoardService(new PieceService()));
+    private final PgnService pgnService = new ServiceProvider().getInstance(PgnService.class);
 
     @Test
     void toPgnMove_simpleOpeningPawnMove() {

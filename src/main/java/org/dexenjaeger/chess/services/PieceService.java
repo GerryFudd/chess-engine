@@ -86,10 +86,7 @@ public class PieceService {
                     checkAvailability
                 );
             default:
-                throw new ServiceException(String.format(
-                    "Not implemented for piece type %s",
-                    piece.getType()
-                ));
+                throw new NotImplementedException(piece.getType());
         }
     }
 

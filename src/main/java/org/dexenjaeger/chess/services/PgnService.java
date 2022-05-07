@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import org.dexenjaeger.chess.config.Inject;
 import org.dexenjaeger.chess.models.Side;
 import org.dexenjaeger.chess.models.board.Board;
 import org.dexenjaeger.chess.models.board.FileType;
@@ -27,6 +28,7 @@ public class PgnService {
 
     private final BoardService boardService;
 
+    @Inject
     public PgnService(BoardService boardService) {
         this.boardService = boardService;
     }

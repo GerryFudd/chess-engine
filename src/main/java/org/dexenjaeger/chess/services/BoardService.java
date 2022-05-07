@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.dexenjaeger.chess.config.Inject;
 import org.dexenjaeger.chess.models.Side;
 import org.dexenjaeger.chess.models.board.Board;
 import org.dexenjaeger.chess.models.board.FileType;
@@ -61,6 +62,7 @@ public class BoardService {
 
     private final PieceService pieceService;
 
+    @Inject
     public BoardService(PieceService pieceService) {
         this.pieceService = pieceService;
     }
