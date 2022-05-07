@@ -30,6 +30,8 @@ import org.junit.jupiter.api.Test;
 
 class BoardServiceTest {
     public static final ServiceProvider serviceProvider = new ServiceProvider();
+    private final BoardService boardService = serviceProvider.getInstance(BoardService.class);
+    private static final PgnService pgnService = serviceProvider.getInstance(PgnService.class);
 
     public static void assertPiece(Board board, FileType x, RankType y, Piece expected) {
         Optional<Piece> p = board.getPiece(x, y);
@@ -51,7 +53,7 @@ class BoardServiceTest {
     }
 
     public static Board nimzoIndianBoard() {
-        return serviceProvider.getInstance(PgnService.class)
+        return pgnService
             .boardFromPgn(PgnFileUtil.readOpening("NimzoIndianDefenseKasparov.pgn"));
     }
 
@@ -63,6 +65,14 @@ class BoardServiceTest {
         return new Board(newBoardState);
     }
 
+    public static Board simpleEndgameWithCFilePawn() {
+        Map<Square, Piece> newBoardState = new HashMap<>();
+        newBoardState.put(new Square(FileType.C, RankType.SIX), new Piece(WHITE, PAWN));
+        newBoardState.put(new Square(FileType.D, RankType.SIX), new Piece(WHITE, KING));
+        newBoardState.put(new Square(FileType.D, RankType.EIGHT), new Piece(BLACK, KING));
+        return new Board(newBoardState);
+    }
+
     @Test
     void getMoves_pinnedPiece() {
         Board board = nimzoIndianBoard();
@@ -70,14 +80,13 @@ class BoardServiceTest {
         // The knight on C3 is pinned
         assertEquals(
             Set.of(),
-            serviceProvider.getInstance(BoardService.class)
-                .getMoves(board, FileType.C, RankType.THREE)
+            boardService.getMoves(board, FileType.C, RankType.THREE)
         );
     }
 
     @Test
     void getMovesForSide_inCheck() {
-        Board board = serviceProvider.getInstance(BoardService.class)
+        Board board = boardService
             .applyMove(
                 nimzoIndianBoard(),
                 new SimpleMove(new Square(FileType.D, RankType.ONE), new Square(FileType.C, RankType.TWO), PieceType.QUEEN, Side.WHITE),
@@ -94,7 +103,7 @@ class BoardServiceTest {
                 new SimpleMove(new Square(FileType.C, RankType.ONE), new Square(FileType.D, RankType.TWO), PieceType.BISHOP, Side.WHITE),
                 new SimpleMove(new Square(FileType.F, RankType.THREE), new Square(FileType.D, RankType.TWO), PieceType.KNIGHT, Side.WHITE)
             ),
-            serviceProvider.getInstance(BoardService.class).getMovesBySide(board, Side.WHITE)
+            boardService.getMovesBySide(board, Side.WHITE)
         );
     }
 
@@ -107,9 +116,24 @@ class BoardServiceTest {
                 new PromotionMove(WHITE, FileType.C, BISHOP),
                 new PromotionMove(WHITE, FileType.C, QUEEN)
             ),
-            serviceProvider
-                .getInstance(BoardService.class)
+            boardService
                 .getMoves(simpleEndgameWithCFilePromotion(), FileType.C, RankType.SEVEN)
+        );
+    }
+
+    @Test
+    void getMoves_pawnThatHasMoved() {
+        assertEquals(
+            Set.of(
+                new SimpleMove(
+                    new Square(FileType.C, RankType.SIX),
+                    new Square(FileType.C, RankType.SEVEN),
+                    PAWN, WHITE
+                )
+            ),
+            boardService.getMoves(
+                simpleEndgameWithCFilePawn(), FileType.C, RankType.SIX
+            )
         );
     }
 }

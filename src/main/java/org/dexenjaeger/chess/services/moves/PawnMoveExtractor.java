@@ -34,6 +34,9 @@ public class PawnMoveExtractor implements MoveExtractor {
     private int getDirection() {
         return side == Side.WHITE ? 1 : -1;
     }
+    private RankType startingRank() {
+        return side == Side.WHITE ? RankType.TWO : RankType.SEVEN;
+    }
 
     private RankType getPromotionRank() {
         return side == Side.WHITE ? RankType.EIGHT : RankType.ONE;
@@ -55,7 +58,9 @@ public class PawnMoveExtractor implements MoveExtractor {
         nextForward(starting)
             .flatMap(square -> {
                 squares.add(square);
-                return nextForward(square);
+                return starting.getRank() == startingRank()
+                    ? nextForward(square)
+                    : Optional.empty();
             })
             .ifPresent(squares::add);
         return squares;
