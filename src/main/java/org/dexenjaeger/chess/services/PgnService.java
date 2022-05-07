@@ -29,6 +29,30 @@ public class PgnService {
     // movetext. They may appear in commentary, however. One would hope that illegal moves
     // are relatively rare in games worthy of recording.
     // TODO: match movetext that includes annotations and the game termination marker.
+    // 8.2.3.3: Basic SAN move construction
+    // A basic SAN move is given by listing the moving piece letter (omitted for pawns)
+    // followed by the destination square. Capture moves are denoted by the lower case
+    // letter "x" immediately prior to the destination square; pawn captures include the
+    // file letter of the originating square of the capturing pawn immediately prior to
+    // the "x" character.
+    // SAN kingside castling is indicated by the sequence "O-O"; queenside castling is
+    // indicated by the sequence "O-O-O". Note that the upper case letter "O" is used, not
+    // the digit zero. The use of a zero character is not only incompatible with traditional
+    // text practices, but it can also confuse parsing algorithms which also have to
+    // understand about move numbers and game termination markers. Also note that the use
+    // of the letter "O" is consistent with the practice of having all chess move symbols
+    // start with a letter; also, it follows the convention that all non-pwn move symbols
+    // start with an upper case letter.
+    // En passant captures do not have any special notation; they are formed as if the
+    // captured pawn were on the capturing pawn's destination square. Pawn promotions
+    // are denoted by the equal sign "=" immediately following the destination square
+    // with a promoted piece letter (indicating one of knight, bishop, rook, or queen)
+    // immediately following the equal sign. As above, the piece letter is in upper case.
+    // TODO: parse pawn promotions
+
+    // The following are the castling indicators. They are strings rather than regex.
+    private static final String CASTLE_SHORT = "O-O";
+    private static final String CASTLE_LONG = "O-O-0";
 
     // The below regex matches
     //   - an optional character indicating either a starting file or a rank followed by
@@ -54,12 +78,12 @@ public class PgnService {
     // characters may appear between the digit sequence and the period(s).
 
     // The below regex for a turn number will match
-    //   - a number that is not preceded by letters or "-" followed by
+    //   - a number that is not preceded by letters followed by
     //   - zero or more whitespace characters followed by
     //   - zero or more periods followed by
     //   - one or more white space characters.
-    private static final Pattern turnPattern = Pattern.compile("(?<![\\w\\-])(\\d+)\\s*\\.*\\s+([^\\s]+)(?:\\s+([^\\s]+))?\\s*");
-    private static final Pattern turnStartPattern = Pattern.compile("(?<![\\w\\-])\\d+\\s*\\.*\\s+");
+    private static final Pattern turnPattern = Pattern.compile("(?<!\\w)(\\d+)\\s*\\.*\\s+([^\\s]+)(?:\\s+([^\\s]+))?\\s*");
+    private static final Pattern turnStartPattern = Pattern.compile("(?<!\\w)\\d+\\s*\\.*\\s+");
 
     // 8.1: Tag pair section
     // The tag pair section is composed of a series of zero or more tag pairs.
@@ -189,10 +213,10 @@ public class PgnService {
         if (pgnMove == null || pgnMove.length() == 0) {
             throw new ServiceException("A pgn move may not be empty.");
         }
-        if ("0-0".equals(pgnMove)) {
+        if (CASTLE_SHORT.equals(pgnMove)) {
             return new Castle(side, CastleType.SHORT);
         }
-        if ("0-0-0".equals(pgnMove)) {
+        if (CASTLE_LONG.equals(pgnMove)) {
             return new Castle(side, CastleType.LONG);
         }
 
