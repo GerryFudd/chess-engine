@@ -1,12 +1,12 @@
 package org.dexenjaeger.chess.services;
 
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.dexenjaeger.chess.config.Inject;
+import org.dexenjaeger.chess.models.Game;
 import org.dexenjaeger.chess.models.Side;
 import org.dexenjaeger.chess.models.board.Board;
 import org.dexenjaeger.chess.models.board.FileType;
@@ -19,7 +19,6 @@ import org.dexenjaeger.chess.models.moves.SimpleMove;
 import org.dexenjaeger.chess.models.moves.Turn;
 import org.dexenjaeger.chess.models.pieces.PieceType;
 import org.dexenjaeger.chess.utils.ConversionUtil;
-import org.dexenjaeger.chess.utils.Pair;
 
 public class PgnService {
     private static final Pattern movePattern = Pattern.compile("([a-h]|[1-8])?x?([a-h][1-8])");
@@ -27,10 +26,12 @@ public class PgnService {
     private static final Pattern turnStartPattern = Pattern.compile("\\d+\\.");
 
     private final BoardService boardService;
+    private final GameService gameService;
 
     @Inject
-    public PgnService(BoardService boardService) {
+    public PgnService(BoardService boardService, GameService gameService) {
         this.boardService = boardService;
+        this.gameService = gameService;
     }
 
     private String castleToPgnMove(Castle move) {
@@ -172,9 +173,6 @@ public class PgnService {
             .orElseThrow(() -> impossibleMoveException(pgnMove, side, board));
     }
 
-    public Turn fromPgnTurn(String pgnTurn) {
-        return fromPgnTurn(pgnTurn, BoardService.standardGameBoard());
-    }
     public Turn fromPgnTurn(String pgnTurn, Board board) {
         Matcher turnMatcher = turnPattern.matcher(pgnTurn);
         if (!turnMatcher.find()) {
@@ -192,42 +190,25 @@ public class PgnService {
         return new Turn(turnNumber, whiteMove, blackMove);
     }
 
-    public List<Turn> fromPgnTurnList(String pgnTurnList) {
-        return fromPgnTurnList(pgnTurnList, BoardService.standardGameBoard());
-    }
-
-    private Pair<Board, List<Turn>> allFromPgn(String pgn, Board board) {
+    public Game gameFromPgn(String pgn) {
+        Game game = gameService.startGame();
         int cursor = 0;
         Matcher turnStartMatcher = turnStartPattern.matcher(pgn);
-        LinkedList<Turn> turnList = new LinkedList<>();
-        Board currentBoard = board;
         while (turnStartMatcher.find(cursor)) {
             cursor = turnStartMatcher.end();
-            Turn currentTurn = fromPgnTurn(
+            gameService.applyTurn(game, fromPgnTurn(
                 pgn.substring(turnStartMatcher.start()),
-                currentBoard
-            );
-            currentBoard = boardService.applyMove(
-                currentBoard,
-                currentTurn.getWhiteMove()
-            );
-            if (currentTurn.getBlackMove().isPresent()) {
-                currentBoard = boardService.applyMove(currentBoard, currentTurn.getBlackMove().get());
-            }
-            turnList.add(currentTurn);
+                game.getBoardHistory().getLast()
+            ));
         }
-        return new Pair<>(currentBoard, turnList);
+        return game;
     }
 
-    public List<Turn> fromPgnTurnList(String pgnTurnList, Board board) {
-        return allFromPgn(pgnTurnList, board).getRight();
+    public List<Turn> fromPgnTurnList(String pgnTurnList) {
+        return gameFromPgn(pgnTurnList).getTurnHistory();
     }
 
     public Board boardFromPgn(String pgn) {
-        return boardFromPgn(pgn, BoardService.standardGameBoard());
-    }
-
-    public Board boardFromPgn(String pgn, Board board) {
-        return allFromPgn(pgn, board).getLeft();
+        return gameFromPgn(pgn).getBoardHistory().getLast();
     }
 }

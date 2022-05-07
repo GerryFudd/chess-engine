@@ -124,7 +124,7 @@ public class BoardService {
         return hasPiece(board, FileType.E, rank, new Piece(move.getSide(), PieceType.KING));
     }
 
-    private boolean isSideInCheck(Board board, Side side) {
+    public boolean isSideInCheck(Board board, Side side) {
         return board.getBySideAndType(side, PieceType.KING)
             .stream()
             .anyMatch(sq -> !getMovesBySideAndTarget(board, side.other(), sq).isEmpty());

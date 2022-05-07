@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.List;
 import org.dexenjaeger.chess.config.ServiceProvider;
+import org.dexenjaeger.chess.models.Game;
 import org.dexenjaeger.chess.models.Side;
 import org.dexenjaeger.chess.models.board.Board;
 import org.dexenjaeger.chess.models.board.FileType;
@@ -18,7 +19,10 @@ import org.dexenjaeger.chess.utils.PgnFileUtil;
 import org.junit.jupiter.api.Test;
 
 class PgnServiceTest {
-    private final PgnService pgnService = new ServiceProvider().getInstance(PgnService.class);
+    private final ServiceProvider serviceProvider = new ServiceProvider();
+    private final PgnService pgnService = serviceProvider.getInstance(PgnService.class);
+    private final BoardService boardService = serviceProvider.getInstance(BoardService.class);
+    private final GameService gameService = serviceProvider.getInstance(GameService.class);
 
     @Test
     void toPgnMove_simpleOpeningPawnMove() {
@@ -106,7 +110,7 @@ class PgnServiceTest {
                 new SimpleMove(new Square(FileType.D, RankType.TWO), new Square(FileType.D, RankType.FOUR), PieceType.PAWN, Side.WHITE),
                 new SimpleMove(new Square(FileType.G, RankType.EIGHT), new Square(FileType.F, RankType.SIX), PieceType.KNIGHT, Side.BLACK)
             ),
-            pgnService.fromPgnTurn("1. d4 Nf6")
+            pgnService.fromPgnTurn("1. d4 Nf6", BoardService.standardGameBoard())
         );
     }
 
@@ -139,32 +143,45 @@ class PgnServiceTest {
         );
     }
 
+    private final List<Turn> nimzoIndianTurns = List.of(
+        new Turn(
+            1,
+            new SimpleMove(new Square(FileType.D, RankType.TWO), new Square(FileType.D, RankType.FOUR), PieceType.PAWN, Side.WHITE),
+            new SimpleMove(new Square(FileType.G, RankType.EIGHT), new Square(FileType.F, RankType.SIX), PieceType.KNIGHT, Side.BLACK)
+        ),
+        new Turn(
+            2,
+            new SimpleMove(new Square(FileType.C, RankType.TWO), new Square(FileType.C, RankType.FOUR), PieceType.PAWN, Side.WHITE),
+            new SimpleMove(new Square(FileType.E, RankType.SEVEN), new Square(FileType.E, RankType.SIX), PieceType.PAWN, Side.BLACK)
+        ),
+        new Turn(
+            3,
+            new SimpleMove(new Square(FileType.B, RankType.ONE), new Square(FileType.C, RankType.THREE), PieceType.KNIGHT, Side.WHITE),
+            new SimpleMove(new Square(FileType.F, RankType.EIGHT), new Square(FileType.B, RankType.FOUR), PieceType.BISHOP, Side.BLACK)
+        ),
+        new Turn(
+            4,
+            new SimpleMove(new Square(FileType.G, RankType.ONE), new Square(FileType.F, RankType.THREE), PieceType.KNIGHT, Side.WHITE),
+            new Castle(Side.BLACK, CastleType.SHORT)
+        )
+    );
+
     @Test
-    void fromPgnTurnList_appliesNimzoIndian() {
+    void gameFromPgn() {
+        Game expectedGame = gameService.startGame();
+        for (Turn expectedTurn:nimzoIndianTurns) {
+            expectedGame.addBoard(boardService.applyMove(
+                expectedGame.getBoardHistory().getLast(), expectedTurn.getWhiteMove()
+            ));
+            expectedTurn.getBlackMove()
+                .ifPresent(m -> expectedGame.addBoard(boardService.applyMove(
+                    expectedGame.getBoardHistory().getLast(), m
+                )));
+            expectedGame.getTurnHistory().add(expectedTurn);
+        }
         assertEquals(
-            List.of(
-                new Turn(
-                    1,
-                    new SimpleMove(new Square(FileType.D, RankType.TWO), new Square(FileType.D, RankType.FOUR), PieceType.PAWN, Side.WHITE),
-                    new SimpleMove(new Square(FileType.G, RankType.EIGHT), new Square(FileType.F, RankType.SIX), PieceType.KNIGHT, Side.BLACK)
-                ),
-                new Turn(
-                    2,
-                    new SimpleMove(new Square(FileType.C, RankType.TWO), new Square(FileType.C, RankType.FOUR), PieceType.PAWN, Side.WHITE),
-                    new SimpleMove(new Square(FileType.E, RankType.SEVEN), new Square(FileType.E, RankType.SIX), PieceType.PAWN, Side.BLACK)
-                ),
-                new Turn(
-                    3,
-                    new SimpleMove(new Square(FileType.B, RankType.ONE), new Square(FileType.C, RankType.THREE), PieceType.KNIGHT, Side.WHITE),
-                    new SimpleMove(new Square(FileType.F, RankType.EIGHT), new Square(FileType.B, RankType.FOUR), PieceType.BISHOP, Side.BLACK)
-                ),
-                new Turn(
-                    4,
-                    new SimpleMove(new Square(FileType.G, RankType.ONE), new Square(FileType.F, RankType.THREE), PieceType.KNIGHT, Side.WHITE),
-                    new Castle(Side.BLACK, CastleType.SHORT)
-                )
-            ),
-            pgnService.fromPgnTurnList(PgnFileUtil.readOpening("NimzoIndianDefenseKasparov.pgn"))
+            expectedGame,
+            pgnService.gameFromPgn(PgnFileUtil.readOpening("NimzoIndianDefenseKasparov.pgn"))
         );
     }
 }
