@@ -1,6 +1,7 @@
 package org.dexenjaeger.chess.services;
 
 import static org.dexenjaeger.chess.models.GameStatus.WHITE_WON;
+import static org.dexenjaeger.chess.models.Side.BLACK;
 import static org.dexenjaeger.chess.models.Side.WHITE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -10,8 +11,10 @@ import java.util.Set;
 import org.dexenjaeger.chess.config.ServiceProvider;
 import org.dexenjaeger.chess.models.Game;
 import org.dexenjaeger.chess.models.Side;
+import org.dexenjaeger.chess.models.board.FileType;
 import org.dexenjaeger.chess.models.moves.Castle;
 import org.dexenjaeger.chess.models.moves.CastleType;
+import org.dexenjaeger.chess.models.moves.EnPassantCapture;
 import org.dexenjaeger.chess.models.moves.Move;
 import org.junit.jupiter.api.Test;
 
@@ -56,6 +59,26 @@ class GameServiceTest {
         assertTrue(
             availableMoves.contains(new Castle(WHITE, CastleType.SHORT)),
             "Available moves should include castling."
+        );
+    }
+
+    @Test
+    void getAvailableMovesTest_includesEnPassantForWhite() {
+        Game game = pgnService.gameFromPgn("1. d4 d5 2. c4 e6 3. Nc3 c6 4. c5 b5");
+        Set<Move> availableMoves = gameService.getAvailableMoves(game);
+        assertTrue(
+            availableMoves.contains(new EnPassantCapture(WHITE, FileType.C, FileType.B)),
+            "Available moves should include en passant captures."
+        );
+    }
+
+    @Test
+    void getAvailableMovesTest_includesEnPassantForBlack() {
+        Game game = pgnService.gameFromPgn("1. d4 d5 2. c4 e5 3. Nf3 e4 4. Nfd2 Nf6 5. f4");
+        Set<Move> availableMoves = gameService.getAvailableMoves(game);
+        assertTrue(
+            availableMoves.contains(new EnPassantCapture(BLACK, FileType.E, FileType.F)),
+            "Available moves should include en passant captures."
         );
     }
 

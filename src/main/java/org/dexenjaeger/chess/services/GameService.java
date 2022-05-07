@@ -3,7 +3,9 @@ package org.dexenjaeger.chess.services;
 import static org.dexenjaeger.chess.models.Side.BLACK;
 import static org.dexenjaeger.chess.models.Side.WHITE;
 
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.dexenjaeger.chess.config.Inject;
@@ -11,10 +13,16 @@ import org.dexenjaeger.chess.models.Game;
 import org.dexenjaeger.chess.models.GameStatus;
 import org.dexenjaeger.chess.models.Side;
 import org.dexenjaeger.chess.models.board.Board;
+import org.dexenjaeger.chess.models.board.RankType;
+import org.dexenjaeger.chess.models.board.Square;
 import org.dexenjaeger.chess.models.moves.Castle;
 import org.dexenjaeger.chess.models.moves.CastleType;
+import org.dexenjaeger.chess.models.moves.EnPassantCapture;
 import org.dexenjaeger.chess.models.moves.Move;
+import org.dexenjaeger.chess.models.moves.SinglePieceMove;
 import org.dexenjaeger.chess.models.moves.Turn;
+import org.dexenjaeger.chess.models.pieces.Piece;
+import org.dexenjaeger.chess.models.pieces.PieceType;
 
 public class GameService {
     private final BoardService boardService;
@@ -43,12 +51,56 @@ public class GameService {
             .orElse(WHITE);
     }
 
+    private Set<EnPassantCapture> enPassantCaptures(
+        Board board, Supplier<Optional<SinglePieceMove>> getPreviousMove, Side side
+    ) {
+        return getPreviousMove.get()
+            .filter(previous -> previous.getType() == PieceType.PAWN)
+            .filter(previous -> {
+                if (side == WHITE) {
+                    return previous.getFrom().getRank() == RankType.SEVEN
+                        && previous.getTo().getRank() == RankType.FIVE;
+                }
+                return previous.getFrom().getRank() == RankType.TWO
+                    && previous.getTo().getRank() == RankType.FOUR;
+            })
+            .stream()
+            .flatMap(previous -> Stream.concat(
+                    previous.getFrom().getFile().shift(-1).stream(),
+                    previous.getFrom().getFile().shift(1).stream()
+            )
+                .map(f -> new Square(f, previous.getTo().getRank()))
+                .filter(
+                    sq -> board
+                        .getPiece(sq)
+                        .filter(p -> p.equals(new Piece(side, PieceType.PAWN)))
+                        .isPresent()
+                )
+                .map(sq -> new EnPassantCapture(
+                    side, sq.getFile(), previous.getFrom().getFile()
+                )))
+            .collect(Collectors.toSet());
+    }
+
+    public Optional<Move> getLastMove(Game game) {
+        return game.lastTurn()
+            .map(t -> t.getBlackMove().orElse(t.getWhiteMove()));
+    }
+
     public Set<Move> getAvailableMoves(Game game) {
         Board board = game.currentBoard();
+        Side side = currentSide(game);
         Set<Move> result = boardService.getMovesBySide(
-            board,
-            currentSide(game)
+            board, side
         );
+
+        result.addAll(enPassantCaptures(
+            board,
+            () -> getLastMove(game)
+                .filter(m -> m instanceof SinglePieceMove)
+                .map(m -> (SinglePieceMove) m),
+            side
+        ));
 
         result.addAll(game.getCastlingRights().stream()
             .filter(c -> boardService.isLegal(board, c))
