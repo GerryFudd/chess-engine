@@ -49,10 +49,40 @@ public class PgnService {
     // with a promoted piece letter (indicating one of knight, bishop, rook, or queen)
     // immediately following the equal sign. As above, the piece letter is in upper case.
     // TODO: parse pawn promotions
+    // 8.2.3.4: Disambiguation
+    // In the case of ambiguities (multiple pieces of the same type moving to the same
+    // square), the first appropriate disambiguating step of the three following steps is
+    // taken:
+    //   - First, if the moving pieces can be distinguished by their originating files, the
+    //     originating file letter of the moving piece is inserted immediately after the
+    //     moving piece letter.
+    //   - Second (when the first step fails), if the moving pieces can be distinguished by
+    //     their originating ranks, the originating rank digit of the moving piece is
+    //     inserted immediately after the moving piece letter.
+    //   - Third (when both the first and the second steps fail), the two character square
+    //     coordinate of the originating square of the moving piece is inserted immediately
+    //     after the moving piece letter.
+    // Note that the above disambiguation is needed only to distinguish among moves of the
+    // same piece type to the same square; it is not used to distinguish among attacks of
+    // the same piece type to the same square. An example of this would be a position with
+    // two white knights, one on square c3 and one on square g1 and a vacant square e2 with
+    // White to move. Both knights attack square e2, and if both could legally move there,
+    // then a file disambiguation is needed; the (nonchecking) knight moves would be "Nce2"
+    // and "Nge2". However, if the white king were at square e1 and a black bishop were at
+    // square b4 with a vacant square d2 (thus an absolute pin of the white knight at square
+    // c3), then only one white knight (the one at square g1) could move to square e2: "Ne2".
+    // TODO: add a test case for this specific scenario where a second knight could move to a
+    //       square if it weren't in a pin.
 
     // The following are the castling indicators. They are strings rather than regex.
     private static final String CASTLE_SHORT = "O-O";
     private static final String CASTLE_LONG = "O-O-0";
+
+    // The specification for PGN notation includes a disambiguation step that begins, "when
+    // both the first and the second steps fail." The first and second steps could only fail
+    // if the two candidate pieces share a file and share a rank. This would place both
+    // pieces on the same square, which is impossible. For this reason I omit that
+    // disambiguation step.
 
     // The below regex matches
     //   - an optional character indicating either a starting file or a rank followed by
