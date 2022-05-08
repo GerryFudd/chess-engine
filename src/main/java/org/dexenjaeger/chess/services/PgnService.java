@@ -21,7 +21,7 @@ import org.dexenjaeger.chess.utils.OptionalsUtil;
 
 public class PgnService {
     // This service implements a parser for the spec outlined here:
-    // http://www.saremba.de/chessgml/standards/pgn/pgn-complete.htm#c2
+    // http://www.saremba.de/chessgml/standards/pgn/pgn-complete.htm
     // TODO: implement a FEN service that implements the spec in section 16
 
     // 8.2: Movetext section
