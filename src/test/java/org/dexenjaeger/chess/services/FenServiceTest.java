@@ -3,18 +3,29 @@ package org.dexenjaeger.chess.services;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import org.dexenjaeger.chess.config.ServiceProvider;
+import org.dexenjaeger.chess.models.Game;
 import org.dexenjaeger.chess.models.Side;
+import org.dexenjaeger.chess.models.board.Board;
 import org.dexenjaeger.chess.models.board.FileType;
 import org.dexenjaeger.chess.models.board.RankType;
 import org.dexenjaeger.chess.models.board.Square;
+import org.dexenjaeger.chess.models.moves.Castle;
+import org.dexenjaeger.chess.models.moves.CastleType;
+import org.dexenjaeger.chess.models.moves.Turn;
 import org.dexenjaeger.chess.models.pieces.Piece;
 import org.dexenjaeger.chess.models.pieces.PieceType;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 class FenServiceTest {
     private static final ServiceProvider serviceProvider = new ServiceProvider();
     private final FenService fenService = serviceProvider.getInstance(FenService.class);
+    private final PgnService pgnService = serviceProvider.getInstance(PgnService.class);
+    private final GameService gameService = serviceProvider.getInstance(GameService.class);
 
     private final Map<Square, Piece> firstRank = Map.of(
         new Square(FileType.A, RankType.ONE), new Piece(Side.WHITE, PieceType.ROOK),
@@ -122,7 +133,121 @@ class FenServiceTest {
     void readPieceLocations_startingPosition() {
         assertEquals(
             BoardService.standardGameBoard(),
-            fenService.readPieceLocations("rnbqkbnr / pppppppp / 8 / 8 / 8 / 8 / PPPPPPPP / RNBQKBNR")
+            fenService.readPieceLocations("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR")
+        );
+    }
+
+    @ParameterizedTest
+    @EnumSource(Side.class)
+    void readSide(Side side) {
+        assertEquals(
+            side,
+            fenService.readSide(side.getRepresentation())
+        );
+    }
+
+    @Test
+    void getCastlingRights_all() {
+        assertEquals(
+            Set.of(
+                new Castle(Side.WHITE, CastleType.SHORT),
+                new Castle(Side.WHITE, CastleType.LONG),
+                new Castle(Side.BLACK, CastleType.SHORT),
+                new Castle(Side.BLACK, CastleType.LONG)
+            ),
+            fenService.getCastlingRights("KQkq")
+        );
+    }
+
+    @Test
+    void getCastlingRights_none() {
+        assertEquals(
+            Set.of(),
+            fenService.getCastlingRights("-")
+        );
+    }
+
+    @Test
+    void getCastlingRights_whiteOnly() {
+        assertEquals(
+            Set.of(
+                new Castle(Side.WHITE, CastleType.SHORT),
+                new Castle(Side.WHITE, CastleType.LONG)
+            ),
+            fenService.getCastlingRights("QK")
+        );
+    }
+
+    @Test
+    void getCastlingRights_allButOne() {
+        assertEquals(
+            Set.of(
+                new Castle(Side.WHITE, CastleType.LONG),
+                new Castle(Side.BLACK, CastleType.SHORT),
+                new Castle(Side.BLACK, CastleType.LONG)
+            ),
+            fenService.getCastlingRights("Qqk")
+        );
+    }
+
+    @Test
+    void getEnPassantSquare_placeholder() {
+        assertEquals(
+            Optional.empty(),
+            fenService.getEnPassantSquare("-")
+        );
+    }
+
+    @Test
+    void getEnPassantSquare_validSquare() {
+        assertEquals(
+            Optional.of(new Square(FileType.E, RankType.THREE)),
+            fenService.getEnPassantSquare("e3")
+        );
+    }
+
+    @Test
+    void getGame_startingPosition() {
+        String completeStartingBoard = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+        assertEquals(
+            gameService.startGame(),
+            fenService.getGame(completeStartingBoard)
+        );
+    }
+
+    @Test
+    void getGame_afterE4() {
+        String completeWithEnPassant = "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1";
+        assertEquals(
+            pgnService.gameFromPgn("1. e4"),
+            fenService.getGame(completeWithEnPassant)
+        );
+    }
+
+    @Test
+    void getGame_afterSomeOpeningMoves() {
+        Game fullGame = pgnService.gameFromPgn("1. e4 e5 2. Nf3");
+        String afterSomeOpeningMoves = "rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2";
+        assertEquals(
+            new Game()
+                .addBoard(fullGame.currentBoard())
+                .addCastlingRights(fullGame.getCastlingRights())
+                .addTurn(new Turn(2, null)),
+            fenService.getGame(afterSomeOpeningMoves)
+        );
+    }
+
+    @Test
+    void getGame_laterGamePosition() {
+        Map<Square, Piece> pieceMap = Map.of(
+            new Square(FileType.E, RankType.EIGHT), new Piece(Side.BLACK, PieceType.KING),
+            new Square(FileType.E, RankType.TWO), new Piece(Side.WHITE, PieceType.PAWN),
+            new Square(FileType.E, RankType.ONE), new Piece(Side.WHITE, PieceType.KING)
+        );
+        String laterGamePosition = "4k3/8/8/8/8/8/4P3/4K3 w - - 5 39";
+        assertEquals(
+            new Game().addBoard(new Board(pieceMap)),
+            fenService.getGame(laterGamePosition)
         );
     }
 }

@@ -61,8 +61,9 @@ public class Game {
         return this;
     }
 
-    public void addTurn(Turn turn) {
+    public Game addTurn(Turn turn) {
         turnHistory.add(turn);
+        return this;
     }
 
     public Game addBoard(Board board) {
