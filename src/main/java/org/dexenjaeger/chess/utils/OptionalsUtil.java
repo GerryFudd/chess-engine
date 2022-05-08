@@ -12,5 +12,8 @@ public class OptionalsUtil {
             .isEmpty();
     }
 
-
+    public static <T, U, V> Optional<V> merge(Supplier<Optional<T>> maybeT, Supplier<Optional<U>> maybeU, Function<Pair<T, U>, V> processor) {
+        return maybeT.get()
+            .flatMap(t -> maybeU.get().map(u -> new Pair<>(t, u)).map(processor));
+    }
 }

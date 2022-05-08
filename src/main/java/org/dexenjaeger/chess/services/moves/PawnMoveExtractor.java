@@ -18,6 +18,7 @@ import org.dexenjaeger.chess.models.moves.NormalMove;
 import org.dexenjaeger.chess.models.moves.PromotionMove;
 import org.dexenjaeger.chess.models.moves.SimpleMove;
 import org.dexenjaeger.chess.models.pieces.PieceType;
+import org.dexenjaeger.chess.utils.Pair;
 
 public class PawnMoveExtractor implements MoveExtractor {
     private final Side side;
@@ -53,12 +54,13 @@ public class PawnMoveExtractor implements MoveExtractor {
         return Optional.empty();
     }
 
-    private Set<Square> forwardSquares(Square starting) {
+    private Set<Square> forwardSquares(Square squareFrom) {
         Set<Square> squares = new HashSet<>();
-        nextForward(starting)
+        nextForward(squareFrom)
             .flatMap(square -> {
                 squares.add(square);
-                return starting.getRank() == startingRank()
+                // If the pawn is on the starting rank and the first square is clear, check the second.
+                return squareFrom.getRank() == startingRank()
                     ? nextForward(square)
                     : Optional.empty();
             })
@@ -83,29 +85,21 @@ public class PawnMoveExtractor implements MoveExtractor {
         return evaluateOccupyingSide.getOccupyingSide(target).filter(s -> s != side).isPresent();
     }
 
+    private Stream<NormalMove> capturingMovesForFileShift(Square starting, int fileShift) {
+        return starting.shift(new Pair<>(fileShift, getDirection()))
+            .filter(this::isCapture)
+            .stream()
+            .flatMap(sq -> sq.getRank() == getPromotionRank()
+                ? promotionCandidates().map(t -> new PromotionMove(side, starting.getFile(), sq.getFile(), t))
+                : Stream.of(new SimpleMove(starting, sq, PAWN, side))
+            );
+    }
+
     private Set<NormalMove> capturingMoves(Square starting) {
-        Set<NormalMove> moves = new HashSet<>();
-        starting.getRank()
-            .shift(getDirection())
-            .ifPresent(rank -> {
-                starting.getFile().shift(-1).map(f -> new Square(f, rank))
-                    .filter(this::isCapture)
-                    .stream()
-                    .flatMap(sq -> sq.getRank() == getPromotionRank()
-                        ? promotionCandidates().map(t -> new PromotionMove(side, starting.getFile(), sq.getFile(), t))
-                        : Stream.of(new SimpleMove(starting, sq, PAWN, side))
-                    )
-                    .forEach(moves::add);
-                starting.getFile().shift(1).map(f -> new Square(f, rank))
-                    .filter(this::isCapture)
-                    .stream()
-                    .flatMap(sq -> sq.getRank() == getPromotionRank()
-                        ? promotionCandidates().map(t -> new PromotionMove(side, starting.getFile(), sq.getFile(), t))
-                        : Stream.of(new SimpleMove(starting, sq, PAWN, side))
-                    )
-                    .forEach(moves::add);
-            });
-        return moves;
+        return Stream.concat(
+            capturingMovesForFileShift(starting, -1),
+            capturingMovesForFileShift(starting, 1)
+        ).collect(Collectors.toSet());
     }
 
     @Override
@@ -120,7 +114,7 @@ public class PawnMoveExtractor implements MoveExtractor {
         if (from.getFile() == to.getFile()) {
             return forwardSquares(from).contains(to);
         }
-        if (to.getRank().ordinal() != from.getRank().ordinal() + 1 || !isCapture(to)) {
+        if (to.getRank().ordinal() != from.getRank().ordinal() + getDirection() || !isCapture(to)) {
             return false;
         }
         return Math.abs(from.getFile().ordinal() - to.getFile().ordinal()) == 1;

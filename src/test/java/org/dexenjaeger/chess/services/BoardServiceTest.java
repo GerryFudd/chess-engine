@@ -96,6 +96,56 @@ class BoardServiceTest {
     }
 
     @Test
+    void getMoves_blackPawnThatCanCapture() {
+        Board board = pgnService.boardFromPgn("1. d4 d5 2. c4");
+
+        assertEquals(
+            Set.of(
+                new SimpleMove(new Square(FileType.D, RankType.FIVE), new Square(FileType.C, RankType.FOUR), PAWN, BLACK)
+            ),
+            boardService.getMoves(board, FileType.D, RankType.FIVE)
+        );
+    }
+
+    @Test
+    void getMoves_whitePawnThatCanCapture() {
+        Board board = pgnService.boardFromPgn("1. d4 d5 2. c4 e5");
+
+        assertEquals(
+            Set.of(
+                new SimpleMove(new Square(FileType.D, RankType.FOUR), new Square(FileType.E, RankType.FIVE), PAWN, WHITE)
+            ),
+            boardService.getMoves(board, FileType.D, RankType.FOUR)
+        );
+    }
+
+    @Test
+    void getMoves_blackPawnWithCaptureAndForwardMove() {
+        Board board = pgnService.boardFromPgn("1. d4 d5 2. c4 e5 3. e3");
+
+        assertEquals(
+            Set.of(
+                new SimpleMove(new Square(FileType.E, RankType.FIVE), new Square(FileType.D, RankType.FOUR), PAWN, BLACK),
+                new SimpleMove(new Square(FileType.E, RankType.FIVE), new Square(FileType.E, RankType.FOUR), PAWN, BLACK)
+            ),
+            boardService.getMoves(board, FileType.E, RankType.FIVE)
+        );
+    }
+
+    @Test
+    void getMoves_whitePawnWithCaptureAndForwardMove() {
+        Board board = pgnService.boardFromPgn("1. d4 d5 2. c4 e5");
+
+        assertEquals(
+            Set.of(
+                new SimpleMove(new Square(FileType.C, RankType.FOUR), new Square(FileType.D, RankType.FIVE), PAWN, WHITE),
+                new SimpleMove(new Square(FileType.C, RankType.FOUR), new Square(FileType.C, RankType.FIVE), PAWN, WHITE)
+            ),
+            boardService.getMoves(board, FileType.C, RankType.FOUR)
+        );
+    }
+
+    @Test
     void getMovesForSide_inCheck() {
         Board board = boardService
             .applyMove(

@@ -1,7 +1,6 @@
 package org.dexenjaeger.chess.services.moves;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -34,14 +33,7 @@ public class FixedMoveExtractor implements MoveExtractor {
     public Set<NormalMove> moveSet(Square starting) {
 
         return fixedMoves.stream()
-            .map(
-                shifts -> starting
-                    .getFile()
-                    .shift(shifts.getLeft())
-                    .flatMap(f -> starting.getRank().shift(shifts.getRight()).map(r -> new Square(f, r)))
-            )
-            .filter(Optional::isPresent)
-            .map(Optional::get)
+            .flatMap(direction -> starting.shift(direction).stream())
             .filter(checkAvailability)
             .map(sq -> new SimpleMove(starting, sq, pieceType, side))
             .collect(Collectors.toSet());

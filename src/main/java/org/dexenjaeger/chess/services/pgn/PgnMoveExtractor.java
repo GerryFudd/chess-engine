@@ -11,8 +11,8 @@ import org.dexenjaeger.chess.services.ServiceException;
 public class PgnMoveExtractor {
     private final PgnMove pgnMove;
 
-    public PgnMoveExtractor(PgnMove summary) {
-        this.pgnMove = summary;
+    public PgnMoveExtractor(PgnMove pgnMove) {
+        this.pgnMove = pgnMove;
     }
 
     public Optional<FileType> getOriginFile() {

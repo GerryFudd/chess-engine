@@ -3,10 +3,6 @@ package org.dexenjaeger.chess.utils;
 import java.util.Optional;
 
 public class ConversionUtil {
-    public static int intFromChar(char c) {
-        return c - 48;
-    }
-
     public static Optional<Pair<Integer, Integer>> directionFromShifts(int xShift, int yShift) {
         if (xShift == 0) {
             if (yShift == 0) {
