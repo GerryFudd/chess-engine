@@ -79,6 +79,7 @@ public class GameService {
                 .map(sq -> new EnPassantCapture(
                     side, sq.getFile(), previous.getFrom().getFile()
                 )))
+            .filter(move -> boardService.satisfiesCheckingRule(board, move))
             .collect(Collectors.toSet());
     }
 

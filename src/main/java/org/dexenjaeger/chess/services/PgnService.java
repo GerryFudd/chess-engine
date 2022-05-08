@@ -248,10 +248,9 @@ public class PgnService {
             moveMatcher.group(3),
             moveMatcher.group(4)
         ));
-        List<SimpleMove> possibleMoves = boardService.getMovesBySideAndTarget(board, side, pgnMoveExtractor.getTarget())
+        List<SimpleMove> possibleMoves = boardService.getLegalMovesForSideWithTarget(board, side, pgnMoveExtractor.getTarget())
             .stream()
             .filter(possible -> possible.getType() == pgnMoveExtractor.getPieceType())
-            .filter(possible -> !boardService.isSideInCheck(board.movePiece(possible), possible.getSide()))
             .collect(Collectors.toList());
         if (possibleMoves.size() == 0) {
             throw impossibleMoveException(pgnMoveString, side, board);

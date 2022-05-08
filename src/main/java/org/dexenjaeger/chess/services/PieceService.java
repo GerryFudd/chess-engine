@@ -98,7 +98,7 @@ public class PieceService {
         return getMoveExtractor(piece, evaluateOccupyingSide).moveSet(starting);
     }
 
-    public boolean isLegal(NormalMove move, EvaluateOccupyingSide evaluateOccupyingSide) {
+    public boolean matchesPieceMovementRule(NormalMove move, EvaluateOccupyingSide evaluateOccupyingSide) {
         return getMoveExtractor(move.getPiece(), evaluateOccupyingSide)
             .canMove(move.getFrom(), move.getTo());
     }

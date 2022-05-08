@@ -327,7 +327,7 @@ public class BoardServiceStartingStateTest {
                 new SimpleMove(new Square(FileType.C, RankType.TWO), new Square(FileType.C, RankType.THREE), PAWN, WHITE),
                 new SimpleMove(new Square(FileType.B, RankType.ONE), new Square(FileType.C, RankType.THREE), KNIGHT, WHITE)
             ),
-            boardService.getMovesBySideAndTarget(
+            boardService.getLegalMovesForSideWithTarget(
                 BoardService.standardGameBoard(), WHITE, new Square(FileType.C, RankType.THREE)
             )
         );

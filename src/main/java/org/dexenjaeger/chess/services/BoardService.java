@@ -18,7 +18,6 @@ import org.dexenjaeger.chess.models.moves.Move;
 import org.dexenjaeger.chess.models.moves.NormalMove;
 import org.dexenjaeger.chess.models.moves.PromotionMove;
 import org.dexenjaeger.chess.models.moves.SimpleMove;
-import org.dexenjaeger.chess.models.moves.SinglePieceMove;
 import org.dexenjaeger.chess.models.pieces.Piece;
 import org.dexenjaeger.chess.models.pieces.PieceType;
 
@@ -69,6 +68,43 @@ public class BoardService {
         this.pieceService = pieceService;
     }
 
+    private Set<SimpleMove> getMovesFromSourcesAndTarget(Board board, Set<Square> sources, Square target) {
+        return sources
+            .stream()
+            .map(sq -> new SimpleMove(sq, target, board.getPiece(sq).orElseThrow()))
+            .filter(mo -> pieceService.matchesPieceMovementRule(mo, board::getOccupyingSide))
+            .collect(Collectors.toSet());
+    }
+
+    public boolean isSideInCheck(Board board, Side side) {
+        return board.getBySideAndType(side, PieceType.KING)
+            .stream()
+            .anyMatch(sq -> !getMovesFromSourcesAndTarget(board, board.getBySide(side.other()), sq).isEmpty());
+    }
+
+    public boolean satisfiesCheckingRule(Board board, Move move) {
+        Board testBoard;
+        if (move instanceof SimpleMove) {
+            testBoard = board.movePiece((SimpleMove) move);
+        } else if (move instanceof PromotionMove) {
+            testBoard = board.promote((PromotionMove) move);
+        } else if (move instanceof Castle) {
+            testBoard = board.castle((Castle) move);
+        } else if (move instanceof EnPassantCapture) {
+            testBoard = board.captureEnPassant((EnPassantCapture) move);
+        } else {
+            throw new NotImplementedException(move.getClass());
+        }
+        return !isSideInCheck(testBoard, move.getSide());
+    }
+
+    public Set<SimpleMove> getLegalMovesForSideWithTarget(Board board, Side side, Square target) {
+        return getMovesFromSourcesAndTarget(board, board.getBySide(side), target)
+            .stream()
+            .filter(move -> satisfiesCheckingRule(board, move))
+            .collect(Collectors.toSet());
+    }
+
     public Set<NormalMove> getMoves(Board board, FileType f, RankType r) {
         return getMoves(board, new Square(f, r));
     }
@@ -78,17 +114,7 @@ public class BoardService {
             .map(p -> pieceService
                 .getMoves(p, sq, board::getOccupyingSide)
                 .stream()
-                .filter(mo -> {
-                    Board testBoard;
-                    if (mo instanceof SimpleMove) {
-                        testBoard = board.movePiece((SimpleMove) mo);
-                    } else if (mo instanceof PromotionMove) {
-                        testBoard = board.promote((PromotionMove) mo);
-                    } else {
-                        throw new NotImplementedException(mo.getClass());
-                    }
-                    return !isSideInCheck(testBoard, mo.getSide());
-                })
+                .filter(move -> isLegal(board, move))
                 .collect(Collectors.toSet())
             )
             .orElse(Set.of());
@@ -112,7 +138,7 @@ public class BoardService {
             .isPresent();
     }
 
-    private boolean isLegalCastle(Board board, Castle move) {
+    private boolean satisfiesCastlingPiecePlacementRule(Board board, Castle move) {
         RankType rank = move.getSide() == Side.WHITE ? RankType.ONE : RankType.EIGHT;
         Set<FileType> middleFiles = move.getType() == CastleType.LONG
             ? Set.of(FileType.B, FileType.C, FileType.D)
@@ -126,7 +152,12 @@ public class BoardService {
         return hasPiece(board, FileType.E, rank, new Piece(move.getSide(), PieceType.KING));
     }
 
-    private boolean isLegalEnPassant(Board board, EnPassantCapture move) {
+    private boolean isLegalCastle(Board board, Castle move) {
+        return satisfiesCastlingPiecePlacementRule(board, move)
+            && satisfiesCheckingRule(board, move);
+    }
+
+    private boolean satisfiesEnPasantPiecePlacementRule(Board board, EnPassantCapture move) {
         if (board.getPiece(move.getTo()).isPresent()) {
             return false;
         }
@@ -140,8 +171,14 @@ public class BoardService {
             .isPresent();
     }
 
+    private boolean isLegalEnPassant(Board board, EnPassantCapture move) {
+        return satisfiesEnPasantPiecePlacementRule(board, move)
+            && satisfiesCheckingRule(board, move);
+    }
+
     private boolean isLegalNormal(Board board, NormalMove move) {
-        return pieceService.isLegal(move, board::getOccupyingSide);
+        return pieceService.matchesPieceMovementRule(move, board::getOccupyingSide)
+            && satisfiesCheckingRule(board, move);
     }
 
     public boolean isLegal(Board board, Move move) {
@@ -157,23 +194,11 @@ public class BoardService {
         throw new NotImplementedException(move.getClass());
     }
 
-    public boolean isSideInCheck(Board board, Side side) {
-        return board.getBySideAndType(side, PieceType.KING)
-            .stream()
-            .anyMatch(sq -> !getMovesBySideAndTarget(board, side.other(), sq).isEmpty());
-    }
-
     private Board applySingleCastle(Board board, Castle move) {
-        if (!isLegal(board, move)) {
-            throw new ServiceException(String.format("The move %s is not available on this board.\n%s", move, board));
-        }
         return board.castle(move);
     }
 
-    private Board applySinglePieceMove(Board board, SinglePieceMove move) {
-        if (!isLegal(board, move)) {
-            throw new ServiceException(String.format("The move %s is not available on this board.\n%s", move, board));
-        }
+    private Board applySingleMove(Board board, Move move) {
         if (move instanceof SimpleMove) {
             return board.movePiece((SimpleMove) move);
         }
@@ -182,14 +207,6 @@ public class BoardService {
         }
         if (move instanceof EnPassantCapture) {
             return board.captureEnPassant((EnPassantCapture) move);
-        }
-
-        throw new NotImplementedException(move.getClass());
-    }
-
-    private Board applySingleMove(Board board, Move move) {
-        if (move instanceof SinglePieceMove) {
-            return applySinglePieceMove(board, (SinglePieceMove) move);
         }
         if (move instanceof Castle) {
             return applySingleCastle(board, (Castle) move);
@@ -200,23 +217,12 @@ public class BoardService {
     public Board applyMove(Board board, Move...moves) {
         Board result = board;
         for (Move move:moves) {
-            result = applySingleMove(result, move);
-            if (isSideInCheck(result, move.getSide())) {
-                throw new ServiceException(String.format(
-                    "The move %s is not allowed for %s because it would put %s in check.",
-                    move, move.getSide(), move.getSide()
-                ));
+            if (!isLegal(result, move)) {
+                throw new ServiceException(String.format("The move %s is not available on this board.\n%s", move, result));
             }
+            result = applySingleMove(result, move);
         }
         return result;
-    }
-
-    public Set<SimpleMove> getMovesBySideAndTarget(Board board, Side side, Square target) {
-        return board.getBySide(side)
-            .stream()
-            .map(sq -> new SimpleMove(sq, target, board.getPiece(sq).orElseThrow()))
-            .filter(mo -> pieceService.isLegal(mo, board::getOccupyingSide))
-            .collect(Collectors.toSet());
     }
 
     public Set<Move> getMovesBySide(Board board, Side side) {

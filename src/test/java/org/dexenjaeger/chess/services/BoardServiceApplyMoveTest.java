@@ -240,7 +240,15 @@ public class BoardServiceApplyMoveTest {
         ));
 
         assertEquals(
-            "The move Nc3d5 is not allowed for WHITE because it would put WHITE in check.",
+            "The move Nc3d5 is not available on this board.\n"
+                + "bRbNbBbQ  bRbK  \n"
+                + "bpbpbpbp  bpbpbp\n"
+                + "        bpbN    \n"
+                + "                \n"
+                + "  bBwpwp        \n"
+                + "    wN    wN    \n"
+                + "wpwp    wpwpwpwp\n"
+                + "wR  wBwQwKwB  wR",
             e.getMessage()
         );
     }
