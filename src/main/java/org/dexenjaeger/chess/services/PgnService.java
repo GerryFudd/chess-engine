@@ -64,17 +64,6 @@ public class PgnService {
     //   - Third (when both the first and the second steps fail), the two character square
     //     coordinate of the originating square of the moving piece is inserted immediately
     //     after the moving piece letter.
-    // Note that the above disambiguation is needed only to distinguish among moves of the
-    // same piece type to the same square; it is not used to distinguish among attacks of
-    // the same piece type to the same square. An example of this would be a position with
-    // two white knights, one on square c3 and one on square g1 and a vacant square e2 with
-    // White to move. Both knights attack square e2, and if both could legally move there,
-    // then a file disambiguation is needed; the (nonchecking) knight moves would be "Nce2"
-    // and "Nge2". However, if the white king were at square e1 and a black bishop were at
-    // square b4 with a vacant square d2 (thus an absolute pin of the white knight at square
-    // c3), then only one white knight (the one at square g1) could move to square e2: "Ne2".
-    // TODO: add a test case for this specific scenario where a second knight could move to a
-    //       square if it weren't in a pin.
     // 8.2.3.8: SAN move suffix annotations
     // Import format PGN allows for the use of traditional suffix annotations for moves.
     // There are exactly six such annotations available: "!", "?", "!!", "!?", "?!", and
