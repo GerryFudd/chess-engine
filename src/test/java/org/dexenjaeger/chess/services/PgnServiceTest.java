@@ -21,6 +21,8 @@ import org.dexenjaeger.chess.models.pieces.Piece;
 import org.dexenjaeger.chess.models.pieces.PieceType;
 import org.dexenjaeger.chess.utils.Pair;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 class PgnServiceTest {
     // The PGN service needs to read text files that follow this spec:
@@ -108,6 +110,66 @@ class PgnServiceTest {
         );
     }
 
+    private Board boardWithCastlingAvailable() {
+        Map<Square, Piece> pieceMap = new HashMap<>();
+        pieceMap.put(new Square(FileType.A, RankType.EIGHT), new Piece(Side.BLACK, PieceType.ROOK));
+        pieceMap.put(new Square(FileType.A, RankType.ONE), new Piece(Side.WHITE, PieceType.ROOK));
+        pieceMap.put(new Square(FileType.H, RankType.EIGHT), new Piece(Side.BLACK, PieceType.ROOK));
+        pieceMap.put(new Square(FileType.H, RankType.ONE), new Piece(Side.WHITE, PieceType.ROOK));
+        pieceMap.put(new Square(FileType.E, RankType.EIGHT), new Piece(Side.BLACK, PieceType.KING));
+        pieceMap.put(new Square(FileType.E, RankType.ONE), new Piece(Side.WHITE, PieceType.KING));
+        pieceMap.put(new Square(FileType.A, RankType.SEVEN), new Piece(Side.BLACK, PieceType.PAWN));
+        pieceMap.put(new Square(FileType.B, RankType.SEVEN), new Piece(Side.BLACK, PieceType.PAWN));
+        pieceMap.put(new Square(FileType.C, RankType.SEVEN), new Piece(Side.BLACK, PieceType.PAWN));
+        pieceMap.put(new Square(FileType.F, RankType.SEVEN), new Piece(Side.BLACK, PieceType.PAWN));
+        pieceMap.put(new Square(FileType.G, RankType.SEVEN), new Piece(Side.BLACK, PieceType.PAWN));
+        pieceMap.put(new Square(FileType.H, RankType.SEVEN), new Piece(Side.BLACK, PieceType.PAWN));
+        pieceMap.put(new Square(FileType.A, RankType.TWO), new Piece(Side.WHITE, PieceType.PAWN));
+        pieceMap.put(new Square(FileType.B, RankType.TWO), new Piece(Side.WHITE, PieceType.PAWN));
+        pieceMap.put(new Square(FileType.C, RankType.TWO), new Piece(Side.WHITE, PieceType.PAWN));
+        pieceMap.put(new Square(FileType.F, RankType.TWO), new Piece(Side.WHITE, PieceType.PAWN));
+        pieceMap.put(new Square(FileType.G, RankType.TWO), new Piece(Side.WHITE, PieceType.PAWN));
+        pieceMap.put(new Square(FileType.H, RankType.TWO), new Piece(Side.WHITE, PieceType.PAWN));
+        return new Board(pieceMap);
+    }
+
+    @ParameterizedTest
+    @EnumSource(Side.class)
+    void fromPgnMove_parsesShortCastle(Side side) {
+        assertEquals(
+            new Castle(side, CastleType.SHORT),
+            pgnService.fromPgnMove("O-O", side, boardWithCastlingAvailable())
+        );
+    }
+
+    @ParameterizedTest
+    @EnumSource(Side.class)
+    void fromPgnMove_parsesLongCastle(Side side) {
+        assertEquals(
+            new Castle(side, CastleType.LONG),
+            pgnService.fromPgnMove("O-O-O", side, boardWithCastlingAvailable())
+        );
+    }
+
+    // The following test covers an example from the PGN spec documentation:
+    //   | Note that the above disambiguation is needed only to distinguish among moves of the
+    //   | same piece type to the same square; it is not used to distinguish among attacks of
+    //   | the same piece type to the same square. An example of this would be a position with
+    //   | two white knights, one on square c3 and one on square g1 and a vacant square e2 with
+    //   | White to move. Both knights attack square e2, and if both could legally move there,
+    //   | then a file disambiguation is needed; the (nonchecking) knight moves would be "Nce2"
+    //   | and "Nge2". However, if the white king were at square e1 and a black bishop were at
+    //   | square b4 with a vacant square d2 (thus an absolute pin of the white knight at square
+    //   | c3), then only one white knight (the one at square g1) could move to square e2: "Ne2".
+    @Test
+    void fromPgnMove_specialCase() {
+        Board nimzoBoard = pgnService.boardFromPgn("1. d4 d5 2. c4 e6 3. Nc3 Bb4 4. e3 Nf6");
+        assertEquals(
+            new SimpleMove(new Square(FileType.G, RankType.ONE), new Square(FileType.E, RankType.TWO), PieceType.KNIGHT, Side.WHITE),
+            pgnService.fromPgnMove("Ne2", Side.WHITE, nimzoBoard)
+        );
+    }
+
     @Test
     void fromPgnMove_edgeCaseWithThreeQueens() {
         Map<Square, Piece> pieceLocations = new HashMap<>();
@@ -166,7 +228,7 @@ class PgnServiceTest {
                     new SimpleMove(new Square(FileType.B, RankType.EIGHT), new Square(FileType.D, RankType.SEVEN), PieceType.KNIGHT, Side.BLACK)
                 )
             ),
-            pgnService.fromPgnTurnList(PgnFileReader.readOpening("QGDClassical.pgn"))
+            pgnService.fromPgnTurnList(PgnFileReader.readOpening(PgnFileReader.QGD_CLASSICAL))
         );
     }
 
@@ -208,7 +270,7 @@ class PgnServiceTest {
         }
         assertEquals(
             expectedGame,
-            pgnService.gameFromPgn(PgnFileReader.readOpening("NimzoIndianDefenseKasparov.pgn"))
+            pgnService.gameFromPgn(PgnFileReader.readOpening(PgnFileReader.NIMZO))
         );
     }
 

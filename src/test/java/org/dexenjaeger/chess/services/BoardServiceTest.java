@@ -54,7 +54,7 @@ class BoardServiceTest {
 
     public static Board nimzoIndianBoard() {
         return pgnService
-            .boardFromPgn(PgnFileReader.readOpening("NimzoIndianDefenseKasparov.pgn"));
+            .boardFromPgn(PgnFileReader.readOpening(PgnFileReader.NIMZO));
     }
 
     public static Board simpleEndgameWithCFilePromotion() {
