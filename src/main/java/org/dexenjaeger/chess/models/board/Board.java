@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import lombok.EqualsAndHashCode;
 import org.dexenjaeger.chess.models.Side;
@@ -31,13 +32,27 @@ public class Board {
         LinkedList<String> result = new LinkedList<>();
         for (RankType rank:RankType.values()) {
             StringBuilder rankRep = new StringBuilder();
+            AtomicInteger currentShift = new AtomicInteger();
             for (FileType file:FileType.values()) {
-                rankRep.append(getPiece(file, rank).map(Piece::toString).orElse("  "));
+                getPiece(file, rank)
+                    .ifPresentOrElse(
+                        piece -> {
+                            if (currentShift.get() > 0) {
+                                rankRep.append(currentShift.get());
+                            }
+                            rankRep.append(piece.toString());
+                            currentShift.set(0);
+                        },
+                        currentShift::incrementAndGet
+                    );
+            }
+            if (currentShift.get() > 0) {
+                rankRep.append(currentShift.get());
             }
             result.addFirst(rankRep.toString());
         }
 
-        return String.join("\n", result);
+        return String.join("/", result);
     }
 
     public Optional<Piece> getPiece(FileType file, RankType rank) {

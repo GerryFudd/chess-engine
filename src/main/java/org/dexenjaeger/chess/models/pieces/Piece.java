@@ -9,9 +9,9 @@ public class Piece {
     PieceType type;
 
     public String toString() {
-        if (type == PieceType.PAWN) {
-            return String.format("%sp", side.getRepresentation());
+        if (side == Side.WHITE) {
+            return type.getRepresentation();
         }
-        return String.format("%s%s", side.getRepresentation(), type.getRepresentation());
+        return type.getRepresentation().toLowerCase();
     }
 }

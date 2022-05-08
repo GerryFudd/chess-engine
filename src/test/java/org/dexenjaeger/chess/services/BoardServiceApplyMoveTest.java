@@ -121,14 +121,7 @@ public class BoardServiceApplyMoveTest {
 
         assertEquals(
             "The move Qd1d8 is not available on this board.\n"
-                + "bRbNbBbQbKbBbNbR\n"
-                + "bpbpbpbpbpbpbpbp\n"
-                + "                \n"
-                + "                \n"
-                + "                \n"
-                + "                \n"
-                + "wpwpwpwpwpwpwpwp\n"
-                + "wRwNwBwQwKwBwNwR",
+                + "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR",
             e.getMessage()
         );
     }
@@ -241,14 +234,8 @@ public class BoardServiceApplyMoveTest {
 
         assertEquals(
             "The move Nc3d5 is not available on this board.\n"
-                + "bRbNbBbQ  bRbK  \n"
-                + "bpbpbpbp  bpbpbp\n"
-                + "        bpbN    \n"
-                + "                \n"
-                + "  bBwpwp        \n"
-                + "    wN    wN    \n"
-                + "wpwp    wpwpwpwp\n"
-                + "wR  wBwQwKwB  wR",
+                + "rnbq1rk1/pppp1ppp/4pn2/8/"
+                + "1bPP4/2N2N2/PP2PPPP/R1BQKB1R",
             e.getMessage()
         );
     }
