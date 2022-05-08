@@ -23,7 +23,7 @@ public class EnPassantCapture implements SinglePieceMove {
     }
 
     public Piece getPiece() {
-        return new Piece(Side.WHITE, PieceType.PAWN);
+        return new Piece(side, PieceType.PAWN);
     }
 
     @Override

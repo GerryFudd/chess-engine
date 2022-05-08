@@ -79,7 +79,7 @@ public class GameService {
                 .map(sq -> new EnPassantCapture(
                     side, sq.getFile(), previous.getFrom().getFile()
                 )))
-            .filter(move -> boardService.satisfiesCheckingRule(board, move))
+            .filter(move -> boardService.isLegal(board, move))
             .collect(Collectors.toSet());
     }
 

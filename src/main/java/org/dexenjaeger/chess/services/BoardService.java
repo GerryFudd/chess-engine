@@ -68,6 +68,8 @@ public class BoardService {
         this.pieceService = pieceService;
     }
 
+    // This method returns any move that satisfies the piece movement rules.
+    // These moves may result in the moving side placing themselves in check.
     private Set<SimpleMove> getMovesFromSourcesAndTarget(Board board, Set<Square> sources, Square target) {
         return sources
             .stream()
@@ -82,22 +84,30 @@ public class BoardService {
             .anyMatch(sq -> !getMovesFromSourcesAndTarget(board, board.getBySide(side.other()), sq).isEmpty());
     }
 
-    public boolean satisfiesCheckingRule(Board board, Move move) {
-        Board testBoard;
+    private Board applySingleMove(Board board, Move move) {
         if (move instanceof SimpleMove) {
-            testBoard = board.movePiece((SimpleMove) move);
-        } else if (move instanceof PromotionMove) {
-            testBoard = board.promote((PromotionMove) move);
-        } else if (move instanceof Castle) {
-            testBoard = board.castle((Castle) move);
-        } else if (move instanceof EnPassantCapture) {
-            testBoard = board.captureEnPassant((EnPassantCapture) move);
-        } else {
-            throw new NotImplementedException(move.getClass());
+            return board.movePiece((SimpleMove) move);
         }
-        return !isSideInCheck(testBoard, move.getSide());
+        if (move instanceof PromotionMove) {
+            return board.promote((PromotionMove) move);
+        }
+        if (move instanceof EnPassantCapture) {
+            return board.captureEnPassant((EnPassantCapture) move);
+        }
+        if (move instanceof Castle) {
+            return board.castle((Castle) move);
+        }
+        throw new NotImplementedException(move.getClass());
     }
 
+    // This method tests the move on the given board without regard to whether the
+    // move satisfies piece movement rules or other restrictions on castling
+    // or capturing en passant.
+    private boolean satisfiesCheckingRule(Board board, Move move) {
+        return !isSideInCheck(applySingleMove(board, move), move.getSide());
+    }
+
+    // Publicly facing method that only returns legal moves
     public Set<SimpleMove> getLegalMovesForSideWithTarget(Board board, Side side, Square target) {
         return getMovesFromSourcesAndTarget(board, board.getBySide(side), target)
             .stream()
@@ -105,10 +115,10 @@ public class BoardService {
             .collect(Collectors.toSet());
     }
 
+    // Publicly facing method that only returns legal moves
     public Set<NormalMove> getMoves(Board board, FileType f, RankType r) {
         return getMoves(board, new Square(f, r));
     }
-
     public Set<NormalMove> getMoves(Board board, Square sq) {
         return board.getPiece(sq)
             .map(p -> pieceService
@@ -120,6 +130,7 @@ public class BoardService {
             .orElse(Set.of());
     }
 
+    // Only returns squares corresponding to legal moves
     public Optional<Square> lookupAlternateStartForMove(SimpleMove simpleMove, Board board) {
         return board.getBySideAndType(simpleMove.getSide(), simpleMove.getType())
             .stream()
@@ -190,26 +201,6 @@ public class BoardService {
         }
         if (move instanceof EnPassantCapture) {
             return isLegalEnPassant(board, (EnPassantCapture) move);
-        }
-        throw new NotImplementedException(move.getClass());
-    }
-
-    private Board applySingleCastle(Board board, Castle move) {
-        return board.castle(move);
-    }
-
-    private Board applySingleMove(Board board, Move move) {
-        if (move instanceof SimpleMove) {
-            return board.movePiece((SimpleMove) move);
-        }
-        if (move instanceof PromotionMove) {
-            return board.promote((PromotionMove) move);
-        }
-        if (move instanceof EnPassantCapture) {
-            return board.captureEnPassant((EnPassantCapture) move);
-        }
-        if (move instanceof Castle) {
-            return applySingleCastle(board, (Castle) move);
         }
         throw new NotImplementedException(move.getClass());
     }
