@@ -2,8 +2,11 @@ package org.dexenjaeger.chess.services;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.dexenjaeger.chess.config.ServiceProvider;
+import org.dexenjaeger.chess.io.PgnFileReader;
 import org.dexenjaeger.chess.models.Game;
 import org.dexenjaeger.chess.models.Side;
 import org.dexenjaeger.chess.models.board.Board;
@@ -14,9 +17,9 @@ import org.dexenjaeger.chess.models.moves.Castle;
 import org.dexenjaeger.chess.models.moves.CastleType;
 import org.dexenjaeger.chess.models.moves.SimpleMove;
 import org.dexenjaeger.chess.models.moves.Turn;
+import org.dexenjaeger.chess.models.pieces.Piece;
 import org.dexenjaeger.chess.models.pieces.PieceType;
 import org.dexenjaeger.chess.utils.Pair;
-import org.dexenjaeger.chess.utils.PgnFileUtil;
 import org.junit.jupiter.api.Test;
 
 class PgnServiceTest {
@@ -106,6 +109,27 @@ class PgnServiceTest {
     }
 
     @Test
+    void fromPgnMove_edgeCaseWithThreeQueens() {
+        Map<Square, Piece> pieceLocations = new HashMap<>();
+        pieceLocations.put(new Square(FileType.A, RankType.EIGHT), new Piece(Side.WHITE, PieceType.QUEEN));
+        pieceLocations.put(new Square(FileType.A, RankType.FIVE), new Piece(Side.WHITE, PieceType.QUEEN));
+        pieceLocations.put(new Square(FileType.D, RankType.FIVE), new Piece(Side.WHITE, PieceType.QUEEN));
+        pieceLocations.put(new Square(FileType.B, RankType.SEVEN), new Piece(Side.WHITE, PieceType.KING));
+        pieceLocations.put(new Square(FileType.E, RankType.SEVEN), new Piece(Side.BLACK, PieceType.KING));
+        pieceLocations.put(new Square(FileType.F, RankType.SEVEN), new Piece(Side.BLACK, PieceType.PAWN));
+        pieceLocations.put(new Square(FileType.E, RankType.SIX), new Piece(Side.BLACK, PieceType.PAWN));
+        pieceLocations.put(new Square(FileType.D, RankType.ONE), new Piece(Side.BLACK, PieceType.ROOK));
+
+        Board boardWithThreeQueens = new Board(pieceLocations);
+        assertEquals(
+            new SimpleMove(
+                new Square(FileType.A, RankType.FIVE), new Square(FileType.D, RankType.EIGHT), PieceType.QUEEN, Side.WHITE
+            ),
+            pgnService.fromPgnMove("Qa5d8", Side.WHITE, boardWithThreeQueens)
+        );
+    }
+
+    @Test
     void fromPgnTurn_firstTurnKingsIndian() {
         assertEquals(
             new Turn(
@@ -142,7 +166,7 @@ class PgnServiceTest {
                     new SimpleMove(new Square(FileType.B, RankType.EIGHT), new Square(FileType.D, RankType.SEVEN), PieceType.KNIGHT, Side.BLACK)
                 )
             ),
-            pgnService.fromPgnTurnList(PgnFileUtil.readOpening("QGDClassical.pgn"))
+            pgnService.fromPgnTurnList(PgnFileReader.readOpening("QGDClassical.pgn"))
         );
     }
 
@@ -184,7 +208,7 @@ class PgnServiceTest {
         }
         assertEquals(
             expectedGame,
-            pgnService.gameFromPgn(PgnFileUtil.readOpening("NimzoIndianDefenseKasparov.pgn"))
+            pgnService.gameFromPgn(PgnFileReader.readOpening("NimzoIndianDefenseKasparov.pgn"))
         );
     }
 

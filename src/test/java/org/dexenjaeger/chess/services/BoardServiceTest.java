@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import org.dexenjaeger.chess.config.ServiceProvider;
+import org.dexenjaeger.chess.io.PgnFileReader;
 import org.dexenjaeger.chess.models.Side;
 import org.dexenjaeger.chess.models.board.Board;
 import org.dexenjaeger.chess.models.board.FileType;
@@ -25,7 +26,6 @@ import org.dexenjaeger.chess.models.moves.PromotionMove;
 import org.dexenjaeger.chess.models.moves.SimpleMove;
 import org.dexenjaeger.chess.models.pieces.Piece;
 import org.dexenjaeger.chess.models.pieces.PieceType;
-import org.dexenjaeger.chess.utils.PgnFileUtil;
 import org.junit.jupiter.api.Test;
 
 class BoardServiceTest {
@@ -54,7 +54,7 @@ class BoardServiceTest {
 
     public static Board nimzoIndianBoard() {
         return pgnService
-            .boardFromPgn(PgnFileUtil.readOpening("NimzoIndianDefenseKasparov.pgn"));
+            .boardFromPgn(PgnFileReader.readOpening("NimzoIndianDefenseKasparov.pgn"));
     }
 
     public static Board simpleEndgameWithCFilePromotion() {

@@ -8,11 +8,19 @@ public enum RankType {
     FOUR(4), FIVE(5), SIX(6),
     SEVEN(7), EIGHT(8);
 
-    public static Optional<RankType> fromIntVal(int val) {
-        if (val < 1 || val > 8) {
+    public static Optional<RankType> fromString(String val) {
+        if (val == null) {
             return Optional.empty();
         }
-        return Optional.of(RankType.values()[val - 1]);
+        try {
+            int asNum = Integer.parseInt(val);
+            if (asNum < 1 || asNum > 8) {
+                return Optional.empty();
+            }
+            return Optional.of(RankType.values()[asNum - 1]);
+        } catch (NumberFormatException e) {
+            return Optional.empty();
+        }
     }
 
     @Getter

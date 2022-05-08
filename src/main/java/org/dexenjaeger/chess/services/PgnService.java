@@ -1,7 +1,6 @@
 package org.dexenjaeger.chess.services;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -10,18 +9,21 @@ import org.dexenjaeger.chess.models.Game;
 import org.dexenjaeger.chess.models.Side;
 import org.dexenjaeger.chess.models.TagType;
 import org.dexenjaeger.chess.models.board.Board;
-import org.dexenjaeger.chess.models.board.FileType;
-import org.dexenjaeger.chess.models.board.RankType;
-import org.dexenjaeger.chess.models.board.Square;
 import org.dexenjaeger.chess.models.moves.Castle;
 import org.dexenjaeger.chess.models.moves.CastleType;
 import org.dexenjaeger.chess.models.moves.Move;
 import org.dexenjaeger.chess.models.moves.SimpleMove;
 import org.dexenjaeger.chess.models.moves.Turn;
+import org.dexenjaeger.chess.models.pgn.PgnMove;
 import org.dexenjaeger.chess.models.pieces.PieceType;
-import org.dexenjaeger.chess.utils.ConversionUtil;
+import org.dexenjaeger.chess.services.pgn.PgnMoveExtractor;
+import org.dexenjaeger.chess.utils.OptionalsUtil;
 
 public class PgnService {
+    // This service implements a parser for the spec outlined here:
+    // http://www.saremba.de/chessgml/standards/pgn/pgn-complete.htm#c2
+    // TODO: implement a FEN service that implements the spec in section 16
+
     // 8.2: Movetext section
     // The movetext section is composed of chess moves, move number indications, optional
     // annotations, and a single concluding game termination marker.
@@ -73,25 +75,37 @@ public class PgnService {
     // c3), then only one white knight (the one at square g1) could move to square e2: "Ne2".
     // TODO: add a test case for this specific scenario where a second knight could move to a
     //       square if it weren't in a pin.
+    // 8.2.3.8: SAN move suffix annotations
+    // Import format PGN allows for the use of traditional suffix annotations for moves.
+    // There are exactly six such annotations available: "!", "?", "!!", "!?", "?!", and
+    // "??". At most one such suffix annotation may appear per move, and if present, it is
+    // always the last part of the move symbol.
+    // When exported, a move suffix annotation is translated into the corresponding Numeric
+    // Annotation Glyph as described in a later section of this document. For example, if
+    // the single move symbol "Qxa8?" appears in an import format PGN movetext, it would
+    // be replaced with the two adjacent symbols "Qxa8 $2".
+    // TODO: implement this spec using the table in "10: Numeric Annotation Glyphs"
 
     // The following are the castling indicators. They are strings rather than regex.
     private static final String CASTLE_SHORT = "O-O";
-    private static final String CASTLE_LONG = "O-O-0";
+    private static final String CASTLE_LONG = "O-O-O";
 
     // The specification for PGN notation includes a disambiguation step that begins, "when
-    // both the first and the second steps fail." The first and second steps could only fail
-    // if the two candidate pieces share a file and share a rank. This would place both
-    // pieces on the same square, which is impossible. For this reason I omit that
-    // disambiguation step.
+    // both the first and the second steps fail." This seems impossible, but it is possible if
+    // there are three or more pieces of the same type where two share a file and two share a
+    // rank. For example
+    // White has promoted two pawns to queens, and they are on a8, a5, and d5. If the queen on
+    // a5 moves to d8, then Qad8 and Q5a8 are both ambiguous, so Qa5a8 is the representation.
 
     // The below regex matches
-    //   - an optional character indicating either a starting file or a rank followed by
+    //   - an optional character indicating a starting file followed by
+    //   - an optional character indicating a starting rank followed by
     //   - an optional x to indicate a capture followed by
     //   - a file indicating character followed by
     //   - a rank indicating character.
     // This regex captures the optional starting location indicator and the destination square
     // rank and file indicators.
-    private static final Pattern movePattern = Pattern.compile("([a-h]|[1-8])?x?([a-h][1-8])");
+    private static final Pattern movePattern = Pattern.compile("([RNBQK])?([a-h])?([1-8])?x?([a-h][1-8])");
 
     // 8.2.2: Movetext move number indications
     // A move number indication is composed of one or more adjacent digits (an integer token)
@@ -189,32 +203,6 @@ public class PgnService {
         }
         throw new NotImplementedException(move.getClass());
     }
-    
-    private PieceType typeFromIndicator(char indicator) {
-        switch (indicator) {
-            case 'R':
-                return PieceType.ROOK;
-            case 'N':
-                return PieceType.KNIGHT;
-            case 'B':
-                return PieceType.BISHOP;
-            case 'Q':
-                return PieceType.QUEEN;
-            case 'K':
-                return PieceType.KING;
-            default:
-                return PieceType.PAWN;
-        }
-    }
-
-    private Square squareFromString(String squareString) {
-        FileType file = FileType.fromCharVal(squareString.charAt(0))
-            .orElseThrow(() -> new ServiceException(String.format("%s is not a file value.", squareString.charAt(0))));
-
-        RankType rank = RankType.fromIntVal(ConversionUtil.intFromChar(squareString.charAt(1)))
-            .orElseThrow(() -> new ServiceException(String.format("%s is not a rank value.", squareString.charAt(1))));
-        return new Square(file, rank);
-    }
 
     private ServiceException ambiguousMoveException(
         String pgnMove, Side side,
@@ -239,54 +227,53 @@ public class PgnService {
         ));
     }
     
-    public Move fromPgnMove(String pgnMove, Side side, Board board) {
-        if (pgnMove == null || pgnMove.length() == 0) {
+    public Move fromPgnMove(String pgnMoveString, Side side, Board board) {
+        if (pgnMoveString == null || pgnMoveString.length() == 0) {
             throw new ServiceException("A pgn move may not be empty.");
         }
-        if (CASTLE_SHORT.equals(pgnMove)) {
+        if (CASTLE_SHORT.equals(pgnMoveString)) {
             return new Castle(side, CastleType.SHORT);
         }
-        if (CASTLE_LONG.equals(pgnMove)) {
+        if (CASTLE_LONG.equals(pgnMoveString)) {
             return new Castle(side, CastleType.LONG);
         }
 
-        PieceType type = typeFromIndicator(pgnMove.charAt(0));
-        Matcher moveMatcher = movePattern.matcher(pgnMove);
+        Matcher moveMatcher = movePattern.matcher(pgnMoveString);
         if (!moveMatcher.find()) {
-            throw new ServiceException(String.format("%s is not a valid move in PGN format", pgnMove));
+            throw new ServiceException(String.format("%s is not a valid move in PGN format", pgnMoveString));
         }
-        Square target = squareFromString(moveMatcher.group(2));
-        List<SimpleMove> possibleMoves = boardService.getMovesBySideAndTarget(board, side, target)
+        PgnMoveExtractor pgnMoveExtractor = new PgnMoveExtractor(new PgnMove(
+            moveMatcher.group(1),
+            moveMatcher.group(2),
+            moveMatcher.group(3),
+            moveMatcher.group(4)
+        ));
+        List<SimpleMove> possibleMoves = boardService.getMovesBySideAndTarget(board, side, pgnMoveExtractor.getTarget())
             .stream()
-            .filter(possible -> possible.getType() == type)
+            .filter(possible -> possible.getType() == pgnMoveExtractor.getPieceType())
             .collect(Collectors.toList());
         if (possibleMoves.size() == 0) {
-            throw impossibleMoveException(pgnMove, side, board);
+            throw impossibleMoveException(pgnMoveString, side, board);
         }
         if (possibleMoves.size() == 1) {
             return possibleMoves.get(0);
         }
-        if (moveMatcher.group(1) == null) {
-            throw ambiguousMoveException(
-                pgnMove, side, possibleMoves, board
-            );
-        }
-        char specifier = moveMatcher.group(1).charAt(0);
-        Optional<FileType> originFile = FileType.fromCharVal(specifier);
-        Optional<RankType> originRank = RankType.fromIntVal(ConversionUtil.intFromChar(specifier));
         possibleMoves = possibleMoves.stream()
-            .filter(possible -> originFile
-                .map(f -> possible.getFrom().getFile() == f)
-                .orElseGet(() -> originRank
-                    .map(r -> possible.getFrom().getRank() == r)
-                    .orElse(true)))
+            .filter(OptionalsUtil.emptyOrMatches(
+                pgnMoveExtractor::getOriginFile,
+                possible -> possible.getFrom().getFile()
+            ))
+            .filter(OptionalsUtil.emptyOrMatches(
+                pgnMoveExtractor::getOriginRank,
+                possible -> possible.getFrom().getRank()
+            ))
             .collect(Collectors.toList());
         if (possibleMoves.size() > 1) {
-            throw ambiguousMoveException(pgnMove, side, possibleMoves, board);
+            throw ambiguousMoveException(pgnMoveString, side, possibleMoves, board);
         }
         return possibleMoves.stream()
             .findAny()
-            .orElseThrow(() -> impossibleMoveException(pgnMove, side, board));
+            .orElseThrow(() -> impossibleMoveException(pgnMoveString, side, board));
     }
 
     public Turn fromPgnTurn(String pgnTurn, Board board) {

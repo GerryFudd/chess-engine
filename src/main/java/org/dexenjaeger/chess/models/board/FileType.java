@@ -7,7 +7,11 @@ public enum FileType {
     A('a'), B('b'), C('c'), D('d'),
     E('e'), F('f'), G('g'), H('h');
 
-    public static Optional<FileType> fromCharVal(char val) {
+    public static Optional<FileType> fromString(String stringVal) {
+        if (stringVal == null || stringVal.length() != 1) {
+            return Optional.empty();
+        }
+        char val = stringVal.charAt(0);
         for (FileType type:FileType.values()) {
             if (val == type.getCharVal()) {
                 return Optional.of(type);
