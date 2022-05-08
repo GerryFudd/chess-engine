@@ -246,7 +246,7 @@ class FenServiceTest {
         );
         String laterGamePosition = "4k3/8/8/8/8/8/4P3/4K3 w - - 5 39";
         assertEquals(
-            new Game().addBoard(new Board(pieceMap)),
+            new Game().addBoard(new Board(pieceMap)).setTurnNumber(39),
             fenService.getGame(laterGamePosition)
         );
     }

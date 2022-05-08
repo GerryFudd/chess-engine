@@ -41,7 +41,8 @@ public class GameService {
     public Game startGame() {
         return new Game()
             .addBoard(BoardService.standardGameBoard())
-            .addCastlingRights(getCastlingTypes());
+            .addCastlingRights(getCastlingTypes())
+            .setTurnNumber(1);
     }
 
     public Side currentSide(Game game) {

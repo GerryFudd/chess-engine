@@ -15,6 +15,7 @@ import java.util.stream.Stream;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 import org.dexenjaeger.chess.models.board.Board;
 import org.dexenjaeger.chess.models.moves.Castle;
@@ -32,6 +33,16 @@ public class Game {
     private final Set<Castle> castlingRights = new HashSet<>();
     private final LinkedList<Turn> turnHistory = new LinkedList<>();
     private final LinkedList<Board> boardHistory = new LinkedList<>();
+    @Setter
+    private Integer turnNumber = null;
+
+    private Integer getTurnNumber() {
+        return lastTurn()
+            .map(t -> t.getBlackMove().isPresent()
+                ? t.getTurnNumber()
+                : t.getTurnNumber() + 1)
+            .orElse(turnNumber);
+    }
 
     public void addTag(TagType tagType, String tag) {
         standardTags.put(tagType, tag);

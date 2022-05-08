@@ -221,12 +221,14 @@ public class FenService {
                     .addBoard(previousBoard)
                     .addBoard(board)
                     .addTurn(previousTurn)
-                    .addCastlingRights(castlingRights);
+                    .addCastlingRights(castlingRights)
+                    .setTurnNumber(turnNumber);
             })
             .orElseGet(() -> {
                 Game result = new Game()
                     .addBoard(board)
-                    .addCastlingRights(castlingRights);
+                    .addCastlingRights(castlingRights)
+                    .setTurnNumber(turnNumber);
                 if (side == Side.BLACK) {
                     return result.addTurn(new Turn(turnNumber, null));
                 }
