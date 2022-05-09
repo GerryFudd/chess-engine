@@ -1,4 +1,4 @@
-package org.dexenjaeger.chess.models.moves;
+package org.dexenjaeger.chess.models.game;
 
 import java.util.Optional;
 import lombok.AllArgsConstructor;
@@ -6,6 +6,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.dexenjaeger.chess.models.moves.Move;
 
 @AllArgsConstructor
 @ToString
@@ -42,5 +43,9 @@ public class Turn {
 
     public Optional<Move> getBlackMove() {
         return Optional.ofNullable(blackMove);
+    }
+
+    public boolean isEmpty() {
+        return whiteMove == null && blackMove == null;
     }
 }

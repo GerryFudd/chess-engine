@@ -5,16 +5,16 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import org.dexenjaeger.chess.models.Game;
 import org.dexenjaeger.chess.models.Side;
 import org.dexenjaeger.chess.models.board.Board;
 import org.dexenjaeger.chess.models.board.FileType;
 import org.dexenjaeger.chess.models.board.RankType;
 import org.dexenjaeger.chess.models.board.Square;
+import org.dexenjaeger.chess.models.game.Game;
 import org.dexenjaeger.chess.models.moves.Castle;
 import org.dexenjaeger.chess.models.moves.CastleType;
+import org.dexenjaeger.chess.models.moves.Move;
 import org.dexenjaeger.chess.models.moves.SimpleMove;
-import org.dexenjaeger.chess.models.moves.Turn;
 import org.dexenjaeger.chess.models.pieces.Piece;
 import org.dexenjaeger.chess.models.pieces.PieceType;
 import org.dexenjaeger.chess.utils.OptionalsUtil;
@@ -206,33 +206,15 @@ public class FenService {
                     new Square(sq.getFile(), startingRank),
                     PieceType.PAWN, previousSide
                 ));
-                Turn previousTurn = previousSide == Side.WHITE
-                    ? new Turn(turnNumber, new SimpleMove(
-                        new Square(sq.getFile(), startingRank),
-                        new Square(sq.getFile(), endingRank),
-                        PieceType.PAWN, previousSide
-                    ))
-                    : new Turn(turnNumber - 1, null, new SimpleMove(
-                        new Square(sq.getFile(), startingRank),
-                        new Square(sq.getFile(), endingRank),
-                        PieceType.PAWN, previousSide
-                    ));
-                return new Game()
-                    .addBoard(previousBoard)
-                    .addBoard(board)
-                    .addTurn(previousTurn)
-                    .addCastlingRights(castlingRights)
-                    .setTurnNumber(turnNumber);
+                Move previousMove = new SimpleMove(
+                    new Square(sq.getFile(), startingRank),
+                    new Square(sq.getFile(), endingRank),
+                    PieceType.PAWN, previousSide
+                );
+                return Game.init(turnNumber, previousSide, previousBoard)
+                    .addMove(previousMove, board)
+                    .addCastlingRights(castlingRights);
             })
-            .orElseGet(() -> {
-                Game result = new Game()
-                    .addBoard(board)
-                    .addCastlingRights(castlingRights)
-                    .setTurnNumber(turnNumber);
-                if (side == Side.BLACK) {
-                    return result.addTurn(new Turn(turnNumber, null));
-                }
-                return result;
-            });
+            .orElseGet(() -> Game.init(turnNumber, side, board).addCastlingRights(castlingRights));
     }
 }

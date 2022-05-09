@@ -6,15 +6,14 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import org.dexenjaeger.chess.config.ServiceProvider;
-import org.dexenjaeger.chess.models.Game;
 import org.dexenjaeger.chess.models.Side;
 import org.dexenjaeger.chess.models.board.Board;
 import org.dexenjaeger.chess.models.board.FileType;
 import org.dexenjaeger.chess.models.board.RankType;
 import org.dexenjaeger.chess.models.board.Square;
+import org.dexenjaeger.chess.models.game.Game;
 import org.dexenjaeger.chess.models.moves.Castle;
 import org.dexenjaeger.chess.models.moves.CastleType;
-import org.dexenjaeger.chess.models.moves.Turn;
 import org.dexenjaeger.chess.models.pieces.Piece;
 import org.dexenjaeger.chess.models.pieces.PieceType;
 import org.junit.jupiter.api.Test;
@@ -229,10 +228,8 @@ class FenServiceTest {
         Game fullGame = pgnService.gameFromPgn("1. e4 e5 2. Nf3");
         String afterSomeOpeningMoves = "rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2";
         assertEquals(
-            new Game()
-                .addBoard(fullGame.currentBoard())
-                .addCastlingRights(fullGame.getCastlingRights())
-                .addTurn(new Turn(2, null)),
+            Game.init(2, Side.BLACK, fullGame.getCurrentBoard())
+                .addCastlingRights(fullGame.getCastlingRights()),
             fenService.getGame(afterSomeOpeningMoves)
         );
     }
@@ -246,7 +243,7 @@ class FenServiceTest {
         );
         String laterGamePosition = "4k3/8/8/8/8/8/4P3/4K3 w - - 5 39";
         assertEquals(
-            new Game().addBoard(new Board(pieceMap)).setTurnNumber(39),
+            Game.init(39, Side.WHITE, new Board(pieceMap)),
             fenService.getGame(laterGamePosition)
         );
     }

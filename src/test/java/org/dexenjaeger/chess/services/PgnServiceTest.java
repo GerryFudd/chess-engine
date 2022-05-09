@@ -7,16 +7,19 @@ import java.util.List;
 import java.util.Map;
 import org.dexenjaeger.chess.config.ServiceProvider;
 import org.dexenjaeger.chess.io.PgnFileReader;
-import org.dexenjaeger.chess.models.Game;
 import org.dexenjaeger.chess.models.Side;
 import org.dexenjaeger.chess.models.board.Board;
 import org.dexenjaeger.chess.models.board.FileType;
 import org.dexenjaeger.chess.models.board.RankType;
 import org.dexenjaeger.chess.models.board.Square;
+import org.dexenjaeger.chess.models.game.Game;
+import org.dexenjaeger.chess.models.game.MoveNode;
+import org.dexenjaeger.chess.models.game.Turn;
 import org.dexenjaeger.chess.models.moves.Castle;
 import org.dexenjaeger.chess.models.moves.CastleType;
+import org.dexenjaeger.chess.models.moves.Move;
 import org.dexenjaeger.chess.models.moves.SimpleMove;
-import org.dexenjaeger.chess.models.moves.Turn;
+import org.dexenjaeger.chess.models.moves.ZeroMove;
 import org.dexenjaeger.chess.models.pieces.Piece;
 import org.dexenjaeger.chess.models.pieces.PieceType;
 import org.dexenjaeger.chess.utils.Pair;
@@ -205,68 +208,45 @@ class PgnServiceTest {
 
     @Test
     void fromPgnTurnList_appliesQGDClassical() {
+        Board currentBoard = BoardService.standardGameBoard();
+        MoveNode expectedHistory = new MoveNode(0, new ZeroMove(Side.BLACK), currentBoard);
+        MoveNode currentTail = expectedHistory;
+        for (Move move:List.of(
+            new SimpleMove(new Square(FileType.D, RankType.TWO), new Square(FileType.D, RankType.FOUR), PieceType.PAWN, Side.WHITE),
+            new SimpleMove(new Square(FileType.D, RankType.SEVEN), new Square(FileType.D, RankType.FIVE), PieceType.PAWN, Side.BLACK),
+            new SimpleMove(new Square(FileType.C, RankType.TWO), new Square(FileType.C, RankType.FOUR), PieceType.PAWN, Side.WHITE),
+            new SimpleMove(new Square(FileType.E, RankType.SEVEN), new Square(FileType.E, RankType.SIX), PieceType.PAWN, Side.BLACK),
+            new SimpleMove(new Square(FileType.B, RankType.ONE), new Square(FileType.C, RankType.THREE), PieceType.KNIGHT, Side.WHITE),
+            new SimpleMove(new Square(FileType.G, RankType.EIGHT), new Square(FileType.F, RankType.SIX), PieceType.KNIGHT, Side.BLACK),
+            new SimpleMove(new Square(FileType.C, RankType.ONE), new Square(FileType.G, RankType.FIVE), PieceType.BISHOP, Side.WHITE),
+            new SimpleMove(new Square(FileType.B, RankType.EIGHT), new Square(FileType.D, RankType.SEVEN), PieceType.KNIGHT, Side.BLACK)
+        )) {
+            currentBoard = boardService.applyMove(currentBoard, move);
+            currentTail = currentTail.addChild(move, currentBoard);
+        }
+
         assertEquals(
-            List.of(
-                new Turn(
-                    1,
-                    new SimpleMove(new Square(FileType.D, RankType.TWO), new Square(FileType.D, RankType.FOUR), PieceType.PAWN, Side.WHITE),
-                    new SimpleMove(new Square(FileType.D, RankType.SEVEN), new Square(FileType.D, RankType.FIVE), PieceType.PAWN, Side.BLACK)
-                ),
-                new Turn(
-                    2,
-                    new SimpleMove(new Square(FileType.C, RankType.TWO), new Square(FileType.C, RankType.FOUR), PieceType.PAWN, Side.WHITE),
-                    new SimpleMove(new Square(FileType.E, RankType.SEVEN), new Square(FileType.E, RankType.SIX), PieceType.PAWN, Side.BLACK)
-                ),
-                new Turn(
-                    3,
-                    new SimpleMove(new Square(FileType.B, RankType.ONE), new Square(FileType.C, RankType.THREE), PieceType.KNIGHT, Side.WHITE),
-                    new SimpleMove(new Square(FileType.G, RankType.EIGHT), new Square(FileType.F, RankType.SIX), PieceType.KNIGHT, Side.BLACK)
-                ),
-                new Turn(
-                    4,
-                    new SimpleMove(new Square(FileType.C, RankType.ONE), new Square(FileType.G, RankType.FIVE), PieceType.BISHOP, Side.WHITE),
-                    new SimpleMove(new Square(FileType.B, RankType.EIGHT), new Square(FileType.D, RankType.SEVEN), PieceType.KNIGHT, Side.BLACK)
-                )
-            ),
-            pgnService.fromPgnTurnList(PgnFileReader.readOpening(PgnFileReader.QGD_CLASSICAL))
+            expectedHistory,
+            pgnService.fromPgnMoves(PgnFileReader.readOpening(PgnFileReader.QGD_CLASSICAL))
         );
     }
 
-    private final List<Turn> nimzoIndianTurns = List.of(
-        new Turn(
-            1,
-            new SimpleMove(new Square(FileType.D, RankType.TWO), new Square(FileType.D, RankType.FOUR), PieceType.PAWN, Side.WHITE),
-            new SimpleMove(new Square(FileType.G, RankType.EIGHT), new Square(FileType.F, RankType.SIX), PieceType.KNIGHT, Side.BLACK)
-        ),
-        new Turn(
-            2,
-            new SimpleMove(new Square(FileType.C, RankType.TWO), new Square(FileType.C, RankType.FOUR), PieceType.PAWN, Side.WHITE),
-            new SimpleMove(new Square(FileType.E, RankType.SEVEN), new Square(FileType.E, RankType.SIX), PieceType.PAWN, Side.BLACK)
-        ),
-        new Turn(
-            3,
-            new SimpleMove(new Square(FileType.B, RankType.ONE), new Square(FileType.C, RankType.THREE), PieceType.KNIGHT, Side.WHITE),
-            new SimpleMove(new Square(FileType.F, RankType.EIGHT), new Square(FileType.B, RankType.FOUR), PieceType.BISHOP, Side.BLACK)
-        ),
-        new Turn(
-            4,
-            new SimpleMove(new Square(FileType.G, RankType.ONE), new Square(FileType.F, RankType.THREE), PieceType.KNIGHT, Side.WHITE),
-            new Castle(Side.BLACK, CastleType.SHORT)
-        )
+    private final List<Move> nimzoIndianMoves = List.of(
+        new SimpleMove(new Square(FileType.D, RankType.TWO), new Square(FileType.D, RankType.FOUR), PieceType.PAWN, Side.WHITE),
+        new SimpleMove(new Square(FileType.G, RankType.EIGHT), new Square(FileType.F, RankType.SIX), PieceType.KNIGHT, Side.BLACK),
+        new SimpleMove(new Square(FileType.C, RankType.TWO), new Square(FileType.C, RankType.FOUR), PieceType.PAWN, Side.WHITE),
+        new SimpleMove(new Square(FileType.E, RankType.SEVEN), new Square(FileType.E, RankType.SIX), PieceType.PAWN, Side.BLACK),
+        new SimpleMove(new Square(FileType.B, RankType.ONE), new Square(FileType.C, RankType.THREE), PieceType.KNIGHT, Side.WHITE),
+        new SimpleMove(new Square(FileType.F, RankType.EIGHT), new Square(FileType.B, RankType.FOUR), PieceType.BISHOP, Side.BLACK),
+        new SimpleMove(new Square(FileType.G, RankType.ONE), new Square(FileType.F, RankType.THREE), PieceType.KNIGHT, Side.WHITE),
+        new Castle(Side.BLACK, CastleType.SHORT)
     );
 
     @Test
     void gameFromPgn() {
         Game expectedGame = gameService.startGame();
-        for (Turn expectedTurn:nimzoIndianTurns) {
-            expectedGame.addBoard(boardService.applyMove(
-                expectedGame.currentBoard(), expectedTurn.getWhiteMove()
-            ));
-            expectedTurn.getBlackMove()
-                .ifPresent(m -> expectedGame.addBoard(boardService.applyMove(
-                    expectedGame.currentBoard(), m
-                )));
-            expectedGame.addTurn(expectedTurn);
+        for (Move expectedMove: nimzoIndianMoves) {
+            expectedGame.addMove(expectedMove, boardService.applyMove(expectedGame.getCurrentBoard(), expectedMove));
         }
         assertEquals(
             expectedGame,

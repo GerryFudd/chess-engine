@@ -5,15 +5,16 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.dexenjaeger.chess.config.Inject;
-import org.dexenjaeger.chess.models.Game;
 import org.dexenjaeger.chess.models.Side;
 import org.dexenjaeger.chess.models.TagType;
 import org.dexenjaeger.chess.models.board.Board;
+import org.dexenjaeger.chess.models.game.Game;
+import org.dexenjaeger.chess.models.game.MoveNode;
+import org.dexenjaeger.chess.models.game.Turn;
 import org.dexenjaeger.chess.models.moves.Castle;
 import org.dexenjaeger.chess.models.moves.CastleType;
 import org.dexenjaeger.chess.models.moves.Move;
 import org.dexenjaeger.chess.models.moves.SimpleMove;
-import org.dexenjaeger.chess.models.moves.Turn;
 import org.dexenjaeger.chess.models.pgn.PgnMove;
 import org.dexenjaeger.chess.models.pieces.PieceType;
 import org.dexenjaeger.chess.services.pgn.PgnMoveExtractor;
@@ -298,19 +299,21 @@ public class PgnService {
         Matcher turnStartMatcher = turnStartPattern.matcher(pgn);
         while (turnStartMatcher.find(cursor)) {
             cursor = turnStartMatcher.end();
-            gameService.applyTurn(game, fromPgnTurn(
+            Turn turn = fromPgnTurn(
                 pgn.substring(turnStartMatcher.start()),
-                game.currentBoard()
-            ));
+                game.getCurrentBoard()
+            );
+            gameService.applyMove(game, turn.getWhiteMove());
+            turn.getBlackMove().ifPresent(m -> gameService.applyMove(game, m));
         }
         return game;
     }
 
-    public List<Turn> fromPgnTurnList(String pgnTurnList) {
-        return gameFromPgn(pgnTurnList).getTurnHistory();
+    public MoveNode fromPgnMoves(String pgnTurnList) {
+        return gameFromPgn(pgnTurnList).getMoveHistory();
     }
 
     public Board boardFromPgn(String pgn) {
-        return gameFromPgn(pgn).currentBoard();
+        return gameFromPgn(pgn).getLastBoard();
     }
 }

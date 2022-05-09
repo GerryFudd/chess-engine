@@ -1,6 +1,5 @@
 package org.dexenjaeger.chess.services;
 
-import static org.dexenjaeger.chess.models.Side.BLACK;
 import static org.dexenjaeger.chess.models.Side.WHITE;
 
 import java.util.Optional;
@@ -9,18 +8,17 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.dexenjaeger.chess.config.Inject;
-import org.dexenjaeger.chess.models.Game;
 import org.dexenjaeger.chess.models.GameStatus;
 import org.dexenjaeger.chess.models.Side;
 import org.dexenjaeger.chess.models.board.Board;
 import org.dexenjaeger.chess.models.board.RankType;
 import org.dexenjaeger.chess.models.board.Square;
+import org.dexenjaeger.chess.models.game.Game;
 import org.dexenjaeger.chess.models.moves.Castle;
 import org.dexenjaeger.chess.models.moves.CastleType;
 import org.dexenjaeger.chess.models.moves.EnPassantCapture;
 import org.dexenjaeger.chess.models.moves.Move;
 import org.dexenjaeger.chess.models.moves.SinglePieceMove;
-import org.dexenjaeger.chess.models.moves.Turn;
 import org.dexenjaeger.chess.models.pieces.Piece;
 import org.dexenjaeger.chess.models.pieces.PieceType;
 
@@ -39,17 +37,12 @@ public class GameService {
     }
 
     public Game startGame() {
-        return new Game()
-            .addBoard(BoardService.standardGameBoard())
-            .addCastlingRights(getCastlingTypes())
-            .setTurnNumber(1);
+        return Game.init(BoardService.standardGameBoard())
+            .addCastlingRights(getCastlingTypes());
     }
 
     public Side currentSide(Game game) {
-        return game.lastTurn()
-            .filter(t -> t.getBlackMove().isEmpty())
-            .map(t -> BLACK)
-            .orElse(WHITE);
+        return game.getLastMove().getSide().other();
     }
 
     private Set<EnPassantCapture> enPassantCaptures(
@@ -84,13 +77,8 @@ public class GameService {
             .collect(Collectors.toSet());
     }
 
-    public Optional<Move> getLastMove(Game game) {
-        return game.lastTurn()
-            .map(t -> t.getBlackMove().orElse(t.getWhiteMove()));
-    }
-
     public Set<Move> getAvailableMoves(Game game) {
-        Board board = game.currentBoard();
+        Board board = game.getCurrentBoard();
         Side side = currentSide(game);
         Set<Move> result = boardService.getMovesBySide(
             board, side
@@ -98,9 +86,13 @@ public class GameService {
 
         result.addAll(enPassantCaptures(
             board,
-            () -> getLastMove(game)
-                .filter(m -> m instanceof SinglePieceMove)
-                .map(m -> (SinglePieceMove) m),
+            () -> {
+                Move m = game.getLastMove();
+                if (m instanceof SinglePieceMove) {
+                    return Optional.of((SinglePieceMove) m);
+                }
+                return Optional.empty();
+            },
             side
         ));
 
@@ -115,7 +107,7 @@ public class GameService {
         Side side = currentSide(game);
         if (getAvailableMoves(game).isEmpty()) {
             if (boardService.isSideInCheck(
-                game.currentBoard(), side
+                game.getCurrentBoard(), side
             )) {
                 return side == WHITE ? GameStatus.BLACK_WON : GameStatus.WHITE_WON;
             }
@@ -124,15 +116,7 @@ public class GameService {
         return side == WHITE ? GameStatus.WHITE_TO_MOVE : GameStatus.BLACK_TO_MOVE;
     }
 
-    public void applyTurn(Game game, Turn turn) {
-        Board currentBoard = boardService.applyMove(
-            game.currentBoard(),
-            turn.getWhiteMove()
-        );
-        game.addBoard(currentBoard);
-        turn.getBlackMove().ifPresent(m -> game.addBoard(
-            boardService.applyMove(currentBoard, m)
-        ));
-        game.addTurn(turn);
+    public void applyMove(Game game, Move move) {
+        game.addMove(move, boardService.applyMove(game.getCurrentBoard(), move));
     }
 }

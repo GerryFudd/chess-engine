@@ -7,16 +7,17 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.List;
 import java.util.Set;
 import org.dexenjaeger.chess.config.ServiceProvider;
-import org.dexenjaeger.chess.models.Game;
 import org.dexenjaeger.chess.models.Side;
 import org.dexenjaeger.chess.models.board.FileType;
+import org.dexenjaeger.chess.models.game.Game;
+import org.dexenjaeger.chess.models.game.MoveNode;
 import org.dexenjaeger.chess.models.moves.Castle;
 import org.dexenjaeger.chess.models.moves.CastleType;
 import org.dexenjaeger.chess.models.moves.EnPassantCapture;
 import org.dexenjaeger.chess.models.moves.Move;
+import org.dexenjaeger.chess.models.moves.ZeroMove;
 import org.junit.jupiter.api.Test;
 
 class GameServiceTest {
@@ -28,12 +29,8 @@ class GameServiceTest {
     void startGameTest() {
         Game initializedGame = gameService.startGame();
         assertEquals(
-            BoardService.standardGameBoard(),
-            initializedGame.currentBoard()
-        );
-        assertEquals(
-            List.of(),
-            initializedGame.getTurnHistory()
+            new MoveNode(0, new ZeroMove(BLACK), BoardService.standardGameBoard()),
+            initializedGame.getMoveHistory()
         );
         assertEquals(
             Set.of(

@@ -128,12 +128,12 @@ public class BoardServiceApplyMoveTest {
 
     @ParameterizedTest
     @CsvSource({
-        "WHITE,SHORT",
-        "WHITE,LONG",
-        "BLACK,SHORT",
-        "BLACK,LONG"
+        "WHITE,SHORT,K",
+        "WHITE,LONG,Q",
+        "BLACK,SHORT,k",
+        "BLACK,LONG,q"
     })
-    void applyMove_castleNotAvailableWhenPiecesBetween(String sideName, String typeName) {
+    void applyMove_castleNotAvailableWhenPiecesBetween(String sideName, String typeName, String asString) {
         Side side = Side.valueOf(sideName);
         CastleType type = CastleType.valueOf(typeName);
 
@@ -142,8 +142,8 @@ public class BoardServiceApplyMoveTest {
         ));
         assertEquals(
             String.format(
-                "The move Castle(side=%s, type=%s) is not available on this board.\n%s",
-                sideName, typeName, BoardService.standardGameBoard()
+                "The move %s is not available on this board.\n%s",
+                asString, BoardService.standardGameBoard()
             ),
             e.getMessage()
         );
@@ -151,12 +151,12 @@ public class BoardServiceApplyMoveTest {
 
     @ParameterizedTest
     @CsvSource({
-        "WHITE,SHORT",
-        "WHITE,LONG",
-        "BLACK,SHORT",
-        "BLACK,LONG"
+        "WHITE,SHORT,K",
+        "WHITE,LONG,Q",
+        "BLACK,SHORT,k",
+        "BLACK,LONG,q"
     })
-    void applyMove_noCastlingAfterKingMove(String sideName, String typeName) {
+    void applyMove_noCastlingAfterKingMove(String sideName, String typeName, String asString) {
         Map<Square, Piece> initialBoardState = new HashMap<>();
         initialBoardState.put(new Square(FileType.D, RankType.ONE), new Piece(WHITE, KING));
         initialBoardState.put(new Square(FileType.A, RankType.ONE), new Piece(WHITE, ROOK));
@@ -174,8 +174,8 @@ public class BoardServiceApplyMoveTest {
         );
 
         assertEquals(String.format(
-            "The move Castle(side=%s, type=%s) is not available on this board.\n%s",
-            sideName, typeName, board
+            "The move %s is not available on this board.\n%s",
+            asString, board
         ), e.getMessage());
     }
 
@@ -196,8 +196,8 @@ public class BoardServiceApplyMoveTest {
         );
 
         assertEquals(String.format(
-            "The move Castle(side=%s, type=LONG) is not available on this board.\n%s",
-            side.name(), board
+            "The move %s is not available on this board.\n%s",
+            side == WHITE ? "Q" : "q", board
         ), e.getMessage());
     }
 
@@ -218,8 +218,8 @@ public class BoardServiceApplyMoveTest {
         );
 
         assertEquals(String.format(
-            "The move Castle(side=%s, type=SHORT) is not available on this board.\n%s",
-            side.name(), board
+            "The move %s is not available on this board.\n%s",
+            side == WHITE ? "K" : "k", board
         ), e.getMessage());
     }
 
