@@ -30,7 +30,7 @@ class GameServiceTest {
         Game initializedGame = gameService.startGame();
         assertEquals(
             new MoveNode(0, new ZeroMove(BLACK), BoardService.standardGameBoard()),
-            initializedGame.getMoveHistory()
+            initializedGame.getMoveSummary()
         );
         assertEquals(
             Set.of(

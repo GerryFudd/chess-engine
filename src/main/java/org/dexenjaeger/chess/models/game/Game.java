@@ -30,16 +30,10 @@ public class Game {
     @Getter(AccessLevel.NONE)
     private final Map<String, String> nonStandardTags = new LinkedHashMap<>();
     private final Set<Castle> castlingRights = new HashSet<>();
-    private final MoveNode moveHistory;
-    @Getter(AccessLevel.NONE)
-    private MoveNode currentMove;
-    @Getter(AccessLevel.NONE)
-    private MoveNode lastMove;
+    private MoveNode moveSummary;
 
-    private Game(MoveNode moveHistory) {
-        this.moveHistory = moveHistory;
-        currentMove = moveHistory;
-        lastMove = moveHistory;
+    private Game(MoveNode moveSummary) {
+        this.moveSummary = moveSummary;
     }
 
     public static Game init(Board board) {
@@ -79,51 +73,61 @@ public class Game {
         return this;
     }
 
-    public Game addMove(Move move, Board board) {
-        currentMove = currentMove.addChild(move, board);
-        if (!lastMove.getChildren().isEmpty()) {
-            lastMove = lastMove.getChildren().getFirst();
-        }
-        return this;
+    public Move getPreviousMove() {
+        return moveSummary.getValue();
     }
 
-    public Move getLastMove() {
-        return lastMove.getValue();
-    }
-
-    public Move getCurrentMove() {
-        return currentMove.getValue();
+    public List<Move> getAttemptedMoves() {
+        return moveSummary.getChildren().stream().map(MoveNode::getValue).collect(Collectors.toList());
     }
 
     public Board getCurrentBoard() {
-        return currentMove.getBoard();
+        return moveSummary.getBoard();
     }
 
-    public Board getLastBoard() {
-        return lastMove.getBoard();
-    }
-
-    public Game parentMove() {
-        currentMove = currentMove.getParent().orElse(currentMove);
+    public Game addMove(Move move, Board board) {
+        moveSummary = moveSummary.addChild(move, board);
         return this;
     }
 
-    public Game childMove(int i) {
-        if (i < currentMove.getChildren().size()) {
-            currentMove = currentMove.getChildren().get(i);
+    public Game goToParentMove() {
+        moveSummary = moveSummary.getParent().orElse(moveSummary);
+        return this;
+    }
+
+    public Game goToAttemptedMove(Move childMove) {
+        moveSummary = moveSummary.getChildren()
+            .stream()
+            .filter(ch -> ch.getValue().equals(childMove))
+            .findAny()
+            .orElse(moveSummary);
+        return this;
+    }
+
+    public Game goToNextMainLineMove() {
+        if (!moveSummary.getChildren().isEmpty()) {
+            moveSummary = moveSummary.getChildren().getFirst();
         }
+        return this;
+    }
+
+    public Game goToFirstMove() {
+        moveSummary = moveSummary.getFirstAncestor();
         return this;
     }
 
     public Game goToLastMove() {
-        currentMove = lastMove;
+        goToFirstMove();
+        while (!getAttemptedMoves().isEmpty()) {
+            goToNextMainLineMove();
+        }
         return this;
     }
 
     public String toString() {
         return String.format(
             "Game(moves=\"%s\", castlingRights=[%s])",
-            currentMove, castlingRights.stream().map(Castle::toString).sorted().collect(Collectors.joining())
+            moveSummary.getFirstAncestor(), castlingRights.stream().map(Castle::toString).sorted().collect(Collectors.joining())
         );
     }
 }

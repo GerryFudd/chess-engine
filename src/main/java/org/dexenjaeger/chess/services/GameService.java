@@ -42,7 +42,7 @@ public class GameService {
     }
 
     public Side currentSide(Game game) {
-        return game.getLastMove().getSide().other();
+        return game.getPreviousMove().getSide().other();
     }
 
     private Set<EnPassantCapture> enPassantCaptures(
@@ -87,7 +87,7 @@ public class GameService {
         result.addAll(enPassantCaptures(
             board,
             () -> {
-                Move m = game.getLastMove();
+                Move m = game.getPreviousMove();
                 if (m instanceof SinglePieceMove) {
                     return Optional.of((SinglePieceMove) m);
                 }

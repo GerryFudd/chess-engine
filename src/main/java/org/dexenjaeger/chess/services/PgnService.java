@@ -310,10 +310,10 @@ public class PgnService {
     }
 
     public MoveNode fromPgnMoves(String pgnTurnList) {
-        return gameFromPgn(pgnTurnList).getMoveHistory();
+        return gameFromPgn(pgnTurnList).getMoveSummary().getFirstAncestor();
     }
 
     public Board boardFromPgn(String pgn) {
-        return gameFromPgn(pgn).getLastBoard();
+        return gameFromPgn(pgn).goToLastMove().getCurrentBoard();
     }
 }
