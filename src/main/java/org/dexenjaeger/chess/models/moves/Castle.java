@@ -11,10 +11,10 @@ public class Castle implements Move {
     public String toString() {
         String result;
         if (type == CastleType.LONG) {
-            result = "q";
+            result = "O-O-O";
         } else {
-            result = "k";
+            result = "O-O";
         }
-        return side == Side.WHITE ? result.toUpperCase() : result;
+        return side == Side.WHITE ? result : result.toLowerCase();
     }
 }

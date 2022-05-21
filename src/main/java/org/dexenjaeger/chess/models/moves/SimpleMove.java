@@ -31,6 +31,6 @@ public class SimpleMove implements NormalMove {
     }
 
     public String toString() {
-        return String.format("%s%s%s", getType().getRepresentation(), from, to);
+        return String.format("%s%s%s", piece, from, to);
     }
 }

@@ -7,6 +7,6 @@ import org.dexenjaeger.chess.models.Side;
 public class ZeroMove implements Move {
     Side side;
     public String toString() {
-        return String.format("StartingSide=%s", side.other().name());
+        return String.format("Starting side = %s", side.other().name());
     }
 }

@@ -11,11 +11,17 @@ import lombok.Setter;
 import org.dexenjaeger.chess.models.Side;
 import org.dexenjaeger.chess.models.board.Board;
 import org.dexenjaeger.chess.models.moves.Move;
+import org.dexenjaeger.chess.models.moves.ZeroMove;
+import org.dexenjaeger.chess.services.BoardService;
 import org.dexenjaeger.chess.utils.MergedIterable;
 import org.dexenjaeger.chess.utils.Pair;
 
 @AllArgsConstructor
 public class MoveNode {
+    public static MoveNode opening() {
+        return new MoveNode(0, new ZeroMove(Side.BLACK), BoardService.standardGameBoard());
+    }
+
     @Getter
     private final int turnNumber;
     @Getter
@@ -124,12 +130,12 @@ public class MoveNode {
     }
 
     private Optional<String> parentString() {
-        return getParent().map(MoveNode::asParentString);
+        return getParent().map(MoveNode::asParentString).map(s -> s + " ");
     }
 
     private String asParentString() {
         return parentString()
-            .map(pStr -> String.format("%s %s", pStr, value))
+            .map(pStr -> String.format("%s%s", pStr, value))
             .orElse(value.toString());
     }
 
@@ -140,18 +146,21 @@ public class MoveNode {
         MoveNode firstChild = children.getFirst();
         List<MoveNode> remainingChildren = children.subList(1, children.size());
         if (remainingChildren.isEmpty()) {
-            return Optional.of(firstChild.asChildString());
+            return Optional.of(" " + firstChild.asChildString());
         }
         return Optional.of(
-            firstChild.value.toString()
-                + "... (" + children.subList(1, children.size()).stream().map(MoveNode::asChildString).collect(Collectors.joining(" "))
+            " "
+                + firstChild.value.toString()
+                + " ("
+                + children.subList(1, children.size()).stream().map(MoveNode::asChildString).collect(Collectors.joining(") ("))
                 + ")"
-                + firstChild.childrenString().map(cStr -> " " + cStr).orElse(""));
+                + firstChild.childrenString().orElse("")
+        );
     }
 
     private String asChildString() {
         return childrenString()
-            .map(cStr -> String.format("%s %s", value, cStr))
+            .map(cStr -> String.format("%s%s", value, cStr))
             .orElse(value.toString());
     }
 
@@ -160,6 +169,8 @@ public class MoveNode {
         parentString().ifPresent(parts::add);
         parts.add(value.toString());
         childrenString().ifPresent(parts::add);
-        return String.join(" ", parts);
+        parts.add(" ");
+        parts.add(board.toString());
+        return String.join("", parts);
     }
 }

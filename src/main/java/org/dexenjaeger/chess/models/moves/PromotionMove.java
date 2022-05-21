@@ -47,6 +47,6 @@ public class PromotionMove implements NormalMove {
     }
 
     public String toString() {
-        return String.format("%s%s=%s", getFrom(), getTo(), getResult().getRepresentation());
+        return String.format("%s%s%s=%s", new Piece(side, PieceType.PAWN), getFrom(), getTo(), getResult().getRepresentation());
     }
 }
