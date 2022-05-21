@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import org.dexenjaeger.chess.models.Side;
@@ -16,7 +15,6 @@ import org.dexenjaeger.chess.services.BoardService;
 import org.dexenjaeger.chess.utils.MergedIterable;
 import org.dexenjaeger.chess.utils.Pair;
 
-@AllArgsConstructor
 public class MoveNode {
     public static MoveNode opening() {
         return new MoveNode(0, new ZeroMove(Side.BLACK), BoardService.standardGameBoard());
@@ -29,6 +27,7 @@ public class MoveNode {
     @Getter
     private final Board board;
     private final MoveNode parent;
+    private final MoveNode firstAncestor;
     @Getter
     private final LinkedList<MoveNode> children = new LinkedList<>();
     @Getter
@@ -36,21 +35,30 @@ public class MoveNode {
     private String commentary;
 
     public MoveNode(int turnNumber, Move value, Board board) {
-        this(turnNumber, value, board, null);
+        this(turnNumber, value, board, null, null, null);
     }
-    public MoveNode(int turnNumber, Move value, Board board, MoveNode parent) {
-        this(turnNumber, value, board, parent, null);
+    public MoveNode(int turnNumber, Move value, Board board, MoveNode parent, MoveNode firstAncestor, String commentary) {
+        this.turnNumber = turnNumber;
+        this.value = value;
+        this.board = board;
+        this.parent = parent;
+        this.firstAncestor = firstAncestor;
+        this.commentary = commentary;
     }
 
     public Optional<MoveNode> getParent() {
         return Optional.ofNullable(parent);
     }
 
+    public MoveNode getFirstAncestor() {
+        return Optional.ofNullable(firstAncestor).orElse(this);
+    }
+
     public MoveNode addChild(Move child, Board board) {
         return addChild(child, board, null);
     }
     public MoveNode addChild(Move child, Board board, String commentary) {
-        MoveNode newChild = new MoveNode(value.getSide() == Side.WHITE ? turnNumber : turnNumber + 1, child, board, this, commentary);
+        MoveNode newChild = new MoveNode(value.getSide() == Side.WHITE ? turnNumber : turnNumber + 1, child, board, this, getFirstAncestor(), commentary);
         children.add(newChild);
         return newChild;
     }
@@ -78,7 +86,8 @@ public class MoveNode {
     }
 
     private boolean equalsValueAndBoard(MoveNode otherNode) {
-        return Objects.equals(otherNode.getValue(), value)
+        return otherNode != null
+            && Objects.equals(otherNode.getValue(), value)
             && Objects.equals(otherNode.getBoard(), board);
     }
 
@@ -99,21 +108,6 @@ public class MoveNode {
         return true;
     }
 
-    private boolean equalsAsParent(MoveNode otherNode) {
-        return equalsValueAndBoard(otherNode)
-            && equalsParent(otherNode.getParent().orElse(null));
-    }
-
-    private boolean equalsParent(MoveNode otherParent) {
-        if (parent == otherParent) {
-            return true;
-        }
-        if (parent == null) {
-            return false;
-        }
-        return parent.equalsAsParent(otherParent);
-    }
-
     public boolean equals(Object other) {
         if (other == null) {
             return false;
@@ -123,54 +117,50 @@ public class MoveNode {
                 return true;
             }
             return equalsValueAndBoard((MoveNode) other)
-                && equalsParent(((MoveNode) other).getParent().orElse(null))
-                && equalsChildren(((MoveNode) other).getChildren());
+                && getFirstAncestor().equalsAsChildren(((MoveNode) other).getFirstAncestor());
         }
         return false;
     }
 
-    private Optional<String> parentString() {
-        return getParent().map(MoveNode::asParentString).map(s -> s + " ");
+    private String firstAncestorString() {
+        return getFirstAncestor().asChildString(this);
     }
 
-    private String asParentString() {
-        return parentString()
-            .map(pStr -> String.format("%s%s", pStr, value))
-            .orElse(value.toString());
+    private String valueString(MoveNode currentNode) {
+        if (equalsValueAndBoard(currentNode)) {
+            return String.format("<%s>", value);
+        }
+        return value.toString();
     }
 
-    private Optional<String> childrenString() {
+    private Optional<String> childrenString(MoveNode currentNode) {
         if (children.isEmpty()) {
             return Optional.empty();
         }
         MoveNode firstChild = children.getFirst();
         List<MoveNode> remainingChildren = children.subList(1, children.size());
         if (remainingChildren.isEmpty()) {
-            return Optional.of(" " + firstChild.asChildString());
+            return Optional.of(" " + firstChild.asChildString(currentNode));
         }
         return Optional.of(
             " "
-                + firstChild.value.toString()
+                + firstChild.valueString(currentNode)
                 + " ("
-                + children.subList(1, children.size()).stream().map(MoveNode::asChildString).collect(Collectors.joining(") ("))
+                + remainingChildren.stream().map(c -> c.asChildString(currentNode)).collect(Collectors.joining(") ("))
                 + ")"
-                + firstChild.childrenString().orElse("")
+                + firstChild.childrenString(currentNode).orElse("")
         );
     }
 
-    private String asChildString() {
-        return childrenString()
-            .map(cStr -> String.format("%s%s", value, cStr))
-            .orElse(value.toString());
+    private String asChildString(MoveNode currentNode) {
+        return childrenString(currentNode)
+            .map(cStr -> String.format("%s%s", valueString(currentNode), cStr))
+            .orElse(valueString(currentNode));
     }
 
     public String toString() {
         List<String> parts = new LinkedList<>();
-        parentString().ifPresent(parts::add);
-        parts.add("<");
-        parts.add(value.toString());
-        parts.add(">");
-        childrenString().ifPresent(parts::add);
+        parts.add(firstAncestorString());
         parts.add(" ");
         parts.add(board.toString());
         return String.join("", parts);
