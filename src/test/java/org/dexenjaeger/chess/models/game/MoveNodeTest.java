@@ -10,7 +10,9 @@ import static org.dexenjaeger.chess.models.pieces.PieceType.QUEEN;
 import static org.dexenjaeger.chess.models.pieces.PieceType.ROOK;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.List;
 import org.dexenjaeger.chess.config.ServiceProvider;
 import org.dexenjaeger.chess.models.Side;
 import org.dexenjaeger.chess.models.board.Board;
@@ -294,5 +296,37 @@ class MoveNodeTest {
         // The children from each node should be equal and have the same hash codes
         assertEquals(firstNode.getChildren().getFirst(), secondNodeChild);
         assertEquals(firstNode.getChildren().getFirst().hashCode(), secondNodeChild.hashCode());
+    }
+
+    @Test
+    void testParentAncestorAndChild() {
+        MoveNode firstNode = MoveNode.opening();
+
+        // Apply a move to both nodes and capture the child from the second node
+        MoveNode firstChild = new MoveLine(boardService, firstNode)
+            .applyMoves(new SimpleMove(new Square(FileType.D, RankType.TWO), new Square(FileType.D, RankType.FOUR), PAWN, WHITE));
+        MoveNode secondChild = new MoveLine(boardService, firstNode)
+            .applyMoves(new SimpleMove(new Square(FileType.E, RankType.TWO), new Square(FileType.E, RankType.FOUR), PAWN, WHITE));
+
+        // The first ancestor for all nodes is equal
+        assertEquals(firstNode, firstNode.getFirstAncestor());
+        assertEquals(firstNode, firstChild.getFirstAncestor());
+        assertEquals(firstNode, secondChild.getFirstAncestor());
+
+        // The parent of the first node is empty
+        assertTrue(firstNode.getParent().isEmpty(), "The first node's parent should be empty");
+        // The parent of the other two nodes should be the first node
+        assertEquals(firstNode, firstChild.getParent().orElseThrow());
+        assertEquals(firstNode, secondChild.getParent().orElseThrow());
+
+        // The children of the first node match the two child nodes
+        assertEquals(
+            List.of(firstChild, secondChild),
+            firstNode.getChildren()
+        );
+
+        // The children of the two child nodes are empty
+        assertTrue(firstChild.getChildren().isEmpty(), "The children of a terminal node should be empty.");
+        assertTrue(secondChild.getChildren().isEmpty(), "The children of a terminal node should be empty.");
     }
 }
