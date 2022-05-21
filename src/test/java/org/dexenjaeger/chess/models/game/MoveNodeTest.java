@@ -10,7 +10,6 @@ import static org.dexenjaeger.chess.models.pieces.PieceType.QUEEN;
 import static org.dexenjaeger.chess.models.pieces.PieceType.ROOK;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.util.List;
 import org.dexenjaeger.chess.config.ServiceProvider;
 import org.dexenjaeger.chess.models.Side;
 import org.dexenjaeger.chess.models.board.Board;
@@ -34,7 +33,7 @@ class MoveNodeTest {
     void toString_starting() {
         Board board = BoardService.standardGameBoard();
         assertEquals(
-            String.format("Starting side = WHITE %s", board),
+            String.format("<Starting side = WHITE> %s", board),
             new MoveNode(0, new ZeroMove(Side.BLACK), board).toString()
         );
     }
@@ -43,74 +42,58 @@ class MoveNodeTest {
     void toString_WithSingleMove() {
         Move firstMove =  new SimpleMove(new Square(FileType.D, RankType.TWO), new Square(FileType.D, RankType.FOUR), PAWN, WHITE);
         Board board = boardService.applyMove(MoveNode.opening().getBoard(), firstMove);
-        MoveNode moveNode = MoveNode.opening().addChild(
+        MoveNode childNode = MoveNode.opening().addChild(
            firstMove, board
         );
         assertEquals(
-            String.format("Starting side = WHITE Pd2d4 %s", board),
-           moveNode.toString()
+            String.format("Starting side = WHITE <Pd2d4> %s", board),
+           childNode.toString()
         );
     }
 
     @Test
     void toString_WithParentAndChildren() {
-        MoveNode moveNode = MoveNode.opening();
-        for (Move move:List.of(
+        MoveNode startingNode = MoveNode.opening();
+        new MoveLine(boardService, startingNode).applyMoves(
             new SimpleMove(new Square(FileType.D, RankType.TWO), new Square(FileType.D, RankType.FOUR), PAWN, WHITE),
             new SimpleMove(new Square(FileType.D, RankType.SEVEN), new Square(FileType.D, RankType.FIVE), PAWN, BLACK),
             new SimpleMove(new Square(FileType.C, RankType.TWO), new Square(FileType.C, RankType.FOUR), PAWN, WHITE)
-        )) {
-            moveNode = moveNode.addChild(move, boardService.applyMove(moveNode.getBoard(), move));
-        }
-        moveNode = moveNode.getParent().orElseThrow();
+        );
         assertEquals(
-            String.format("Starting side = WHITE Pd2d4 Pd7d5 Pc2c4 %s", moveNode.getBoard()),
-           moveNode.toString()
+            String.format("<Starting side = WHITE> Pd2d4 pd7d5 Pc2c4 %s", startingNode.getBoard()),
+           startingNode.toString()
         );
     }
 
     @Test
     void toString_WithParentAndMultipleChildren() {
-        MoveNode moveNode = MoveNode.opening();
-        for (Move move:List.of(
-            new SimpleMove(new Square(FileType.D, RankType.TWO), new Square(FileType.D, RankType.FOUR), PAWN, WHITE),
-            new SimpleMove(new Square(FileType.D, RankType.SEVEN), new Square(FileType.D, RankType.FIVE), PAWN, BLACK),
-            new SimpleMove(new Square(FileType.C, RankType.TWO), new Square(FileType.C, RankType.FOUR), PAWN, WHITE)
-        )) {
-            moveNode = moveNode.addChild(move, boardService.applyMove(moveNode.getBoard(), move));
-        }
-        moveNode = moveNode.getParent().orElseThrow();
-        Move alternateMove1 = new SimpleMove(new Square(FileType.C, RankType.ONE), new Square(FileType.F, RankType.FOUR), BISHOP, WHITE);
-        moveNode.addChild(alternateMove1, boardService.applyMove(moveNode.getBoard(), alternateMove1));
+        MoveNode startingNode = MoveNode.opening();
+        MoveLine mainLine = new MoveLine(boardService, startingNode);
 
-        Move alternateMove2 = new SimpleMove(new Square(FileType.G, RankType.ONE), new Square(FileType.F, RankType.THREE), KNIGHT, WHITE);
-        moveNode.addChild(alternateMove2, boardService.applyMove(moveNode.getBoard(), alternateMove2));
+        // Apply moves before any branching to get the relevant node
+        MoveNode branchNode = mainLine
+            .applyMoves(
+                new SimpleMove(new Square(FileType.D, RankType.TWO), new Square(FileType.D, RankType.FOUR), PAWN, WHITE),
+                new SimpleMove(new Square(FileType.D, RankType.SEVEN), new Square(FileType.D, RankType.FIVE), PAWN, BLACK)
+            );
+
+        // Apply main move
+        mainLine.applyMoves(
+            new SimpleMove(new Square(FileType.C, RankType.TWO), new Square(FileType.C, RankType.FOUR), PAWN, WHITE)
+        );
+
+        // Apply first alternate move
+        new MoveLine(boardService, branchNode)
+            .applyMoves(new SimpleMove(new Square(FileType.C, RankType.ONE), new Square(FileType.F, RankType.FOUR), BISHOP, WHITE));
+
+        // Apply second alternate move
+        new MoveLine(boardService, branchNode)
+            .applyMoves(new SimpleMove(new Square(FileType.G, RankType.ONE), new Square(FileType.F, RankType.THREE), KNIGHT, WHITE));
 
         assertEquals(
-            String.format("Starting side = WHITE Pd2d4 Pd7d5... (Bc1f4) (Ng1f3) Pc2c4 %s", moveNode.getBoard()),
-            moveNode.toString()
+            String.format("<Starting side = WHITE> Pd2d4 pd7d5 Pc2c4 (Bc1f4) (Ng1f3) %s", startingNode.getBoard()),
+            startingNode.toString()
         );
-    }
-
-    private static class MoveLine {
-        private final BoardService service;
-        private MoveNode tail;
-
-        private MoveLine(BoardService service, MoveNode tail) {
-            this.service = service;
-            this.tail = tail;
-        }
-
-        private MoveNode getMoveResult(Move move) {
-            return tail.addChild(move, service.applyMove(tail.getBoard(), move));
-        }
-
-        public MoveNode applyMoves(Move... moves) {
-            for (Move move:moves) {
-                tail = getMoveResult(move);
-            }
-            return tail;
-        }
     }
 
     @Test
@@ -193,7 +176,7 @@ class MoveNodeTest {
             ancestor = ancestor.getParent().orElseThrow();
         }
 
-        String expectedString = "Starting side = WHITE Pd2d4 pd7d5 Pc2c4 pe7e5 Pd4e5 pd5d4 Pe2e3 bf8b4 Bc1d2 pd4e3 Bd2b4 pe3f2 Ke1e2 " 
+        String expectedString = "<Starting side = WHITE> Pd2d4 pd7d5 Pc2c4 pe7e5 Pd4e5 pd5d4 Pe2e3 bf8b4 Bc1d2 pd4e3 Bd2b4 pe3f2 Ke1e2 "
             + "pf2g1=N Ke2e1 (Rh1g1 bc8g4 Ke2e1 qd8d1 Ke1f2) qd8h4 (qd8d1 Ke1d1 bc8g4 (nb8c6 Bb4c3 bc8g4 Kd1e1 o-o-o Rh1g1 rd8d1 Ke1f2) Kd1e1)";
         assertEquals(
             String.format(

@@ -167,7 +167,9 @@ public class MoveNode {
     public String toString() {
         List<String> parts = new LinkedList<>();
         parentString().ifPresent(parts::add);
+        parts.add("<");
         parts.add(value.toString());
+        parts.add(">");
         childrenString().ifPresent(parts::add);
         parts.add(" ");
         parts.add(board.toString());
