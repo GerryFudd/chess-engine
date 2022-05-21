@@ -9,6 +9,7 @@ import static org.dexenjaeger.chess.models.pieces.PieceType.PAWN;
 import static org.dexenjaeger.chess.models.pieces.PieceType.QUEEN;
 import static org.dexenjaeger.chess.models.pieces.PieceType.ROOK;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 import org.dexenjaeger.chess.config.ServiceProvider;
 import org.dexenjaeger.chess.models.Side;
@@ -268,5 +269,30 @@ class MoveNodeTest {
                 thirdBranchNode.getBoard()),
             thirdBranchNode.toString()
         );
+    }
+
+    @Test
+    void testEqualsAndHashCode() {
+        MoveNode firstNode = MoveNode.opening();
+        MoveNode secondNode = MoveNode.opening();
+        assertEquals(firstNode, secondNode);
+        assertEquals(firstNode.hashCode(), secondNode.hashCode());
+
+        // Apply a move to both nodes and capture the child from the second node
+        Move firstMove = new SimpleMove(new Square(FileType.D, RankType.TWO), new Square(FileType.D, RankType.FOUR), PAWN, WHITE);
+        new MoveLine(boardService, firstNode).applyMoves(firstMove);
+        MoveNode secondNodeChild = new MoveLine(boardService, secondNode).applyMoves(firstMove);
+
+        // The two nodes should equal one another and have equal hash codes
+        assertEquals(firstNode, secondNode);
+        assertEquals(firstNode.hashCode(), secondNode.hashCode());
+
+        // The child of the second should not equal the parent of the first and their hash codes should be different
+        assertNotEquals(firstNode, secondNodeChild);
+        assertNotEquals(firstNode.hashCode(), secondNodeChild.hashCode());
+
+        // The children from each node should be equal and have the same hash codes
+        assertEquals(firstNode.getChildren().getFirst(), secondNodeChild);
+        assertEquals(firstNode.getChildren().getFirst().hashCode(), secondNodeChild.hashCode());
     }
 }

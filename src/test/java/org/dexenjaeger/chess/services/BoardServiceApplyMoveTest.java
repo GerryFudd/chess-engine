@@ -128,10 +128,10 @@ public class BoardServiceApplyMoveTest {
 
     @ParameterizedTest
     @CsvSource({
-        "WHITE,SHORT,K",
-        "WHITE,LONG,Q",
-        "BLACK,SHORT,k",
-        "BLACK,LONG,q"
+        "WHITE,SHORT,O-O",
+        "WHITE,LONG,O-O-O",
+        "BLACK,SHORT,o-o",
+        "BLACK,LONG,o-o-o"
     })
     void applyMove_castleNotAvailableWhenPiecesBetween(String sideName, String typeName, String asString) {
         Side side = Side.valueOf(sideName);
@@ -151,10 +151,10 @@ public class BoardServiceApplyMoveTest {
 
     @ParameterizedTest
     @CsvSource({
-        "WHITE,SHORT,K",
-        "WHITE,LONG,Q",
-        "BLACK,SHORT,k",
-        "BLACK,LONG,q"
+        "WHITE,SHORT,O-O",
+        "WHITE,LONG,O-O-O",
+        "BLACK,SHORT,o-o",
+        "BLACK,LONG,o-o-o"
     })
     void applyMove_noCastlingAfterKingMove(String sideName, String typeName, String asString) {
         Map<Square, Piece> initialBoardState = new HashMap<>();
@@ -197,7 +197,7 @@ public class BoardServiceApplyMoveTest {
 
         assertEquals(String.format(
             "The move %s is not available on this board.\n%s",
-            side == WHITE ? "Q" : "q", board
+            side == WHITE ? "O-O-O" : "o-o-o", board
         ), e.getMessage());
     }
 
@@ -219,7 +219,7 @@ public class BoardServiceApplyMoveTest {
 
         assertEquals(String.format(
             "The move %s is not available on this board.\n%s",
-            side == WHITE ? "K" : "k", board
+            side == WHITE ? "O-O" : "o-o", board
         ), e.getMessage());
     }
 

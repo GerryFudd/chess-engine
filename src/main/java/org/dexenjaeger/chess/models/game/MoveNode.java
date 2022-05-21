@@ -71,18 +71,9 @@ public class MoveNode {
         return Objects.hash(value, board) + hashChildren();
     }
 
-    private int hashParent() {
-        return Optional.ofNullable(parent).map(MoveNode::hashAsParent).orElse(0);
-    }
-
-    private int hashAsParent() {
-        return Objects.hash(value, board) + hashParent();
-    }
-
     public int hashCode() {
         return Objects.hash(value, board)
-            + hashChildren()
-            + hashParent();
+            + getFirstAncestor().hashAsChild();
     }
 
     private boolean equalsValueAndBoard(MoveNode otherNode) {
@@ -116,6 +107,8 @@ public class MoveNode {
             if (this == other) {
                 return true;
             }
+            // Confirm that the two nodes represent the same move and that they have their
+            // trees match if you start from the top.
             return equalsValueAndBoard((MoveNode) other)
                 && getFirstAncestor().equalsAsChildren(((MoveNode) other).getFirstAncestor());
         }
