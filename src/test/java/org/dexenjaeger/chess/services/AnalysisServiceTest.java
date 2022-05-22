@@ -98,4 +98,38 @@ class AnalysisServiceTest {
             analysisService.findCheckmateInOne(game)
         );
     }
+
+    @ParameterizedTest
+    @CsvSource({
+        "3qk3/3ppp2/8/8/2B5/2K2Q2/8/8 w - - 15 38,Qf7",
+        "6rk/6pp/7P/6N1/6K1/8/8/8 w - - 15 38,Nf7",
+        "R7/8/7k/2r5/5n2/8/6Q1/5K2 w - - 13 49,Rh8",
+        "2rb4/2k5/5N2/1Q6/3K4/8/8/8 w - - 13 49,Ne8",
+    })
+    void findForcedCheckmate_inOne(String fen, String solutionPgn) {
+        Game game = fenService.getGame(fen);
+        Move solution = pgnService.fromPgnMove(solutionPgn, gameService.currentSide(game), game.getCurrentBoard());
+        assertEquals(
+            gameService.applyMove(analysisService.detachGameState(game), solution).getMoveSummary().getFirstAncestor(),
+            analysisService.findForcedCheckmate(game, 1)
+        );
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "2r1r1k1/5ppp/8/8/4R3/8/5PPP/4R1K1 w - - 15 38,Re8 Rxe8 Rxe8",
+        "5r2/2R3b1/P4r2/2p2Nkp/2b3pN/6P1/4PP2/6K1 w - - 15 38,Rg7 Rg6 Rxg6",
+    })
+    void findForcedCheckmate(String fen, String solutionPgns) {
+        Game game = fenService.getGame(fen);
+        Game detachedGame = analysisService.detachGameState(game);
+        for (String solutionPgn:solutionPgns.split(" ")) {
+            Move newMove = pgnService.fromPgnMove(solutionPgn, gameService.currentSide(detachedGame), detachedGame.getCurrentBoard());
+            gameService.applyMove(detachedGame, newMove);
+        }
+        assertEquals(
+            detachedGame.getMoveSummary().getFirstAncestor(),
+            analysisService.findForcedCheckmate(game, 2)
+        );
+    }
 }

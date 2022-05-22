@@ -101,7 +101,7 @@ public class MoveNode {
             + getFirstAncestor().hashAsChild();
     }
 
-    private boolean equalsCurrentNodeValues(MoveNode otherNode) {
+    public boolean equalsCurrentNodeValues(MoveNode otherNode) {
         return otherNode != null
             && otherNode.getFiftyMoveRuleCounter() == fiftyMoveRuleCounter
             && otherNode.getTurnNumber() == turnNumber
