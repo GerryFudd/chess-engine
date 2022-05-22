@@ -37,12 +37,18 @@ public class Game {
     }
 
     public static Game init(Board board) {
-        return init(1, Side.WHITE, board);
+        return init(1, Side.WHITE, board, 0);
     }
-    public static Game init(int turnNumber, Side side, Board board) {
-        return new Game(new MoveNode(
-            turnNumber - 1, new ZeroMove(side.other()), board
-        ));
+
+    public static Game init(
+        int turnNumber, Side side, Board board,
+        int fiftyMoveRuleCounter
+    ) {
+        return new Game(
+            new MoveNode(
+                turnNumber - 1, new ZeroMove(side.other()), board, fiftyMoveRuleCounter
+            )
+        );
     }
 
     public void addTag(TagType tagType, String tag) {

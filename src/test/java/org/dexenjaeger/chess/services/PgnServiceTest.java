@@ -196,7 +196,7 @@ class PgnServiceTest {
     @Test
     void fromPgnTurnList_appliesQGDClassical() {
         Board currentBoard = BoardService.standardGameBoard();
-        MoveNode expectedHistory = new MoveNode(0, new ZeroMove(Side.BLACK), currentBoard);
+        MoveNode expectedHistory = new MoveNode(0, new ZeroMove(Side.BLACK), currentBoard, 0);
         MoveNode currentTail = expectedHistory;
         for (Move move:List.of(
             new SimpleMove(new Square(FileType.D, RankType.TWO), new Square(FileType.D, RankType.FOUR), PieceType.PAWN, Side.WHITE),

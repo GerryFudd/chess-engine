@@ -228,7 +228,7 @@ class FenServiceTest {
         Game fullGame = pgnService.gameFromPgn("1. e4 e5 2. Nf3");
         String afterSomeOpeningMoves = "rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2";
         assertEquals(
-            Game.init(2, Side.BLACK, fullGame.getCurrentBoard())
+            Game.init(2, Side.BLACK, fullGame.getCurrentBoard(), 1)
                 .addCastlingRights(fullGame.getCastlingRights()),
             fenService.getGame(afterSomeOpeningMoves)
         );
@@ -243,7 +243,7 @@ class FenServiceTest {
         );
         String laterGamePosition = "4k3/8/8/8/8/8/4P3/4K3 w - - 5 39";
         assertEquals(
-            Game.init(39, Side.WHITE, new Board(pieceMap)),
+            Game.init(39, Side.WHITE, new Board(pieceMap), 5),
             fenService.getGame(laterGamePosition)
         );
     }

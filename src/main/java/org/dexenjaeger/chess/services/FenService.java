@@ -194,6 +194,7 @@ public class FenService {
         Side side = readSide(tokens[1]);
         Set<Castle> castlingRights = getCastlingRights(tokens[2]);
         Optional<Square> enPassantTarget = getEnPassantSquare(tokens[3]);
+        int fiftyMoveRuleCounter = Integer.parseInt(tokens[4]);
         int turnNumber = Integer.parseInt(tokens[5]);
         return enPassantTarget
             .map(sq -> {
@@ -211,10 +212,10 @@ public class FenService {
                     new Square(sq.getFile(), endingRank),
                     PieceType.PAWN, previousSide
                 );
-                return Game.init(turnNumber, previousSide, previousBoard)
+                return Game.init(turnNumber, previousSide, previousBoard, fiftyMoveRuleCounter)
                     .addMove(previousMove, board)
                     .addCastlingRights(castlingRights);
             })
-            .orElseGet(() -> Game.init(turnNumber, side, board).addCastlingRights(castlingRights));
+            .orElseGet(() -> Game.init(turnNumber, side, board, fiftyMoveRuleCounter).addCastlingRights(castlingRights));
     }
 }

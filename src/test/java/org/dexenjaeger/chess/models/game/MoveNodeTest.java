@@ -26,18 +26,20 @@ import org.dexenjaeger.chess.models.moves.PromotionMove;
 import org.dexenjaeger.chess.models.moves.SimpleMove;
 import org.dexenjaeger.chess.models.moves.ZeroMove;
 import org.dexenjaeger.chess.services.BoardService;
+import org.dexenjaeger.chess.services.FenService;
 import org.junit.jupiter.api.Test;
 
 class MoveNodeTest {
     private final static ServiceProvider serviceProvider = new ServiceProvider();
     private final BoardService boardService = serviceProvider.getInstance(BoardService.class);
+    private final FenService fenService = serviceProvider.getInstance(FenService.class);
 
     @Test
     void toString_starting() {
         Board board = BoardService.standardGameBoard();
         assertEquals(
-            String.format("<Starting side = WHITE> %s", board),
-            new MoveNode(0, new ZeroMove(Side.BLACK), board).toString()
+            String.format("<Starting side = WHITE> %s 0", board),
+            new MoveNode(0, new ZeroMove(Side.BLACK), board, 0).toString()
         );
     }
 
@@ -49,7 +51,7 @@ class MoveNodeTest {
            firstMove, board
         );
         assertEquals(
-            String.format("Starting side = WHITE <Pd2d4> %s", board),
+            String.format("Starting side = WHITE <Pd2d4> %s 0", board),
            childNode.toString()
         );
     }
@@ -63,7 +65,7 @@ class MoveNodeTest {
             new SimpleMove(new Square(FileType.C, RankType.TWO), new Square(FileType.C, RankType.FOUR), PAWN, WHITE)
         );
         assertEquals(
-            String.format("<Starting side = WHITE> Pd2d4 pd7d5 Pc2c4 %s", startingNode.getBoard()),
+            String.format("<Starting side = WHITE> Pd2d4 pd7d5 Pc2c4 %s 0", startingNode.getBoard()),
            startingNode.toString()
         );
     }
@@ -94,7 +96,7 @@ class MoveNodeTest {
             .applyMoves(new SimpleMove(new Square(FileType.G, RankType.ONE), new Square(FileType.F, RankType.THREE), KNIGHT, WHITE));
 
         assertEquals(
-            String.format("<Starting side = WHITE> Pd2d4 pd7d5 Pc2c4 (Bc1f4) (Ng1f3) %s", startingNode.getBoard()),
+            String.format("<Starting side = WHITE> Pd2d4 pd7d5 Pc2c4 (Bc1f4) (Ng1f3) %s 0", startingNode.getBoard()),
             startingNode.toString()
         );
     }
@@ -179,7 +181,7 @@ class MoveNodeTest {
             + "pf2g1=N Ke2e1 (Rh1g1 bc8g4 Ke2e1 qd8d1 Ke1f2) qd8h4 (qd8d1 Ke1d1 bc8g4 (nb8c6 Bb4c3 bc8g4 Kd1e1 o-o-o Rh1g1 rd8d1 Ke1f2) Kd1e1)";
         assertEquals(
             String.format(
-                "%s %s",
+                "%s %s 0",
                 expectedString,
                 ancestor.getBoard()),
             ancestor.toString()
@@ -266,7 +268,7 @@ class MoveNodeTest {
             + "pf2g1=N Ke2e1 (Rh1g1 bc8g4 Ke2e1 qd8d1 Ke1f2) qd8h4 (qd8d1 <Ke1d1> bc8g4 (nb8c6 Bb4c3 bc8g4 Kd1e1 o-o-o Rh1g1 rd8d1 Ke1f2) Kd1e1)";
         assertEquals(
             String.format(
-                "%s %s",
+                "%s %s 0",
                 expectedString,
                 thirdBranchNode.getBoard()),
             thirdBranchNode.toString()
@@ -328,5 +330,14 @@ class MoveNodeTest {
         // The children of the two child nodes are empty
         assertTrue(firstChild.getChildren().isEmpty(), "The children of a terminal node should be empty.");
         assertTrue(secondChild.getChildren().isEmpty(), "The children of a terminal node should be empty.");
+    }
+
+    @Test
+    void equals_differentFiftyMoveRuleValues() {
+        Board board = fenService.readPieceLocations("8/8/Pk5p/1P4p1/5pP1/5P2/5K2/8");
+        assertNotEquals(
+            new MoveNode(100, new ZeroMove(WHITE), board, 10),
+            new MoveNode(100, new ZeroMove(WHITE), board, 45)
+        );
     }
 }

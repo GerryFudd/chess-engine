@@ -29,7 +29,7 @@ class GameServiceTest {
     void startGameTest() {
         Game initializedGame = gameService.startGame();
         assertEquals(
-            new MoveNode(0, new ZeroMove(BLACK), BoardService.standardGameBoard()),
+            new MoveNode(0, new ZeroMove(BLACK), BoardService.standardGameBoard(), 0),
             initializedGame.getMoveSummary()
         );
         assertEquals(

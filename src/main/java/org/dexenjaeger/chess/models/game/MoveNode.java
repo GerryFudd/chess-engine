@@ -10,14 +10,16 @@ import lombok.Setter;
 import org.dexenjaeger.chess.models.Side;
 import org.dexenjaeger.chess.models.board.Board;
 import org.dexenjaeger.chess.models.moves.Move;
+import org.dexenjaeger.chess.models.moves.SinglePieceMove;
 import org.dexenjaeger.chess.models.moves.ZeroMove;
+import org.dexenjaeger.chess.models.pieces.PieceType;
 import org.dexenjaeger.chess.services.BoardService;
 import org.dexenjaeger.chess.utils.MergedIterable;
 import org.dexenjaeger.chess.utils.Pair;
 
 public class MoveNode {
     public static MoveNode opening() {
-        return new MoveNode(0, new ZeroMove(Side.BLACK), BoardService.standardGameBoard());
+        return new MoveNode(0, new ZeroMove(Side.BLACK), BoardService.standardGameBoard(), 0);
     }
 
     @Getter
@@ -31,18 +33,21 @@ public class MoveNode {
     @Getter
     private final LinkedList<MoveNode> children = new LinkedList<>();
     @Getter
+    private final int fiftyMoveRuleCounter;
+    @Getter
     @Setter
     private String commentary;
 
-    public MoveNode(int turnNumber, Move value, Board board) {
-        this(turnNumber, value, board, null, null, null);
+    public MoveNode(int turnNumber, Move value, Board board, int fiftyMoveRuleCounter) {
+        this(turnNumber, value, board, null, null, fiftyMoveRuleCounter, null);
     }
-    public MoveNode(int turnNumber, Move value, Board board, MoveNode parent, MoveNode firstAncestor, String commentary) {
+    public MoveNode(int turnNumber, Move value, Board board, MoveNode parent, MoveNode firstAncestor, int fiftyMoveRuleCounter, String commentary) {
         this.turnNumber = turnNumber;
         this.value = value;
         this.board = board;
         this.parent = parent;
         this.firstAncestor = firstAncestor;
+        this.fiftyMoveRuleCounter = fiftyMoveRuleCounter;
         this.commentary = commentary;
     }
 
@@ -58,7 +63,27 @@ public class MoveNode {
         return addChild(child, board, null);
     }
     public MoveNode addChild(Move child, Board board, String commentary) {
-        MoveNode newChild = new MoveNode(value.getSide() == Side.WHITE ? turnNumber : turnNumber + 1, child, board, this, getFirstAncestor(), commentary);
+        int newFiftyMoveCounter;
+        if (
+            child instanceof SinglePieceMove
+            && (
+                ((SinglePieceMove) child).getType() == PieceType.PAWN
+                || getBoard().getPiece(((SinglePieceMove) child).getTo()).isPresent()
+                )
+        ) {
+                newFiftyMoveCounter = 0;
+        } else {
+                newFiftyMoveCounter = fiftyMoveRuleCounter + 1;
+        }
+        MoveNode newChild = new MoveNode(
+            value.getSide() == Side.WHITE ? turnNumber : turnNumber + 1,
+            child,
+            board,
+            this,
+            getFirstAncestor(),
+            newFiftyMoveCounter,
+            commentary
+        );
         children.add(newChild);
         return newChild;
     }
@@ -76,15 +101,16 @@ public class MoveNode {
             + getFirstAncestor().hashAsChild();
     }
 
-    private boolean equalsValueTurnNumberAndBoard(MoveNode otherNode) {
+    private boolean equalsCurrentNodeValues(MoveNode otherNode) {
         return otherNode != null
+            && otherNode.getFiftyMoveRuleCounter() == fiftyMoveRuleCounter
             && otherNode.getTurnNumber() == turnNumber
             && Objects.equals(otherNode.getValue(), value)
             && Objects.equals(otherNode.getBoard(), board);
     }
 
     private boolean equalsAsChildren(MoveNode otherNode) {
-        return equalsValueTurnNumberAndBoard(otherNode)
+        return equalsCurrentNodeValues(otherNode)
             && equalsChildren(otherNode.getChildren());
     }
 
@@ -110,7 +136,7 @@ public class MoveNode {
             }
             // Confirm that the two nodes represent the same move and that they have their
             // trees match if you start from the top.
-            return equalsValueTurnNumberAndBoard((MoveNode) other)
+            return equalsCurrentNodeValues((MoveNode) other)
                 && getFirstAncestor().equalsAsChildren(((MoveNode) other).getFirstAncestor());
         }
         return false;
@@ -121,7 +147,7 @@ public class MoveNode {
     }
 
     private String valueString(MoveNode currentNode) {
-        if (equalsValueTurnNumberAndBoard(currentNode)) {
+        if (equalsCurrentNodeValues(currentNode)) {
             return String.format("<%s>", value);
         }
         return value.toString();
@@ -155,8 +181,8 @@ public class MoveNode {
     public String toString() {
         List<String> parts = new LinkedList<>();
         parts.add(firstAncestorString());
-        parts.add(" ");
         parts.add(board.toString());
-        return String.join("", parts);
+        parts.add(String.valueOf(fiftyMoveRuleCounter));
+        return String.join(" ", parts);
     }
 }
