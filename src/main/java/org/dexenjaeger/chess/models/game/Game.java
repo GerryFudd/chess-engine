@@ -37,11 +37,11 @@ public class Game {
     }
 
     public static Game init(Board board) {
-        return init(0, Side.WHITE, board);
+        return init(1, Side.WHITE, board);
     }
     public static Game init(int turnNumber, Side side, Board board) {
         return new Game(new MoveNode(
-            turnNumber, new ZeroMove(side.other()), board
+            turnNumber - 1, new ZeroMove(side.other()), board
         ));
     }
 
@@ -127,7 +127,7 @@ public class Game {
     public String toString() {
         return String.format(
             "Game(moves=\"%s\", castlingRights=[%s])",
-            moveSummary.getFirstAncestor(), castlingRights.stream().map(Castle::toString).sorted().collect(Collectors.joining())
+            moveSummary.getFirstAncestor(), castlingRights.stream().map(Castle::toFen).sorted().collect(Collectors.joining())
         );
     }
 }

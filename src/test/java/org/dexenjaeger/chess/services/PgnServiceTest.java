@@ -14,7 +14,6 @@ import org.dexenjaeger.chess.models.board.RankType;
 import org.dexenjaeger.chess.models.board.Square;
 import org.dexenjaeger.chess.models.game.Game;
 import org.dexenjaeger.chess.models.game.MoveNode;
-import org.dexenjaeger.chess.models.game.Turn;
 import org.dexenjaeger.chess.models.moves.Castle;
 import org.dexenjaeger.chess.models.moves.CastleType;
 import org.dexenjaeger.chess.models.moves.Move;
@@ -195,18 +194,6 @@ class PgnServiceTest {
     }
 
     @Test
-    void fromPgnTurn_firstTurnKingsIndian() {
-        assertEquals(
-            new Turn(
-                1,
-                new SimpleMove(new Square(FileType.D, RankType.TWO), new Square(FileType.D, RankType.FOUR), PieceType.PAWN, Side.WHITE),
-                new SimpleMove(new Square(FileType.G, RankType.EIGHT), new Square(FileType.F, RankType.SIX), PieceType.KNIGHT, Side.BLACK)
-            ),
-            pgnService.fromPgnTurn("1. d4 Nf6", BoardService.standardGameBoard())
-        );
-    }
-
-    @Test
     void fromPgnTurnList_appliesQGDClassical() {
         Board currentBoard = BoardService.standardGameBoard();
         MoveNode expectedHistory = new MoveNode(0, new ZeroMove(Side.BLACK), currentBoard);
@@ -251,6 +238,33 @@ class PgnServiceTest {
         assertEquals(
             expectedGame,
             pgnService.gameFromPgn(PgnFileReader.readOpening(PgnFileReader.NIMZO))
+        );
+    }
+
+    @Test
+    void gameFromPgn_withVariations() {
+        Game sampleFisherGame = pgnService.gameFromPgn(PgnFileReader.readGame(PgnFileReader.SAMPLE_FISHER_GAME));
+        String expectedMoveSummary = "Starting side = WHITE "
+            + "Pd2d4 ng8f6 Pc2c4 pg7g6 Nb1c3 bf8g7 Pe2e4 o-o Pe4e5 nf6e8 Pf2f4 pd7d6 Bc1e3 pc7c5 Pd4c5 nb8c6 Pc5d6 pe7d6 Nc3e4 "
+            + "("
+            + "Pe5d6 ne8d6 "
+            + "("
+            + "bg7c3 Pb2c3 ne8d6 Be3c5 qd8e7 "
+            + "(rf8e8 Bf1e2 nd6e4) "
+            + "Bf1e2 rf8d8 Ng1f3 pb7b6 Bc5a3 "
+            + "(Bc5f2)"
+            + ") "
+            + "Ng1f3 "
+            + "(Be3c5 bg7c3 Pb2c3 qd8e7 Bf1e2) "
+            + "rf8e8 Qd1d2 nd6f5 Qd2d8 bg7c3 Pb2c3 nc6d8"
+            + ") "
+            + "bc8f5 Ne4g3 "
+            + "(Ne4d6 ne8d6 Pe5d6 rf8e8 Qd1e2 nc6d4) "
+            + "bf5e6 Ng1f3 qd8c7 Qd1b1 pd6e5 Pf4f5 pe5e4 Pf5e6 pe4f3 Pg2f3 pf7f5 Pf3f4 ne8f6 Bf1e2 rf8e8 Ke1f2 re8e6 Rh1e1 ra8e8 Be2f3 re6e3 Re1e3 re8e3 Kf2e3 <qc7f4> "
+            + "6k1/pp4bp/2n2np1/5p2/2P2q2/4KBN1/PP5P/RQ6";
+        assertEquals(
+            expectedMoveSummary,
+            sampleFisherGame.getMoveSummary().toString()
         );
     }
 

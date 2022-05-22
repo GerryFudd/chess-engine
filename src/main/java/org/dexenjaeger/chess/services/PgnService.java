@@ -1,6 +1,8 @@
 package org.dexenjaeger.chess.services;
 
+import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -10,7 +12,6 @@ import org.dexenjaeger.chess.models.TagType;
 import org.dexenjaeger.chess.models.board.Board;
 import org.dexenjaeger.chess.models.game.Game;
 import org.dexenjaeger.chess.models.game.MoveNode;
-import org.dexenjaeger.chess.models.game.Turn;
 import org.dexenjaeger.chess.models.moves.Castle;
 import org.dexenjaeger.chess.models.moves.CastleType;
 import org.dexenjaeger.chess.models.moves.Move;
@@ -95,7 +96,7 @@ public class PgnService {
     //   - a rank indicating character.
     // This regex captures the optional starting location indicator and the destination square
     // rank and file indicators.
-    private static final Pattern movePattern = Pattern.compile("([RNBQK])?([a-h])?([1-8])?x?([a-h][1-8])");
+    private static final String movePattern = "([RNBQK])?([a-h])?([1-8])?x?([a-h][1-8])";
 
     // 8.2.2: Movetext move number indications
     // A move number indication is composed of one or more adjacent digits (an integer token)
@@ -111,13 +112,12 @@ public class PgnService {
     // following the digit sequence that gives the move number; one or more white space
     // characters may appear between the digit sequence and the period(s).
 
-    // The below regex for a turn number will match
-    //   - a number that is not preceded by letters followed by
-    //   - zero or more whitespace characters followed by
-    //   - zero or more periods followed by
-    //   - one or more white space characters.
-    private static final Pattern turnPattern = Pattern.compile("(?<!\\w)(\\d+)\\s*\\.*\\s+([^\\s]+)(?:\\s+([^\\s]+))?\\s*");
-    private static final Pattern turnStartPattern = Pattern.compile("(?<!\\w)\\d+\\s*\\.*\\s+");
+    // 8.2.5: Movetext RAV (Recursive Annotation Variation)
+    // An RAV (Recursive Annotation Variation) is a sequence of movetext containing one or
+    // more moves enclosed in parentheses. An RAV is used to represent an alternative
+    // variation. The alternate move sequence given by an RAV is one that may be legally
+    // played by first unplaying the move that appears immediately prior to the RAV.
+    // Because the RAV is a recursive construct, it may be nested.
 
     // 8.1: Tag pair section
     // The tag pair section is composed of a series of zero or more tag pairs.
@@ -183,7 +183,7 @@ public class PgnService {
 
         return result.append(move.getTo()).toString();
     }
-    
+
     public String toPgnMove(Move move, Board board) {
         if (move instanceof Castle) {
             return castleToPgnMove((Castle) move);
@@ -216,7 +216,7 @@ public class PgnService {
             pgnMove, side, board
         ));
     }
-    
+
     public Move fromPgnMove(String pgnMoveString, Side side, Board board) {
         if (pgnMoveString == null || pgnMoveString.length() == 0) {
             throw new ServiceException("A pgn move may not be empty.");
@@ -228,7 +228,7 @@ public class PgnService {
             return new Castle(side, CastleType.LONG);
         }
 
-        Matcher moveMatcher = movePattern.matcher(pgnMoveString);
+        Matcher moveMatcher = Pattern.compile(movePattern).matcher(pgnMoveString);
         if (!moveMatcher.find()) {
             throw new ServiceException(String.format("%s is not a valid move in PGN format", pgnMoveString));
         }
@@ -266,23 +266,6 @@ public class PgnService {
             .orElseThrow(() -> impossibleMoveException(pgnMoveString, side, board));
     }
 
-    public Turn fromPgnTurn(String pgnTurn, Board board) {
-        Matcher turnMatcher = turnPattern.matcher(pgnTurn);
-        if (!turnMatcher.find()) {
-            throw new ServiceException(String.format("%s is not a valid turn in PGN format.", pgnTurn));
-        }
-        int turnNumber = Integer.parseInt(turnMatcher.group(1));
-        Move whiteMove = fromPgnMove(turnMatcher.group(2), Side.WHITE, board);
-        if (turnMatcher.group(3) == null) {
-            return new Turn(turnNumber, whiteMove);
-        }
-        Move blackMove = fromPgnMove(
-            turnMatcher.group(3), Side.BLACK,
-            boardService.applyMove(board, whiteMove)
-        );
-        return new Turn(turnNumber, whiteMove, blackMove);
-    }
-
     public Game gameFromPgn(String pgn) {
         Game game = gameService.startGame();
         int cursor = 0;
@@ -296,15 +279,36 @@ public class PgnService {
                     () -> game.addTag(tagLabel, tagMatcher.group(2))
                 );
         }
-        Matcher turnStartMatcher = turnStartPattern.matcher(pgn);
-        while (turnStartMatcher.find(cursor)) {
-            cursor = turnStartMatcher.end();
-            Turn turn = fromPgnTurn(
-                pgn.substring(turnStartMatcher.start()),
-                game.getCurrentBoard()
-            );
-            gameService.applyMove(game, turn.getWhiteMove());
-            turn.getBlackMove().ifPresent(m -> gameService.applyMove(game, m));
+        Matcher nextTokenMatcher = Pattern.compile(String.format(
+            "(?:\\(|\\)|%s|%s|%s)",
+            CASTLE_SHORT, CASTLE_LONG, movePattern
+        )).matcher(pgn);
+        LinkedList<AtomicInteger> nestedVariationSizes = new LinkedList<>();
+
+        while (nextTokenMatcher.find(cursor)) {
+            cursor = nextTokenMatcher.end();
+            if (nextTokenMatcher.group().equals("(")) {
+                nestedVariationSizes.addLast(new AtomicInteger());
+                game.goToParentMove();
+            } else if (nextTokenMatcher.group().equals(")")) {
+                AtomicInteger variationLength = nestedVariationSizes.removeLast();
+                while (variationLength.getAndDecrement() > 0) {
+                    game.goToParentMove();
+                }
+                game.goToNextMainLineMove();
+            } else {
+                if (!nestedVariationSizes.isEmpty()) {
+                    nestedVariationSizes
+                        .getLast()
+                        .incrementAndGet();
+                }
+                Move newMove = fromPgnMove(
+                    nextTokenMatcher.group(),
+                    gameService.currentSide(game),
+                    game.getCurrentBoard()
+                );
+                gameService.applyMove(game, newMove);
+            }
         }
         return game;
     }

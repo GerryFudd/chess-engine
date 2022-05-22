@@ -76,14 +76,15 @@ public class MoveNode {
             + getFirstAncestor().hashAsChild();
     }
 
-    private boolean equalsValueAndBoard(MoveNode otherNode) {
+    private boolean equalsValueTurnNumberAndBoard(MoveNode otherNode) {
         return otherNode != null
+            && otherNode.getTurnNumber() == turnNumber
             && Objects.equals(otherNode.getValue(), value)
             && Objects.equals(otherNode.getBoard(), board);
     }
 
     private boolean equalsAsChildren(MoveNode otherNode) {
-        return equalsValueAndBoard(otherNode)
+        return equalsValueTurnNumberAndBoard(otherNode)
             && equalsChildren(otherNode.getChildren());
     }
 
@@ -109,7 +110,7 @@ public class MoveNode {
             }
             // Confirm that the two nodes represent the same move and that they have their
             // trees match if you start from the top.
-            return equalsValueAndBoard((MoveNode) other)
+            return equalsValueTurnNumberAndBoard((MoveNode) other)
                 && getFirstAncestor().equalsAsChildren(((MoveNode) other).getFirstAncestor());
         }
         return false;
@@ -120,7 +121,7 @@ public class MoveNode {
     }
 
     private String valueString(MoveNode currentNode) {
-        if (equalsValueAndBoard(currentNode)) {
+        if (equalsValueTurnNumberAndBoard(currentNode)) {
             return String.format("<%s>", value);
         }
         return value.toString();

@@ -43,6 +43,7 @@ public class DirectionalMoveExtractor implements MoveExtractor {
         int fileShift = to.getFile().ordinal() - from.getFile().ordinal();
         int rankShift = to.getRank().ordinal() - from.getRank().ordinal();
         return ConversionUtil.directionFromShifts(fileShift, rankShift)
+            .filter(directions::contains)
             .map(dir -> {
                 for (Square square:new DirectionIterable(
                     List.of(dir), from, checkAvailability
