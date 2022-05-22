@@ -116,7 +116,7 @@ public class GameService {
         return side == WHITE ? GameStatus.WHITE_TO_MOVE : GameStatus.BLACK_TO_MOVE;
     }
 
-    public void applyMove(Game game, Move move) {
-        game.addMove(move, boardService.applyMove(game.getCurrentBoard(), move));
+    public Game applyMove(Game game, Move move) {
+        return game.addMove(move, boardService.applyMove(game.getCurrentBoard(), move));
     }
 }
