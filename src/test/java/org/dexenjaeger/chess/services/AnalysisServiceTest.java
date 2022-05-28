@@ -4,7 +4,7 @@ import static org.dexenjaeger.chess.models.Side.BLACK;
 import static org.dexenjaeger.chess.models.Side.WHITE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.util.Set;
+import java.util.Optional;
 import org.dexenjaeger.chess.config.ServiceProvider;
 import org.dexenjaeger.chess.models.Side;
 import org.dexenjaeger.chess.models.board.Board;
@@ -94,7 +94,7 @@ class AnalysisServiceTest {
         Game game = fenService.getGame(fen);
         Move solution = pgnService.fromPgnMove(solutionPgn, gameService.currentSide(game), game.getCurrentBoard());
         assertEquals(
-            Set.of(solution),
+            Optional.of(solution),
             analysisService.findCheckmateInOne(game)
         );
     }

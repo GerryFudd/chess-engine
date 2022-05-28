@@ -1,5 +1,6 @@
 package org.dexenjaeger.chess.services;
 
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -52,14 +53,14 @@ public class AnalysisService {
         );
     }
 
-    public Set<Move> findCheckmateInOne(Game game) {
+    public Optional<Move> findCheckmateInOne(Game game) {
         return gameService.getAvailableMoves(game)
             .stream()
             .filter(move -> {
                 Game potentialGame = gameService.applyMove(detachGameState(game), move);
                 return gameService.getGameStatus(potentialGame).isCheckmate();
             })
-            .collect(Collectors.toSet());
+            .findAny();
     }
 
     private Game mergeDescendents(Game game, Game gameToMerge) {
@@ -77,6 +78,14 @@ public class AnalysisService {
             gameToMerge.goToParentMove();
         }
         return game;
+    }
+
+    private Iterable<Game> detachedGamesStartingWithForcing(Game game) {
+        return gameService.getAvailableMoves(game)
+            .stream()
+            .map(potentialMove -> gameService.applyMove(detachGameState(game), potentialMove))
+            .sorted(Comparator.comparing(g -> gameService.getAvailableMoves(g).size()))
+            .collect(Collectors.toList());
     }
 
     private Game findForcedCheckmateFromDetached(Game game, Side startingSide, int maxMoves) {
@@ -104,30 +113,27 @@ public class AnalysisService {
             }
             return game;
         }
-        Set<Move> checkmatingMoves = findCheckmateInOne(game);
-        if (!checkmatingMoves.isEmpty()) {
-            for (Move checkmatingMove:checkmatingMoves) {
-                gameService.applyMove(game, checkmatingMove)
-                    .goToParentMove();
-            }
-        }
-        if (maxMoves == 1) {
-            return game;
-        }
-        for (Move potentialMove: gameService.getAvailableMoves(game)) {
-            if (checkmatingMoves.contains(potentialMove)) {
-                continue;
-            }
-            Game gameWithCheckmate = findForcedCheckmateFromDetached(
-                gameService.applyMove(detachGameState(game), potentialMove),
-                startingSide,
-                maxMoves - 1
-            );
-            if (!gameWithCheckmate.getAttemptedMoves().isEmpty()) {
-                mergeDescendents(game, gameWithCheckmate.goToParentMove());
-            }
-        }
-        return game;
+        return findCheckmateInOne(game)
+            .map(checkmatingMove -> gameService
+                .applyMove(game, checkmatingMove)
+                .goToParentMove())
+            .orElseGet(() -> {
+                if (maxMoves == 1) {
+                    return game;
+                }
+                for (Game potentialGame: detachedGamesStartingWithForcing(game)) {
+                    Game gameWithCheckmate = findForcedCheckmateFromDetached(
+                        potentialGame,
+                        startingSide,
+                        maxMoves - 1
+                    );
+                    if (!gameWithCheckmate.getAttemptedMoves().isEmpty()) {
+                        mergeDescendents(game, gameWithCheckmate.goToParentMove());
+                        return game;
+                    }
+                }
+                return game;
+            });
     }
 
     public MoveNode findForcedCheckmate(Game game, int maxTurns) {
