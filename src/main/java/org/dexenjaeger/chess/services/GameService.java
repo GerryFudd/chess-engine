@@ -14,6 +14,7 @@ import org.dexenjaeger.chess.models.board.Board;
 import org.dexenjaeger.chess.models.board.RankType;
 import org.dexenjaeger.chess.models.board.Square;
 import org.dexenjaeger.chess.models.game.Game;
+import org.dexenjaeger.chess.models.game.MoveNode;
 import org.dexenjaeger.chess.models.moves.Castle;
 import org.dexenjaeger.chess.models.moves.CastleType;
 import org.dexenjaeger.chess.models.moves.EnPassantCapture;
@@ -118,5 +119,15 @@ public class GameService {
 
     public Game applyMove(Game game, Move move) {
         return game.addMove(move, boardService.applyMove(game.getCurrentBoard(), move));
+    }
+
+    public Game detachGameState(Game game) {
+        MoveNode moveSummary = game.getMoveSummary();
+        return Game.init(
+            moveSummary.getTurnNumber(),
+            currentSide(game),
+            game.getCurrentBoard(),
+            moveSummary.getFiftyMoveRuleCounter()
+        );
     }
 }

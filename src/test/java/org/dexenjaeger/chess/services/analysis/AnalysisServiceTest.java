@@ -1,15 +1,18 @@
-package org.dexenjaeger.chess.services;
+package org.dexenjaeger.chess.services.analysis;
 
 import static org.dexenjaeger.chess.models.Side.BLACK;
 import static org.dexenjaeger.chess.models.Side.WHITE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.util.Optional;
 import org.dexenjaeger.chess.config.ServiceProvider;
 import org.dexenjaeger.chess.models.Side;
 import org.dexenjaeger.chess.models.board.Board;
 import org.dexenjaeger.chess.models.game.Game;
 import org.dexenjaeger.chess.models.moves.Move;
+import org.dexenjaeger.chess.services.BoardService;
+import org.dexenjaeger.chess.services.FenService;
+import org.dexenjaeger.chess.services.GameService;
+import org.dexenjaeger.chess.services.PgnService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -90,27 +93,11 @@ class AnalysisServiceTest {
         "R7/8/7k/2r5/5n2/8/6Q1/5K2 w - - 13 49,Rh8",
         "2rb4/2k5/5N2/1Q6/3K4/8/8/8 w - - 13 49,Ne8",
     })
-    void findCheckmateInOne(String fen, String solutionPgn) {
-        Game game = fenService.getGame(fen);
-        Move solution = pgnService.fromPgnMove(solutionPgn, gameService.currentSide(game), game.getCurrentBoard());
-        assertEquals(
-            Optional.of(solution),
-            analysisService.findCheckmateInOne(game)
-        );
-    }
-
-    @ParameterizedTest
-    @CsvSource({
-        "3qk3/3ppp2/8/8/2B5/2K2Q2/8/8 w - - 15 38,Qf7",
-        "6rk/6pp/7P/6N1/6K1/8/8/8 w - - 15 38,Nf7",
-        "R7/8/7k/2r5/5n2/8/6Q1/5K2 w - - 13 49,Rh8",
-        "2rb4/2k5/5N2/1Q6/3K4/8/8/8 w - - 13 49,Ne8",
-    })
     void findForcedCheckmate_inOne(String fen, String solutionPgn) {
         Game game = fenService.getGame(fen);
         Move solution = pgnService.fromPgnMove(solutionPgn, gameService.currentSide(game), game.getCurrentBoard());
         assertEquals(
-            gameService.applyMove(analysisService.detachGameState(game), solution).getMoveSummary().getFirstAncestor(),
+            gameService.applyMove(gameService.detachGameState(game), solution).getMoveSummary().getFirstAncestor(),
             analysisService.findForcedCheckmate(game, 1)
         );
     }
@@ -122,7 +109,7 @@ class AnalysisServiceTest {
     })
     void findForcedCheckmate(String fen, String solutionPgns) {
         Game game = fenService.getGame(fen);
-        Game detachedGame = analysisService.detachGameState(game);
+        Game detachedGame = gameService.detachGameState(game);
         for (String solutionPgn:solutionPgns.split(" ")) {
             Move newMove = pgnService.fromPgnMove(solutionPgn, gameService.currentSide(detachedGame), detachedGame.getCurrentBoard());
             gameService.applyMove(detachedGame, newMove);
