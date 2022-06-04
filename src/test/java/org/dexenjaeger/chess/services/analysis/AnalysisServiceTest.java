@@ -8,6 +8,7 @@ import org.dexenjaeger.chess.config.ServiceProvider;
 import org.dexenjaeger.chess.models.Side;
 import org.dexenjaeger.chess.models.board.Board;
 import org.dexenjaeger.chess.models.game.Game;
+import org.dexenjaeger.chess.models.game.MoveNode;
 import org.dexenjaeger.chess.models.moves.Move;
 import org.dexenjaeger.chess.services.BoardService;
 import org.dexenjaeger.chess.services.FenService;
@@ -98,7 +99,7 @@ class AnalysisServiceTest {
         Move solution = pgnService.fromPgnMove(solutionPgn, gameService.currentSide(game), game.getCurrentBoard());
         assertEquals(
             gameService.applyMove(gameService.detachGameState(game), solution).getMoveSummary().getFirstAncestor(),
-            analysisService.findForcedCheckmate(game, 1)
+            analysisService.findForcedCheckmate(game, 1).orElseThrow()
         );
     }
 
@@ -114,9 +115,11 @@ class AnalysisServiceTest {
             Move newMove = pgnService.fromPgnMove(solutionPgn, gameService.currentSide(detachedGame), detachedGame.getCurrentBoard());
             gameService.applyMove(detachedGame, newMove);
         }
+        MoveNode expected = detachedGame.getMoveSummary().getFirstAncestor();
+        MoveNode result = analysisService.findForcedCheckmate(game, 2).orElseThrow();
         assertEquals(
-            detachedGame.getMoveSummary().getFirstAncestor(),
-            analysisService.findForcedCheckmate(game, 2)
+            expected,
+            result
         );
     }
 }

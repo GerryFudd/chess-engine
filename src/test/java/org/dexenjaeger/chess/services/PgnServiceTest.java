@@ -261,7 +261,7 @@ class PgnServiceTest {
             + "bc8f5 Ne4g3 "
             + "(Ne4d6 ne8d6 Pe5d6 rf8e8 Qd1e2 nc6d4) "
             + "bf5e6 Ng1f3 qd8c7 Qd1b1 pd6e5 Pf4f5 pe5e4 Pf5e6 pe4f3 Pg2f3 pf7f5 Pf3f4 ne8f6 Bf1e2 rf8e8 Ke1f2 re8e6 Rh1e1 ra8e8 Be2f3 re6e3 Re1e3 re8e3 Kf2e3 <qc7f4> "
-            + "6k1/pp4bp/2n2np1/5p2/2P2q2/4KBN1/PP5P/RQ6";
+            + "6k1/pp4bp/2n2np1/5p2/2P2q2/4KBN1/PP5P/RQ6 0";
         assertEquals(
             expectedMoveSummary,
             sampleFisherGame.getMoveSummary().toString()

@@ -1,31 +1,21 @@
 package org.dexenjaeger.chess.config;
 
 import java.lang.reflect.Constructor;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
-import java.util.function.Supplier;
 import lombok.SneakyThrows;
 import org.dexenjaeger.chess.services.NotImplementedException;
 
 public class ServiceProvider {
-    private final Set<Binding<?>> bindings = new HashSet<>();
+    private final BindingHolder bindingHolder;
 
-    protected <T> ServiceProvider bind(Class<T> tClass, Supplier<T> supplier) {
-        bindings.add(new Binding<>(tClass, supplier));
-        return this;
+    public ServiceProvider() {
+        this(BindingHolder.init(BindingConfig.builder().build()));
     }
 
-    protected <T> ServiceProvider bind(Class<T> tClass, T instance) {
-        bindings.add(new Binding<>(tClass, instance));
-        return this;
-    }
-
-    protected <T, U extends T> ServiceProvider bind(Class<T> tClass, Class<U> uClass) {
-        bindings.add(new Binding<T>(tClass, () -> getInjectedInstance(uClass)));
-        return this;
+    public ServiceProvider(BindingHolder bindingHolder) {
+        this.bindingHolder = bindingHolder;
     }
 
     @SneakyThrows
@@ -50,11 +40,7 @@ public class ServiceProvider {
     }
 
     private <T> Optional<T> getBoundInstance(Class<T> tClass) {
-        return bindings.stream()
-            .map(b -> b.getInstanceIfMatch(tClass))
-            .filter(Optional::isPresent)
-            .map(Optional::get)
-            .findAny();
+        return bindingHolder.getBound(tClass);
     }
 
     @SneakyThrows

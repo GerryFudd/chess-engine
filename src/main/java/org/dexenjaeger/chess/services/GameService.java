@@ -124,7 +124,7 @@ public class GameService {
     public Game detachGameState(Game game) {
         MoveNode moveSummary = game.getMoveSummary();
         return Game.init(
-            moveSummary.getTurnNumber(),
+            moveSummary.getTurnNumber() + 1,
             currentSide(game),
             game.getCurrentBoard(),
             moveSummary.getFiftyMoveRuleCounter()

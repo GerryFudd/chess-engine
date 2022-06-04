@@ -4,7 +4,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.dexenjaeger.chess.config.Inject;
 import org.dexenjaeger.chess.models.GameStatus;
 import org.dexenjaeger.chess.models.Side;
@@ -31,7 +31,7 @@ public class CheckmateService {
             .findAny();
     }
 
-    private Game mergeDescendents(Game game, Game gameToMerge) {
+    private void mergeDescendents(Game game, Game gameToMerge) {
         if (!game.getCurrentBoard().equals(gameToMerge.getCurrentBoard())) {
             throw new RuntimeException(String.format(
                 "Game board %s doesn't match the game board to merge %s.",
@@ -45,73 +45,69 @@ public class CheckmateService {
             game.goToParentMove();
             gameToMerge.goToParentMove();
         }
-        return game;
     }
 
-    private Iterable<Game> detachedGamesStartingWithForcing(Game game) {
+    private Stream<Game> detachedGamesStartingWithForcing(Game game) {
         return gameService.getAvailableMoves(game)
             .stream()
             .map(potentialMove -> gameService.applyMove(gameService.detachGameState(game), potentialMove))
-            .sorted(Comparator.comparing(g -> gameService.getAvailableMoves(g).size()))
-            .collect(Collectors.toList());
+            .sorted(Comparator.comparing(g -> gameService.getAvailableMoves(g).size()));
     }
 
-    private Game findForcedCheckmateFromDetached(Game game, Side startingSide, int maxMoves) {
+    private Optional<Game> findForcedCheckmateFromDetached(Game game, Side startingSide, int maxMoves) {
         if (maxMoves == 0) {
-            return game;
+            return Optional.empty();
         }
-        if (gameService.currentSide(game) != startingSide) {
-            return findDownstreamCheckmatesForOpponent(game, maxMoves);
+        if (gameService.currentSide(game) == startingSide) {
+            Optional<Game> potentialMateInOne = findCheckmateInOne(game)
+                .map(checkmatingMove -> gameService
+                    .applyMove(game, checkmatingMove)
+                    .goToParentMove());
+            if (potentialMateInOne.isPresent()) {
+                return potentialMateInOne;
+            }
+            return findDownstreamCheckmate(game, maxMoves);
         }
-        return findCheckmateInOne(game)
-            .map(checkmatingMove -> gameService
-                .applyMove(game, checkmatingMove)
-                .goToParentMove())
-            .orElseGet(() -> findDownstreamCheckmate(game, maxMoves));
+        return findDownstreamCheckmatesForOpponent(game, maxMoves);
     }
 
-    private Game findDownstreamCheckmatesForOpponent(Game game, int maxMoves) {
+    private Optional<Game> findDownstreamCheckmatesForOpponent(Game game, int maxMoves) {
         if (gameService.getGameStatus(game) == GameStatus.STALEMATE) {
-            return game;
+            return Optional.empty();
         }
         Set<Game> gamesWithForcedMate = new HashSet<>();
         for (Move potentialMove: gameService.getAvailableMoves(game)) {
-            Game checkmatesForMove = findForcedCheckmateFromDetached(
+            Optional<Game> potentialGameWithCheckmate = findForcedCheckmateFromDetached(
                 gameService.applyMove(gameService.detachGameState(game), potentialMove),
                 gameService.currentSide(game).other(),
                 maxMoves
             );
-            if (checkmatesForMove.getAttemptedMoves().isEmpty()) {
-                return game;
+            if (potentialGameWithCheckmate.isEmpty()) {
+                return Optional.empty();
             }
-            gamesWithForcedMate.add(checkmatesForMove);
+            gamesWithForcedMate.add(potentialGameWithCheckmate.get());
         }
+
         for (Game gameWithForcedMate:gamesWithForcedMate) {
             mergeDescendents(game, gameWithForcedMate.goToParentMove());
         }
-        return game;
+        return Optional.of(game);
     }
 
-    private Game findDownstreamCheckmate(Game game, int maxMoves) {
-        for (Game potentialGame: detachedGamesStartingWithForcing(game)) {
-            Game gameWithCheckmate = findForcedCheckmateFromDetached(
-                potentialGame,
-                gameService.currentSide(game),
-                maxMoves - 1
-            );
-            if (!gameWithCheckmate.getAttemptedMoves().isEmpty()) {
-                return mergeDescendents(game, gameWithCheckmate.goToParentMove());
-            }
-        }
-        return game;
+    private Optional<Game> findDownstreamCheckmate(Game game, int maxMoves) {
+        return detachedGamesStartingWithForcing(game)
+            .flatMap(potentialGame -> findForcedCheckmateFromDetached(
+                potentialGame, gameService.currentSide(game), maxMoves - 1
+            ).stream())
+            .findFirst();
     }
 
-    public MoveNode findForcedCheckmate(Game game, int maxTurns) {
+    public Optional<MoveNode> findForcedCheckmate(Game game, int maxTurns) {
         return findForcedCheckmateFromDetached(
             gameService.detachGameState(game),
             gameService.currentSide(game), maxTurns
         )
-            .getMoveSummary()
-            .getFirstAncestor();
+            .map(Game::getMoveSummary)
+            .map(MoveNode::getFirstAncestor);
     }
 }

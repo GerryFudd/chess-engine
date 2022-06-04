@@ -41,7 +41,7 @@ public class AnalysisService {
         return boardService.getMovesBySide(board, side).size();
     }
 
-    public MoveNode findForcedCheckmate(Game game, int maxTurns) {
+    public Optional<MoveNode> findForcedCheckmate(Game game, int maxTurns) {
         return checkmateService.findForcedCheckmate(game, maxTurns);
     }
 }
