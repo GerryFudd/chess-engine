@@ -11,7 +11,7 @@ import org.dexenjaeger.chess.models.Side;
 import org.dexenjaeger.chess.models.TagType;
 import org.dexenjaeger.chess.models.board.Board;
 import org.dexenjaeger.chess.models.game.Game;
-import org.dexenjaeger.chess.models.game.MoveNode;
+import org.dexenjaeger.chess.models.game.MoveSummary;
 import org.dexenjaeger.chess.models.moves.Castle;
 import org.dexenjaeger.chess.models.moves.CastleType;
 import org.dexenjaeger.chess.models.moves.Move;
@@ -20,6 +20,7 @@ import org.dexenjaeger.chess.models.pgn.PgnMove;
 import org.dexenjaeger.chess.models.pieces.PieceType;
 import org.dexenjaeger.chess.services.pgn.PgnMoveExtractor;
 import org.dexenjaeger.chess.utils.OptionalsUtil;
+import org.dexenjaeger.chess.utils.TreeNode;
 
 public class PgnService {
     // This service implements a parser for the spec outlined here:
@@ -313,8 +314,8 @@ public class PgnService {
         return game;
     }
 
-    public MoveNode fromPgnMoves(String pgnTurnList) {
-        return gameFromPgn(pgnTurnList).getMoveSummary().getFirstAncestor();
+    public TreeNode<MoveSummary> fromPgnMoves(String pgnTurnList) {
+        return gameFromPgn(pgnTurnList).getMoveNode().getFirstAncestor();
     }
 
     public Board boardFromPgn(String pgn) {

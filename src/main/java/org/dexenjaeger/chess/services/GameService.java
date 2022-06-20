@@ -14,12 +14,13 @@ import org.dexenjaeger.chess.models.board.Board;
 import org.dexenjaeger.chess.models.board.RankType;
 import org.dexenjaeger.chess.models.board.Square;
 import org.dexenjaeger.chess.models.game.Game;
-import org.dexenjaeger.chess.models.game.MoveNode;
+import org.dexenjaeger.chess.models.game.MoveSummary;
 import org.dexenjaeger.chess.models.moves.Castle;
 import org.dexenjaeger.chess.models.moves.CastleType;
 import org.dexenjaeger.chess.models.moves.EnPassantCapture;
 import org.dexenjaeger.chess.models.moves.Move;
 import org.dexenjaeger.chess.models.moves.SinglePieceMove;
+import org.dexenjaeger.chess.models.moves.ZeroMove;
 import org.dexenjaeger.chess.models.pieces.Piece;
 import org.dexenjaeger.chess.models.pieces.PieceType;
 
@@ -118,18 +119,37 @@ public class GameService {
     }
 
     public Game applyMove(Game game, Move move) {
-        return game.addMove(move, boardService.applyMove(game.getCurrentBoard(), move));
+        MoveSummary previousMoveSummary = game.getMoveNode().getValue();
+        int newFiftyMoveCounter;
+        if (
+            move instanceof SinglePieceMove
+                && (
+                ((SinglePieceMove) move).getType() == PieceType.PAWN
+                    || game.getCurrentBoard().getPiece(((SinglePieceMove) move).getTo()).isPresent()
+            )
+        ) {
+            newFiftyMoveCounter = 0;
+        } else {
+            newFiftyMoveCounter = game.getMoveNode().getValue().getFiftyMoveRuleCounter() + 1;
+        }
+        return game.addMove(new MoveSummary(
+            move.getSide() == Side.WHITE ? previousMoveSummary.getTurnNumber() + 1 : previousMoveSummary.getTurnNumber(),
+            move,
+            boardService.applyMove(game.getCurrentBoard(), move),
+            newFiftyMoveCounter,
+            null
+        ));
     }
 
     public Game detachGameState(Game game) {
-        MoveNode moveSummary = game.getMoveSummary();
-        Side side = currentSide(game);
-        return Game.init(
-            side == WHITE ? moveSummary.getTurnNumber() + 1 : moveSummary.getTurnNumber(),
-            side,
-            game.getCurrentBoard(),
-            moveSummary.getFiftyMoveRuleCounter()
-        )
+        MoveSummary moveSummary = game.getMoveNode().getValue();
+        return Game.init(new MoveSummary(
+                moveSummary.getTurnNumber(),
+                new ZeroMove(moveSummary.getMove().getSide()),
+                moveSummary.getBoard(),
+                moveSummary.getFiftyMoveRuleCounter(),
+                moveSummary.getCommentary()
+            ))
             .addCastlingRights(game.getCastlingRights());
     }
 }

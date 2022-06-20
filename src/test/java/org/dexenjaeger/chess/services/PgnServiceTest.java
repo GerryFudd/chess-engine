@@ -13,12 +13,10 @@ import org.dexenjaeger.chess.models.board.FileType;
 import org.dexenjaeger.chess.models.board.RankType;
 import org.dexenjaeger.chess.models.board.Square;
 import org.dexenjaeger.chess.models.game.Game;
-import org.dexenjaeger.chess.models.game.MoveNode;
 import org.dexenjaeger.chess.models.moves.Castle;
 import org.dexenjaeger.chess.models.moves.CastleType;
 import org.dexenjaeger.chess.models.moves.Move;
 import org.dexenjaeger.chess.models.moves.SimpleMove;
-import org.dexenjaeger.chess.models.moves.ZeroMove;
 import org.dexenjaeger.chess.models.pieces.Piece;
 import org.dexenjaeger.chess.models.pieces.PieceType;
 import org.dexenjaeger.chess.utils.Pair;
@@ -195,9 +193,7 @@ class PgnServiceTest {
 
     @Test
     void fromPgnTurnList_appliesQGDClassical() {
-        Board currentBoard = BoardService.standardGameBoard();
-        MoveNode expectedHistory = new MoveNode(0, new ZeroMove(Side.BLACK), currentBoard, 0);
-        MoveNode currentTail = expectedHistory;
+        Game expectedGame = gameService.startGame();
         for (Move move:List.of(
             new SimpleMove(new Square(FileType.D, RankType.TWO), new Square(FileType.D, RankType.FOUR), PieceType.PAWN, Side.WHITE),
             new SimpleMove(new Square(FileType.D, RankType.SEVEN), new Square(FileType.D, RankType.FIVE), PieceType.PAWN, Side.BLACK),
@@ -208,12 +204,11 @@ class PgnServiceTest {
             new SimpleMove(new Square(FileType.C, RankType.ONE), new Square(FileType.G, RankType.FIVE), PieceType.BISHOP, Side.WHITE),
             new SimpleMove(new Square(FileType.B, RankType.EIGHT), new Square(FileType.D, RankType.SEVEN), PieceType.KNIGHT, Side.BLACK)
         )) {
-            currentBoard = boardService.applyMove(currentBoard, move);
-            currentTail = currentTail.addChild(move, currentBoard);
+            gameService.applyMove(expectedGame, move);
         }
 
         assertEquals(
-            expectedHistory,
+            expectedGame.getMoveNode().getFirstAncestor(),
             pgnService.fromPgnMoves(PgnFileReader.readOpening(PgnFileReader.QGD_CLASSICAL))
         );
     }
@@ -233,7 +228,9 @@ class PgnServiceTest {
     void gameFromPgn() {
         Game expectedGame = gameService.startGame();
         for (Move expectedMove: nimzoIndianMoves) {
-            expectedGame.addMove(expectedMove, boardService.applyMove(expectedGame.getCurrentBoard(), expectedMove));
+            gameService.applyMove(
+                expectedGame, expectedMove
+            );
         }
         assertEquals(
             expectedGame,
@@ -264,7 +261,7 @@ class PgnServiceTest {
             + "6k1/pp4bp/2n2np1/5p2/2P2q2/4KBN1/PP5P/RQ6 0 23";
         assertEquals(
             expectedMoveSummary,
-            sampleFisherGame.getMoveSummary().toString()
+            sampleFisherGame.getMoveNode().toString()
         );
     }
 

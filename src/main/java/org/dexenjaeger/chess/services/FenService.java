@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import org.dexenjaeger.chess.config.Inject;
 import org.dexenjaeger.chess.models.Side;
 import org.dexenjaeger.chess.models.board.Board;
 import org.dexenjaeger.chess.models.board.FileType;
@@ -20,6 +21,12 @@ import org.dexenjaeger.chess.models.pieces.PieceType;
 import org.dexenjaeger.chess.utils.OptionalsUtil;
 
 public class FenService {
+    private final GameService gameService;
+
+    @Inject
+    public FenService(GameService gameService) {
+        this.gameService = gameService;
+    }
     // http://www.saremba.de/chessgml/standards/pgn/pgn-complete.htm#c16
 
     // 16.1.3: Data fields
@@ -212,9 +219,10 @@ public class FenService {
                     new Square(sq.getFile(), endingRank),
                     PieceType.PAWN, previousSide
                 );
-                return Game.init(turnNumber, previousSide, previousBoard, fiftyMoveRuleCounter)
-                    .addMove(previousMove, board)
-                    .addCastlingRights(castlingRights);
+                return gameService.applyMove(
+                    Game.init(turnNumber, previousSide, previousBoard, fiftyMoveRuleCounter),
+                    previousMove
+                ).addCastlingRights(castlingRights);
             })
             .orElseGet(() -> Game.init(turnNumber, side, board, fiftyMoveRuleCounter).addCastlingRights(castlingRights));
     }

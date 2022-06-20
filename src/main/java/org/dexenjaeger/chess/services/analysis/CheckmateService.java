@@ -10,9 +10,10 @@ import org.dexenjaeger.chess.config.Inject;
 import org.dexenjaeger.chess.models.GameStatus;
 import org.dexenjaeger.chess.models.Side;
 import org.dexenjaeger.chess.models.game.Game;
-import org.dexenjaeger.chess.models.game.MoveNode;
+import org.dexenjaeger.chess.models.game.MoveSummary;
 import org.dexenjaeger.chess.models.moves.Move;
 import org.dexenjaeger.chess.services.GameService;
+import org.dexenjaeger.chess.utils.TreeNode;
 
 public class CheckmateService {
     private final GameService gameService;
@@ -119,12 +120,12 @@ public class CheckmateService {
         return result;
     }
 
-    public Optional<MoveNode> findForcedCheckmate(Game game, int maxTurns) {
+    public Optional<TreeNode<MoveSummary>> findForcedCheckmate(Game game, int maxTurns) {
         return findForcedCheckmateFromDetached(
             gameService.detachGameState(game),
             gameService.currentSide(game), maxTurns
         )
-            .map(Game::getMoveSummary)
-            .map(MoveNode::getFirstAncestor);
+            .map(Game::getMoveNode)
+            .map(TreeNode::getFirstAncestor);
     }
 }

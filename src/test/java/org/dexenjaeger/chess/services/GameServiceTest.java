@@ -13,12 +13,13 @@ import org.dexenjaeger.chess.models.Side;
 import org.dexenjaeger.chess.models.board.Board;
 import org.dexenjaeger.chess.models.board.FileType;
 import org.dexenjaeger.chess.models.game.Game;
-import org.dexenjaeger.chess.models.game.MoveNode;
+import org.dexenjaeger.chess.models.game.MoveSummary;
 import org.dexenjaeger.chess.models.moves.Castle;
 import org.dexenjaeger.chess.models.moves.CastleType;
 import org.dexenjaeger.chess.models.moves.EnPassantCapture;
 import org.dexenjaeger.chess.models.moves.Move;
 import org.dexenjaeger.chess.models.moves.ZeroMove;
+import org.dexenjaeger.chess.utils.TreeNode;
 import org.junit.jupiter.api.Test;
 
 class GameServiceTest {
@@ -31,8 +32,10 @@ class GameServiceTest {
     void startGameTest() {
         Game initializedGame = gameService.startGame();
         assertEquals(
-            new MoveNode(0, new ZeroMove(BLACK), BoardService.standardGameBoard(), 0),
-            initializedGame.getMoveSummary()
+            new TreeNode<>(new MoveSummary(
+                0, new ZeroMove(BLACK), BoardService.standardGameBoard(), 0, null
+            ), null, null),
+            initializedGame.getMoveNode()
         );
         assertEquals(
             Set.of(
@@ -114,7 +117,15 @@ class GameServiceTest {
         Board expectedBoard = fenService.readPieceLocations("rnbqkb1r/ppp2ppp/5n2/3p4/2PPpP2/8/PP1NP1PP/RNBQKB1R");
         assertEquals(expectedBoard, detachedGame.getCurrentBoard());
         assertEquals(game.getCastlingRights(), detachedGame.getCastlingRights());
-        assertEquals(new MoveNode(5, new ZeroMove(WHITE), game.getCurrentBoard(), 0), detachedGame.getMoveSummary());
+        assertEquals(
+            new TreeNode<>(
+                new MoveSummary(
+                    5, new ZeroMove(WHITE), game.getCurrentBoard(), 0, null
+                ),
+                null, null
+            ),
+            detachedGame.getMoveNode()
+        );
     }
 
     @Test
@@ -125,7 +136,13 @@ class GameServiceTest {
         Board expectedBoard = fenService.readPieceLocations("rnbqkb1r/ppp2ppp/5n2/3p4/2PPp3/8/PP1NPPPP/RNBQKB1R");
         assertEquals(expectedBoard, detachedGame.getCurrentBoard());
         assertEquals(game.getCastlingRights(), detachedGame.getCastlingRights());
-        assertEquals(new MoveNode(4, new ZeroMove(BLACK), game.getCurrentBoard(), 2), detachedGame.getMoveSummary());
+        assertEquals(
+            new TreeNode<>(
+                new MoveSummary(4, new ZeroMove(BLACK), game.getCurrentBoard(), 2, null),
+                null, null
+            ),
+            detachedGame.getMoveNode()
+        );
     }
 
     @Test
