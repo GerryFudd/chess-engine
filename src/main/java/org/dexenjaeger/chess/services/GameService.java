@@ -123,11 +123,13 @@ public class GameService {
 
     public Game detachGameState(Game game) {
         MoveNode moveSummary = game.getMoveSummary();
+        Side side = currentSide(game);
         return Game.init(
-            moveSummary.getTurnNumber() + 1,
-            currentSide(game),
+            side == WHITE ? moveSummary.getTurnNumber() + 1 : moveSummary.getTurnNumber(),
+            side,
             game.getCurrentBoard(),
             moveSummary.getFiftyMoveRuleCounter()
-        );
+        )
+            .addCastlingRights(game.getCastlingRights());
     }
 }

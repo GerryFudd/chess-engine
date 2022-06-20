@@ -107,6 +107,7 @@ class AnalysisServiceTest {
     @CsvSource({
         "2r1r1k1/5ppp/8/8/4R3/8/5PPP/4R1K1 w - - 15 38,Re8 Rxe8 Rxe8",
         "5r2/2R3b1/P4r2/2p2Nkp/2b3pN/6P1/4PP2/6K1 w - - 15 38,Rg7 Rg6 Rxg6",
+        "8/7k/p6p/4B1p1/3P1pQ1/7P/P5PK/5q2 w - - 15 38,Qf5 Kg8 Qg6 Kf8 Bd6",
     })
     void findForcedCheckmate(String fen, String solutionPgns) {
         Game game = fenService.getGame(fen);
@@ -116,7 +117,7 @@ class AnalysisServiceTest {
             gameService.applyMove(detachedGame, newMove);
         }
         MoveNode expected = detachedGame.getMoveSummary().getFirstAncestor();
-        MoveNode result = analysisService.findForcedCheckmate(game, 2).orElseThrow();
+        MoveNode result = analysisService.findForcedCheckmate(game, 3).orElseThrow();
         assertEquals(
             expected,
             result

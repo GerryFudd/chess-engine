@@ -10,6 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.Set;
 import org.dexenjaeger.chess.config.ServiceProvider;
 import org.dexenjaeger.chess.models.Side;
+import org.dexenjaeger.chess.models.board.Board;
 import org.dexenjaeger.chess.models.board.FileType;
 import org.dexenjaeger.chess.models.game.Game;
 import org.dexenjaeger.chess.models.game.MoveNode;
@@ -24,6 +25,7 @@ class GameServiceTest {
     private final ServiceProvider serviceProvider = new ServiceProvider();
     private final GameService gameService = serviceProvider.getInstance(GameService.class);
     private final PgnService pgnService = serviceProvider.getInstance(PgnService.class);
+    private final FenService fenService = serviceProvider.getInstance(FenService.class);
 
     @Test
     void startGameTest() {
@@ -102,6 +104,36 @@ class GameServiceTest {
             availableMoves.contains(new EnPassantCapture(BLACK, FileType.E, FileType.F)),
             "Available moves should include en passant captures."
         );
+    }
+
+    @Test
+    void detachGameStateTest_accuratelyStartsFromCurrent() {
+        Game game = pgnService.gameFromPgn("1. d4 d5 2. c4 e5 3. Nf3 e4 4. Nfd2 Nf6 5. f4");
+        Game detachedGame = gameService.detachGameState(game);
+
+        Board expectedBoard = fenService.readPieceLocations("rnbqkb1r/ppp2ppp/5n2/3p4/2PPpP2/8/PP1NP1PP/RNBQKB1R");
+        assertEquals(expectedBoard, detachedGame.getCurrentBoard());
+        assertEquals(game.getCastlingRights(), detachedGame.getCastlingRights());
+        assertEquals(new MoveNode(5, new ZeroMove(WHITE), game.getCurrentBoard(), 0), detachedGame.getMoveSummary());
+    }
+
+    @Test
+    void detachGameStateTest_accuratelyStartsFromParent() {
+        Game game = pgnService.gameFromPgn("1. d4 d5 2. c4 e5 3. Nf3 e4 4. Nfd2 Nf6 5. f4").goToParentMove();
+        Game detachedGame = gameService.detachGameState(game);
+
+        Board expectedBoard = fenService.readPieceLocations("rnbqkb1r/ppp2ppp/5n2/3p4/2PPp3/8/PP1NPPPP/RNBQKB1R");
+        assertEquals(expectedBoard, detachedGame.getCurrentBoard());
+        assertEquals(game.getCastlingRights(), detachedGame.getCastlingRights());
+        assertEquals(new MoveNode(4, new ZeroMove(BLACK), game.getCurrentBoard(), 2), detachedGame.getMoveSummary());
+    }
+
+    @Test
+    void detachGameStateTest_accuratelyErasesEverythingElse() {
+        Game game = pgnService.gameFromPgn("1. d4 d5 2. c4 e5 3. Nf3 e4 4. Nfd2 Nf6 5. f4").goToParentMove();
+        Game detachedGame = gameService.detachGameState(game.goToFirstMove());
+
+        assertEquals(gameService.startGame(), detachedGame);
     }
 
     @Test

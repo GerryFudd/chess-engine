@@ -46,7 +46,7 @@ public class Game {
     ) {
         return new Game(
             new MoveNode(
-                turnNumber - 1, new ZeroMove(side.other()), board, fiftyMoveRuleCounter
+                side == Side.WHITE ? turnNumber - 1 : turnNumber, new ZeroMove(side.other()), board, fiftyMoveRuleCounter
             )
         );
     }
@@ -101,20 +101,18 @@ public class Game {
         return this;
     }
 
-    public Game goToAttemptedMove(Move childMove) {
+    public void goToAttemptedMove(Move childMove) {
         moveSummary = moveSummary.getChildren()
             .stream()
             .filter(ch -> ch.getValue().equals(childMove))
             .findAny()
             .orElse(moveSummary);
-        return this;
     }
 
-    public Game goToNextMainLineMove() {
+    public void goToNextMainLineMove() {
         if (!moveSummary.getChildren().isEmpty()) {
             moveSummary = moveSummary.getChildren().getFirst();
         }
-        return this;
     }
 
     public Game goToFirstMove() {
@@ -133,7 +131,7 @@ public class Game {
     public String toString() {
         return String.format(
             "Game(moves=\"%s\", castlingRights=[%s])",
-            moveSummary.getFirstAncestor(), castlingRights.stream().map(Castle::toFen).sorted().collect(Collectors.joining())
+            moveSummary, castlingRights.stream().map(Castle::toFen).sorted().collect(Collectors.joining())
         );
     }
 }

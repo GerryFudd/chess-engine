@@ -183,6 +183,7 @@ public class MoveNode {
         parts.add(firstAncestorString());
         parts.add(board.toString());
         parts.add(String.valueOf(fiftyMoveRuleCounter));
+        parts.add(String.valueOf(turnNumber));
         return String.join(" ", parts);
     }
 }
