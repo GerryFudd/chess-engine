@@ -13,7 +13,7 @@ import org.dexenjaeger.chess.models.Side;
 import org.dexenjaeger.chess.models.board.Board;
 import org.dexenjaeger.chess.models.board.FileType;
 import org.dexenjaeger.chess.models.game.Game;
-import org.dexenjaeger.chess.models.game.MoveSummary;
+import org.dexenjaeger.chess.models.game.GameSnapshot;
 import org.dexenjaeger.chess.models.moves.Castle;
 import org.dexenjaeger.chess.models.moves.CastleType;
 import org.dexenjaeger.chess.models.moves.EnPassantCapture;
@@ -32,10 +32,10 @@ class GameServiceTest {
     void startGameTest() {
         Game initializedGame = gameService.startGame();
         assertEquals(
-            new TreeNode<>(new MoveSummary(
+            new TreeNode<>(new GameSnapshot(
                 0, new ZeroMove(BLACK), BoardService.standardGameBoard(), 0, null
             ), null, null),
-            initializedGame.getMoveNode()
+            initializedGame.getGameNode()
         );
         assertEquals(
             Set.of(
@@ -119,12 +119,12 @@ class GameServiceTest {
         assertEquals(game.getCastlingRights(), detachedGame.getCastlingRights());
         assertEquals(
             new TreeNode<>(
-                new MoveSummary(
+                new GameSnapshot(
                     5, new ZeroMove(WHITE), game.getCurrentBoard(), 0, null
                 ),
                 null, null
             ),
-            detachedGame.getMoveNode()
+            detachedGame.getGameNode()
         );
     }
 
@@ -138,10 +138,10 @@ class GameServiceTest {
         assertEquals(game.getCastlingRights(), detachedGame.getCastlingRights());
         assertEquals(
             new TreeNode<>(
-                new MoveSummary(4, new ZeroMove(BLACK), game.getCurrentBoard(), 2, null),
+                new GameSnapshot(4, new ZeroMove(BLACK), game.getCurrentBoard(), 2, null),
                 null, null
             ),
-            detachedGame.getMoveNode()
+            detachedGame.getGameNode()
         );
     }
 

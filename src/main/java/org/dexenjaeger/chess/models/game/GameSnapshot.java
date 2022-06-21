@@ -6,7 +6,7 @@ import org.dexenjaeger.chess.models.board.Board;
 import org.dexenjaeger.chess.models.moves.Move;
 
 @Value
-public class MoveSummary implements NodeValue {
+public class GameSnapshot implements NodeValue {
     int turnNumber;
     Move move;
     Board board;

@@ -5,7 +5,7 @@ import org.dexenjaeger.chess.config.Inject;
 import org.dexenjaeger.chess.models.Side;
 import org.dexenjaeger.chess.models.board.Board;
 import org.dexenjaeger.chess.models.game.Game;
-import org.dexenjaeger.chess.models.game.MoveSummary;
+import org.dexenjaeger.chess.models.game.GameSnapshot;
 import org.dexenjaeger.chess.models.pieces.Piece;
 import org.dexenjaeger.chess.models.pieces.PieceType;
 import org.dexenjaeger.chess.services.BoardService;
@@ -42,7 +42,7 @@ public class AnalysisService {
         return boardService.getMovesBySide(board, side).size();
     }
 
-    public Optional<TreeNode<MoveSummary>> findForcedCheckmate(Game game, int maxTurns) {
+    public Optional<TreeNode<GameSnapshot>> findForcedCheckmate(Game game, int maxTurns) {
         return checkmateService.findForcedCheckmate(game, maxTurns);
     }
 }

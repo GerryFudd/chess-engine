@@ -31,10 +31,10 @@ public class Game {
     @Getter(AccessLevel.NONE)
     private final Map<String, String> nonStandardTags = new LinkedHashMap<>();
     private final Set<Castle> castlingRights = new HashSet<>();
-    private TreeNode<MoveSummary> moveNode;
+    private TreeNode<GameSnapshot> gameNode;
 
-    private Game(TreeNode<MoveSummary> moveNode) {
-        this.moveNode = moveNode;
+    private Game(TreeNode<GameSnapshot> gameNode) {
+        this.gameNode = gameNode;
     }
 
     public static Game init(Board board) {
@@ -46,14 +46,14 @@ public class Game {
         int fiftyMoveRuleCounter
     ) {
         return init(
-            new MoveSummary(
+            new GameSnapshot(
                 side == Side.WHITE ? turnNumber - 1 : turnNumber, new ZeroMove(side.other()), board, fiftyMoveRuleCounter, null
             )
         );
     }
 
     public static Game init(
-        MoveSummary moveSummary
+        GameSnapshot moveSummary
     ) {
         return new Game(
             new TreeNode<>(
@@ -91,46 +91,46 @@ public class Game {
     }
 
     public Move getPreviousMove() {
-        return moveNode.getValue().getMove();
+        return gameNode.getValue().getMove();
     }
 
     public List<Move> getAttemptedMoves() {
-        return moveNode.getChildren().stream()
+        return gameNode.getChildren().stream()
             .map(TreeNode::getValue)
-            .map(MoveSummary::getMove)
+            .map(GameSnapshot::getMove)
             .collect(Collectors.toList());
     }
 
     public Board getCurrentBoard() {
-        return moveNode.getValue().getBoard();
+        return gameNode.getValue().getBoard();
     }
 
-    public Game addMove(MoveSummary moveSummary) {
-        moveNode = moveNode.addChild(moveSummary);
+    public Game addMove(GameSnapshot moveSummary) {
+        gameNode = gameNode.addChild(moveSummary);
         return this;
     }
 
     public Game goToParentMove() {
-        moveNode = moveNode.getParent().orElse(moveNode);
+        gameNode = gameNode.getParent().orElse(gameNode);
         return this;
     }
 
     public void goToAttemptedMove(Move childMove) {
-        moveNode = moveNode.getChildren()
+        gameNode = gameNode.getChildren()
             .stream()
             .filter(ch -> ch.getValue().getMove().equals(childMove))
             .findAny()
-            .orElse(moveNode);
+            .orElse(gameNode);
     }
 
     public void goToNextMainLineMove() {
-        if (!moveNode.getChildren().isEmpty()) {
-            moveNode = moveNode.getChildren().getFirst();
+        if (!gameNode.getChildren().isEmpty()) {
+            gameNode = gameNode.getChildren().getFirst();
         }
     }
 
     public Game goToFirstMove() {
-        moveNode = moveNode.getFirstAncestor();
+        gameNode = gameNode.getFirstAncestor();
         return this;
     }
 
@@ -145,7 +145,7 @@ public class Game {
     public String toString() {
         return String.format(
             "Game(moves=\"%s\", castlingRights=[%s])",
-            moveNode, castlingRights.stream().map(Castle::toFen).sorted().collect(Collectors.joining())
+            gameNode, castlingRights.stream().map(Castle::toFen).sorted().collect(Collectors.joining())
         );
     }
 }

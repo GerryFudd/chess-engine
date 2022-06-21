@@ -14,7 +14,7 @@ import org.dexenjaeger.chess.models.board.Board;
 import org.dexenjaeger.chess.models.board.RankType;
 import org.dexenjaeger.chess.models.board.Square;
 import org.dexenjaeger.chess.models.game.Game;
-import org.dexenjaeger.chess.models.game.MoveSummary;
+import org.dexenjaeger.chess.models.game.GameSnapshot;
 import org.dexenjaeger.chess.models.moves.Castle;
 import org.dexenjaeger.chess.models.moves.CastleType;
 import org.dexenjaeger.chess.models.moves.EnPassantCapture;
@@ -115,11 +115,14 @@ public class GameService {
             }
             return GameStatus.STALEMATE;
         }
+        if (game.getGameNode().getValue().getFiftyMoveRuleCounter() >= 50) {
+            return GameStatus.STALEMATE;
+        }
         return side == WHITE ? GameStatus.WHITE_TO_MOVE : GameStatus.BLACK_TO_MOVE;
     }
 
     public Game applyMove(Game game, Move move) {
-        MoveSummary previousMoveSummary = game.getMoveNode().getValue();
+        GameSnapshot previousMoveSummary = game.getGameNode().getValue();
         int newFiftyMoveCounter;
         if (
             move instanceof SinglePieceMove
@@ -130,9 +133,9 @@ public class GameService {
         ) {
             newFiftyMoveCounter = 0;
         } else {
-            newFiftyMoveCounter = game.getMoveNode().getValue().getFiftyMoveRuleCounter() + 1;
+            newFiftyMoveCounter = game.getGameNode().getValue().getFiftyMoveRuleCounter() + 1;
         }
-        return game.addMove(new MoveSummary(
+        return game.addMove(new GameSnapshot(
             move.getSide() == Side.WHITE ? previousMoveSummary.getTurnNumber() + 1 : previousMoveSummary.getTurnNumber(),
             move,
             boardService.applyMove(game.getCurrentBoard(), move),
@@ -142,8 +145,8 @@ public class GameService {
     }
 
     public Game detachGameState(Game game) {
-        MoveSummary moveSummary = game.getMoveNode().getValue();
-        return Game.init(new MoveSummary(
+        GameSnapshot moveSummary = game.getGameNode().getValue();
+        return Game.init(new GameSnapshot(
                 moveSummary.getTurnNumber(),
                 new ZeroMove(moveSummary.getMove().getSide()),
                 moveSummary.getBoard(),

@@ -208,7 +208,7 @@ class PgnServiceTest {
         }
 
         assertEquals(
-            expectedGame.getMoveNode().getFirstAncestor(),
+            expectedGame.getGameNode().getFirstAncestor(),
             pgnService.fromPgnMoves(PgnFileReader.readOpening(PgnFileReader.QGD_CLASSICAL))
         );
     }
@@ -261,7 +261,7 @@ class PgnServiceTest {
             + "6k1/pp4bp/2n2np1/5p2/2P2q2/4KBN1/PP5P/RQ6 0 23";
         assertEquals(
             expectedMoveSummary,
-            sampleFisherGame.getMoveNode().toString()
+            sampleFisherGame.getGameNode().toString()
         );
     }
 

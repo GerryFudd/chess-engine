@@ -35,8 +35,8 @@ class MoveNodeTest {
     private final BoardService boardService = serviceProvider.getInstance(BoardService.class);
     private final FenService fenService = serviceProvider.getInstance(FenService.class);
 
-    private TreeNode<MoveSummary> opening() {
-        return new TreeNode<>(new MoveSummary(
+    private TreeNode<GameSnapshot> opening() {
+        return new TreeNode<>(new GameSnapshot(
             0, new ZeroMove(Side.BLACK), BoardService.standardGameBoard(), 0, null
         ), null, null);
     }
@@ -47,7 +47,7 @@ class MoveNodeTest {
         assertEquals(
             String.format("<Starting side = WHITE> %s 0 0", board),
             new TreeNode<>(
-                new MoveSummary(
+                new GameSnapshot(
                     0, new ZeroMove(Side.BLACK), board, 0, null
                 ), null, null
             ).toString()
@@ -58,7 +58,7 @@ class MoveNodeTest {
     void toString_WithSingleMove() {
         Move firstMove =  new SimpleMove(new Square(FileType.D, RankType.TWO), new Square(FileType.D, RankType.FOUR), PAWN, WHITE);
         Board board = boardService.applyMove(opening().getValue().getBoard(), firstMove);
-        TreeNode<MoveSummary> childNode = opening().addChild(new MoveSummary(
+        TreeNode<GameSnapshot> childNode = opening().addChild(new GameSnapshot(
                 1,
                 firstMove,
                 board,
@@ -74,7 +74,7 @@ class MoveNodeTest {
 
     @Test
     void toString_WithParentAndChildren() {
-        TreeNode<MoveSummary> startingNode = opening();
+        TreeNode<GameSnapshot> startingNode = opening();
         new MoveLine(boardService, startingNode).applyMoves(
             new SimpleMove(new Square(FileType.D, RankType.TWO), new Square(FileType.D, RankType.FOUR), PAWN, WHITE),
             new SimpleMove(new Square(FileType.D, RankType.SEVEN), new Square(FileType.D, RankType.FIVE), PAWN, BLACK),
@@ -88,11 +88,11 @@ class MoveNodeTest {
 
     @Test
     void toString_WithParentAndMultipleChildren() {
-        TreeNode<MoveSummary> startingNode = opening();
+        TreeNode<GameSnapshot> startingNode = opening();
         MoveLine mainLine = new MoveLine(boardService, startingNode);
 
         // Apply moves before any branching to get the relevant node
-        TreeNode<MoveSummary> branchNode = mainLine
+        TreeNode<GameSnapshot> branchNode = mainLine
             .applyMoves(
                 new SimpleMove(new Square(FileType.D, RankType.TWO), new Square(FileType.D, RankType.FOUR), PAWN, WHITE),
                 new SimpleMove(new Square(FileType.D, RankType.SEVEN), new Square(FileType.D, RankType.FIVE), PAWN, BLACK)
@@ -119,7 +119,7 @@ class MoveNodeTest {
 
     @Test
     void toString_startingNode_WithMultipleGenerationsInABranch() {
-        TreeNode<MoveSummary> ancestor = opening();
+        TreeNode<GameSnapshot> ancestor = opening();
 
         // This follows the last move in the main line
         MoveLine mainLine = new MoveLine(boardService, ancestor);
@@ -127,7 +127,7 @@ class MoveNodeTest {
         // Apply moves until we get to the first branch
         // Pd2d4 pd7d5 Pc2c4 pe7e5 Pd4e5 pd5d4 Pe2e3 bf8b4 Bc1d2 pd4e3 Bd2b4 pe3f2 Ke1e2 pf2g1=N
         // Start a branch just before Ke2e1 (first variation)
-        TreeNode<MoveSummary> firstBranchNode = mainLine.applyMoves(
+        TreeNode<GameSnapshot> firstBranchNode = mainLine.applyMoves(
             new SimpleMove(new Square(FileType.D, RankType.TWO), new Square(FileType.D, RankType.FOUR), PAWN, WHITE),
             new SimpleMove(new Square(FileType.D, RankType.SEVEN), new Square(FileType.D, RankType.FIVE), PAWN, BLACK),
             new SimpleMove(new Square(FileType.C, RankType.TWO), new Square(FileType.C, RankType.FOUR), PAWN, WHITE),
@@ -146,7 +146,7 @@ class MoveNodeTest {
 
         // Apply Ke2e1
         // Start just before qd8h4
-        TreeNode<MoveSummary> secondBranchNode = mainLine
+        TreeNode<GameSnapshot> secondBranchNode = mainLine
             .applyMoves(new SimpleMove(new Square(FileType.E, RankType.TWO), new Square(FileType.E, RankType.ONE), KING, WHITE));
 
         // This is the termination of the main line
@@ -168,7 +168,7 @@ class MoveNodeTest {
         // Fill in the second variation (qd8d1 Ke1d1 ...)
         // Start a new node just before bc8g4 (third variation)
         MoveLine secondVariation = new MoveLine(boardService, secondBranchNode);
-        TreeNode<MoveSummary> thirdBranchNode = secondVariation.applyMoves(
+        TreeNode<GameSnapshot> thirdBranchNode = secondVariation.applyMoves(
             new SimpleMove(new Square(FileType.D, RankType.EIGHT), new Square(FileType.D, RankType.ONE), QUEEN, BLACK),
             new SimpleMove(new Square(FileType.E, RankType.ONE), new Square(FileType.D, RankType.ONE), KING, WHITE)
         );
@@ -206,7 +206,7 @@ class MoveNodeTest {
 
     @Test
     void toString_branchNode_WithMultipleGenerationsInABranch() {
-        TreeNode<MoveSummary> ancestor = opening();
+        TreeNode<GameSnapshot> ancestor = opening();
 
         // This follows the last move in the main line
         MoveLine mainLine = new MoveLine(boardService, ancestor);
@@ -214,7 +214,7 @@ class MoveNodeTest {
         // Apply moves until we get to the first branch
         // Pd2d4 pd7d5 Pc2c4 pe7e5 Pd4e5 pd5d4 Pe2e3 bf8b4 Bc1d2 pd4e3 Bd2b4 pe3f2 Ke1e2 pf2g1=N
         // Start a branch just before Ke2e1 (first variation)
-        TreeNode<MoveSummary> firstBranchNode = mainLine.applyMoves(
+        TreeNode<GameSnapshot> firstBranchNode = mainLine.applyMoves(
             new SimpleMove(new Square(FileType.D, RankType.TWO), new Square(FileType.D, RankType.FOUR), PAWN, WHITE),
             new SimpleMove(new Square(FileType.D, RankType.SEVEN), new Square(FileType.D, RankType.FIVE), PAWN, BLACK),
             new SimpleMove(new Square(FileType.C, RankType.TWO), new Square(FileType.C, RankType.FOUR), PAWN, WHITE),
@@ -233,7 +233,7 @@ class MoveNodeTest {
 
         // Apply Ke2e1
         // Start just before qd8h4
-        TreeNode<MoveSummary> secondBranchNode = mainLine
+        TreeNode<GameSnapshot> secondBranchNode = mainLine
             .applyMoves(new SimpleMove(new Square(FileType.E, RankType.TWO), new Square(FileType.E, RankType.ONE), KING, WHITE));
 
         // This is the termination of the main line
@@ -255,7 +255,7 @@ class MoveNodeTest {
         // Fill in the second variation (qd8d1 Ke1d1 ...)
         // Start a new node just before bc8g4 (third variation)
         MoveLine secondVariation = new MoveLine(boardService, secondBranchNode);
-        TreeNode<MoveSummary> thirdBranchNode = secondVariation.applyMoves(
+        TreeNode<GameSnapshot> thirdBranchNode = secondVariation.applyMoves(
             new SimpleMove(new Square(FileType.D, RankType.EIGHT), new Square(FileType.D, RankType.ONE), QUEEN, BLACK),
             new SimpleMove(new Square(FileType.E, RankType.ONE), new Square(FileType.D, RankType.ONE), KING, WHITE)
         );
@@ -293,15 +293,15 @@ class MoveNodeTest {
 
     @Test
     void testEqualsAndHashCode() {
-        TreeNode<MoveSummary> firstNode = opening();
-        TreeNode<MoveSummary> secondNode = opening();
+        TreeNode<GameSnapshot> firstNode = opening();
+        TreeNode<GameSnapshot> secondNode = opening();
         assertEquals(firstNode, secondNode);
         assertEquals(firstNode.hashCode(), secondNode.hashCode());
 
         // Apply a move to both nodes and capture the child from the second node
         Move firstMove = new SimpleMove(new Square(FileType.D, RankType.TWO), new Square(FileType.D, RankType.FOUR), PAWN, WHITE);
         new MoveLine(boardService, firstNode).applyMoves(firstMove);
-        TreeNode<MoveSummary> secondNodeChild = new MoveLine(boardService, secondNode).applyMoves(firstMove);
+        TreeNode<GameSnapshot> secondNodeChild = new MoveLine(boardService, secondNode).applyMoves(firstMove);
 
         // The two nodes should equal one another and have equal hash codes
         assertEquals(firstNode, secondNode);
@@ -318,12 +318,12 @@ class MoveNodeTest {
 
     @Test
     void testParentAncestorAndChild() {
-        TreeNode<MoveSummary> firstNode = opening();
+        TreeNode<GameSnapshot> firstNode = opening();
 
         // Apply a move to both nodes and capture the child from the second node
-        TreeNode<MoveSummary> firstChild = new MoveLine(boardService, firstNode)
+        TreeNode<GameSnapshot> firstChild = new MoveLine(boardService, firstNode)
             .applyMoves(new SimpleMove(new Square(FileType.D, RankType.TWO), new Square(FileType.D, RankType.FOUR), PAWN, WHITE));
-        TreeNode<MoveSummary> secondChild = new MoveLine(boardService, firstNode)
+        TreeNode<GameSnapshot> secondChild = new MoveLine(boardService, firstNode)
             .applyMoves(new SimpleMove(new Square(FileType.E, RankType.TWO), new Square(FileType.E, RankType.FOUR), PAWN, WHITE));
 
         // The first ancestor for all nodes is equal
@@ -352,10 +352,10 @@ class MoveNodeTest {
     void equals_differentFiftyMoveRuleValues() {
         Board board = fenService.readPieceLocations("8/8/Pk5p/1P4p1/5pP1/5P2/5K2/8");
         assertNotEquals(
-            new TreeNode<>(new MoveSummary(
+            new TreeNode<>(new GameSnapshot(
                 100, new ZeroMove(WHITE), board, 10, null), null, null
             ),
-            new TreeNode<>(new MoveSummary(
+            new TreeNode<>(new GameSnapshot(
                 100, new ZeroMove(WHITE), board, 45, null), null, null
             )
         );
