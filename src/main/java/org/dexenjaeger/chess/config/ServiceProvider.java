@@ -1,5 +1,6 @@
 package org.dexenjaeger.chess.config;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.util.LinkedList;
 import java.util.List;
@@ -27,11 +28,20 @@ public class ServiceProvider {
             if (constructor.getAnnotation(Inject.class) == null) {
                 continue;
             }
+            Annotation[][] parameterAnnotations = constructor.getParameterAnnotations();
             Class<?>[] parameterTypes = constructor.getParameterTypes();
             Constructor<T> declaredConstructor = tClass.getDeclaredConstructor(parameterTypes);
             List<Object> parameters = new LinkedList<>();
             while (parameters.size() < parameterTypes.length) {
-                parameters.add(getInstance(parameterTypes[parameters.size()]));
+                String tag = null;
+                for (Annotation annotation: parameterAnnotations[parameters.size()]) {
+                    if (annotation.annotationType() == BindingTag.class) {
+                        tag = ((BindingTag)annotation).value();
+                        break;
+                    }
+                }
+
+                parameters.add(getInstance(parameterTypes[parameters.size()], tag));
             }
             return declaredConstructor.newInstance(parameters.toArray());
         }
@@ -39,12 +49,15 @@ public class ServiceProvider {
         throw new NotImplementedException(tClass);
     }
 
-    private <T> Optional<T> getBoundInstance(Class<T> tClass) {
-        return bindingHolder.getBound(tClass);
+    private <T> Optional<T> getBoundInstance(Class<T> tClass, String tag) {
+        return bindingHolder.getBound(tClass, tag);
     }
 
-    @SneakyThrows
     public <T> T getInstance(Class<T> tClass) {
-        return getBoundInstance(tClass).orElseGet(() -> getInjectedInstance(tClass));
+        return getInstance(tClass, null);
+    }
+
+    public <T> T getInstance(Class<T> tClass, String tag) {
+        return getBoundInstance(tClass, tag).orElseGet(() -> getInjectedInstance(tClass));
     }
 }

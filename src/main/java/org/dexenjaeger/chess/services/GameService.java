@@ -1,5 +1,6 @@
 package org.dexenjaeger.chess.services;
 
+import static org.dexenjaeger.chess.models.Side.BLACK;
 import static org.dexenjaeger.chess.models.Side.WHITE;
 
 import java.util.Optional;
@@ -23,6 +24,7 @@ import org.dexenjaeger.chess.models.moves.SinglePieceMove;
 import org.dexenjaeger.chess.models.moves.ZeroMove;
 import org.dexenjaeger.chess.models.pieces.Piece;
 import org.dexenjaeger.chess.models.pieces.PieceType;
+import org.dexenjaeger.chess.utils.TreeNode;
 
 public class GameService {
     private final BoardService boardService;
@@ -45,6 +47,10 @@ public class GameService {
 
     public Side currentSide(Game game) {
         return game.getPreviousMove().getSide().other();
+    }
+
+    public boolean isInCheck(Game game) {
+        return boardService.isSideInCheck(game.getCurrentBoard(), currentSide(game));
     }
 
     private Set<EnPassantCapture> enPassantCaptures(
@@ -107,10 +113,11 @@ public class GameService {
 
     public GameStatus getGameStatus(Game game) {
         Side side = currentSide(game);
+        if (game.getCurrentBoard().getBySide(WHITE).size() == 1 && game.getCurrentBoard().getBySide(BLACK).size() == 1) {
+            return GameStatus.STALEMATE;
+        }
         if (getAvailableMoves(game).isEmpty()) {
-            if (boardService.isSideInCheck(
-                game.getCurrentBoard(), side
-            )) {
+            if (isInCheck(game)) {
                 return side == WHITE ? GameStatus.BLACK_WON : GameStatus.WHITE_WON;
             }
             return GameStatus.STALEMATE;
@@ -144,14 +151,27 @@ public class GameService {
         ));
     }
 
+    public int countMainlineMoves(Game game) {
+        TreeNode<GameSnapshot> cursor = game.getGameNode().getFirstAncestor();
+        Side startingSide = cursor.getValue().getMove().getSide().other();
+        int count = 0;
+        while (!cursor.getChildren().isEmpty()) {
+            cursor = cursor.getChildren().getFirst();
+            if (cursor.getValue().getMove().getSide() == startingSide) {
+                count += 1;
+            }
+        }
+        return count;
+    }
+
     public Game detachGameState(Game game) {
-        GameSnapshot moveSummary = game.getGameNode().getValue();
+        GameSnapshot gameSnapshot = game.getGameNode().getValue();
         return Game.init(new GameSnapshot(
-                moveSummary.getTurnNumber(),
-                new ZeroMove(moveSummary.getMove().getSide()),
-                moveSummary.getBoard(),
-                moveSummary.getFiftyMoveRuleCounter(),
-                moveSummary.getCommentary()
+                gameSnapshot.getTurnNumber(),
+                new ZeroMove(gameSnapshot.getMove().getSide()),
+                gameSnapshot.getBoard(),
+                gameSnapshot.getFiftyMoveRuleCounter(),
+                gameSnapshot.getCommentary()
             ))
             .addCastlingRights(game.getCastlingRights());
     }

@@ -1,5 +1,8 @@
 package org.dexenjaeger.chess.services;
 
+import static java.lang.Math.abs;
+import static java.lang.Math.max;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -18,6 +21,7 @@ import org.dexenjaeger.chess.models.moves.Move;
 import org.dexenjaeger.chess.models.moves.NormalMove;
 import org.dexenjaeger.chess.models.moves.PromotionMove;
 import org.dexenjaeger.chess.models.moves.SimpleMove;
+import org.dexenjaeger.chess.models.moves.SinglePieceMove;
 import org.dexenjaeger.chess.models.pieces.Piece;
 import org.dexenjaeger.chess.models.pieces.PieceType;
 
@@ -221,5 +225,27 @@ public class BoardService {
         return squaresForSide.stream()
             .flatMap(sq -> getMoves(board, sq).stream())
             .collect(Collectors.toSet());
+    }
+
+    public int distance(Square a, Square b) {
+        return max(abs(a.getRank().ordinal() - b.getRank().ordinal()), abs(a.getFile().ordinal() - b.getFile().ordinal()));
+    }
+
+    public Set<Square> getTargetSquares(Move move) {
+        if (move instanceof SinglePieceMove) {
+            return Set.of(((SinglePieceMove) move).getTo());
+        }
+        if (move instanceof Castle) {
+            RankType rankType = move.getSide() == Side.WHITE ? RankType.ONE : RankType.EIGHT;
+            switch (((Castle) move).getType()) {
+                case LONG:
+                    return Set.of(new Square(FileType.C, rankType), new Square(FileType.D, rankType));
+                case SHORT:
+                    return Set.of(new Square(FileType.F, rankType), new Square(FileType.G, rankType));
+                default:
+                    throw new NotImplementedException(((Castle) move).getType());
+            }
+        }
+        throw new NotImplementedException(move.getClass());
     }
 }

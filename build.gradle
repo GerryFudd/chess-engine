@@ -14,6 +14,12 @@ def jupiterVersion = '5.8.2'
 
 dependencies {
     implementation group: 'commons-io', name: 'commons-io', version: '2.11.0'
+    // https://mvnrepository.com/artifact/ch.qos.logback/logback-classic
+    implementation group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.11'
+
+    // https://mvnrepository.com/artifact/org.slf4j/slf4j-api
+    implementation group: 'org.slf4j', name: 'slf4j-api', version: '1.7.36'
+
     testImplementation "org.junit.jupiter:junit-jupiter-api:${jupiterVersion}"
     testImplementation "org.junit.jupiter:junit-jupiter-params:${jupiterVersion}"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${jupiterVersion}"
