@@ -1,12 +1,12 @@
 package org.dexenjaeger.chess.models.game;
 
 import lombok.Value;
-import org.dexenjaeger.chess.models.NodeValue;
+import org.dexenjaeger.chess.models.PrintableNodeValue;
 import org.dexenjaeger.chess.models.board.Board;
 import org.dexenjaeger.chess.models.moves.Move;
 
 @Value
-public class GameSnapshot implements NodeValue {
+public class GameSnapshot implements PrintableNodeValue {
     int turnNumber;
     Move move;
     Board board;

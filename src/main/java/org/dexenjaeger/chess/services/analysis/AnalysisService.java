@@ -6,7 +6,7 @@ import org.dexenjaeger.chess.config.Inject;
 import org.dexenjaeger.chess.models.board.Board;
 import org.dexenjaeger.chess.models.game.Game;
 import org.dexenjaeger.chess.models.game.GameSnapshot;
-import org.dexenjaeger.chess.utils.TreeNode;
+import org.dexenjaeger.chess.utils.HashablePrintableTreeNode;
 
 public class AnalysisService {
     private final ScoreService scoreService;
@@ -21,7 +21,7 @@ public class AnalysisService {
         this.checkmateService = checkmateService;
     }
 
-    public Optional<TreeNode<GameSnapshot>> findForcedCheckmate(Game game, int maxTurns) {
+    public Optional<HashablePrintableTreeNode<GameSnapshot>> findForcedCheckmate(Game game, int maxTurns) {
         return checkmateService.findForcedCheckmate(game, maxTurns);
     }
 

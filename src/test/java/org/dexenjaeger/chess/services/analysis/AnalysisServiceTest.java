@@ -14,7 +14,7 @@ import org.dexenjaeger.chess.services.BoardService;
 import org.dexenjaeger.chess.services.FenService;
 import org.dexenjaeger.chess.services.GameService;
 import org.dexenjaeger.chess.services.PgnService;
-import org.dexenjaeger.chess.utils.TreeNode;
+import org.dexenjaeger.chess.utils.HashablePrintableTreeNode;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -103,8 +103,8 @@ class AnalysisServiceTest {
             Move newMove = pgnService.fromPgnMove(solutionPgn, gameService.currentSide(detachedGame), detachedGame.getCurrentBoard());
             gameService.applyMove(detachedGame, newMove);
         }
-        TreeNode<GameSnapshot> expected = detachedGame.getGameNode().getFirstAncestor();
-        TreeNode<GameSnapshot> result = analysisService.findForcedCheckmate(game, 3).orElseThrow();
+        HashablePrintableTreeNode<GameSnapshot> expected = detachedGame.getGameNode().getFirstAncestor();
+        HashablePrintableTreeNode<GameSnapshot> result = analysisService.findForcedCheckmate(game, 3).orElseThrow();
         assertEquals(
             expected,
             result
@@ -113,8 +113,8 @@ class AnalysisServiceTest {
 
     @Test
     void findForcedCheckmateForQueenVsNothing() {
-        Game game = fenService.getGame("4k3/Q7/8/4K3/8/8/8/8 w - - 0 1");
-        TreeNode<GameSnapshot> result = analysisService.findForcedCheckmate(game, 6).orElseThrow();
+        Game game = fenService.getGame("4k3/Q7/8/8/8/4K3/8/8 w - - 0 1");
+        HashablePrintableTreeNode<GameSnapshot> result = analysisService.findForcedCheckmate(game, 6).orElseThrow();
         assertEquals("", result.toString());
     }
 }

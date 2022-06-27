@@ -20,8 +20,8 @@ import org.dexenjaeger.chess.models.board.Board;
 import org.dexenjaeger.chess.models.moves.Castle;
 import org.dexenjaeger.chess.models.moves.Move;
 import org.dexenjaeger.chess.models.moves.ZeroMove;
+import org.dexenjaeger.chess.utils.HashablePrintableTreeNode;
 import org.dexenjaeger.chess.utils.Pair;
-import org.dexenjaeger.chess.utils.TreeNode;
 
 @Getter
 @EqualsAndHashCode
@@ -31,10 +31,14 @@ public class Game {
     @Getter(AccessLevel.NONE)
     private final Map<String, String> nonStandardTags = new LinkedHashMap<>();
     private final Set<Castle> castlingRights = new HashSet<>();
-    private TreeNode<GameSnapshot> gameNode;
+    private HashablePrintableTreeNode<GameSnapshot> gameNode;
 
-    private Game(TreeNode<GameSnapshot> gameNode) {
+    private Game(HashablePrintableTreeNode<GameSnapshot> gameNode) {
         this.gameNode = gameNode;
+    }
+
+    public static Game init(HashablePrintableTreeNode<GameSnapshot> gameNode) {
+        return new Game(gameNode.copy());
     }
 
     public static Game init(Board board) {
@@ -56,7 +60,7 @@ public class Game {
         GameSnapshot moveSummary
     ) {
         return new Game(
-            new TreeNode<>(
+            new HashablePrintableTreeNode<>(
                 moveSummary, null, null
             )
         );
@@ -96,7 +100,7 @@ public class Game {
 
     public List<Move> getAttemptedMoves() {
         return gameNode.getChildren().stream()
-            .map(TreeNode::getValue)
+            .map(HashablePrintableTreeNode::getValue)
             .map(GameSnapshot::getMove)
             .collect(Collectors.toList());
     }

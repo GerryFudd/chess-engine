@@ -1,136 +1,119 @@
 package org.dexenjaeger.chess.utils;
 
 import java.util.LinkedList;
-import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import lombok.Getter;
 import org.dexenjaeger.chess.models.NodeValue;
 
-public class TreeNode<T extends NodeValue> {
+public abstract class TreeNode<T extends NodeValue, U extends TreeNode<T, U>> {
     @Getter
-    private final T value;
-    private final TreeNode<T> parent;
-    private final TreeNode<T> firstAncestor;
+    protected final T value;
+    protected final U parent;
+    protected final U firstAncestor;
     @Getter
-    private final LinkedList<TreeNode<T>> children = new LinkedList<>();
+    protected final LinkedList<U> children;
 
-    public TreeNode(T value, TreeNode<T> parent, TreeNode<T> firstAncestor) {
+    public TreeNode(T value) {
+        this(value, null, null, new LinkedList<>());
+    }
+
+    public TreeNode(T value, U parent, U firstAncestor, LinkedList<U> children) {
         this.value = value;
         this.parent = parent;
         this.firstAncestor = firstAncestor;
+        this.children = children;
     }
 
-    public Optional<TreeNode<T>> getParent() {
+    protected abstract U self();
+    protected abstract U newInstance(T value, U parent, U firstAncestor);
+
+    public Optional<U> getParent() {
         return Optional.ofNullable(parent);
     }
 
-    public TreeNode<T> getFirstAncestor() {
-        return Optional.ofNullable(firstAncestor).orElse(this);
+    public U getFirstAncestor() {
+        return Optional.ofNullable(firstAncestor).orElse(self());
     }
 
-    public TreeNode<T> addChild(T childValue) {
-        TreeNode<T> newChild = new TreeNode<>(
+    public Optional<U> getNextSibling() {
+        return getParent()
+            .flatMap(parent -> {
+                int i = parent.getChildren().indexOf(self());
+                if (i + 1 >= parent.getChildren().size()) {
+                    return Optional.empty();
+                }
+                return Optional.of(parent.getChildren().get(i + 1));
+            });
+    }
+
+    public U addChild(T childValue) {
+        U newChild = newInstance(
             childValue,
-            this,
+            self(),
             getFirstAncestor()
         );
         children.add(newChild);
         return newChild;
     }
 
-    private int hashChildren() {
-        return children.stream().mapToInt(TreeNode::hashAsChild).sum();
+    public U addBranch(U childSource) {
+        U child = newInstance(
+            childSource.getValue(),
+            self(),
+            getFirstAncestor()
+        );
+        children.add(child);
+        addAllChildren(childSource, child, child.getValue());
+        return child;
     }
 
-    private int hashAsChild() {
-        return Objects.hash(value) + hashChildren();
+    public U copy() {
+        return addAllChildren(getFirstAncestor(), newInstance(getFirstAncestor().getValue(), null, null), getValue());
     }
 
-    public int hashCode() {
-        return Objects.hash(value)
-            + getFirstAncestor().hashAsChild();
+    public U replaceNode(U newNode) {
+        U result = getParent()
+            .map(p -> {
+                p.getChildren().remove(self());
+                return p.addChild(newNode.getValue());
+            })
+            .orElse(newInstance(newNode.getValue(), null, null));
+
+        return addAllChildren(newNode, result, newNode.getValue());
     }
 
-    public <U extends NodeValue> boolean equalsCurrentNodeValues(TreeNode<U> otherNode) {
-        return otherNode != null
-            && Objects.equals(otherNode.getValue(), value);
-    }
+    private U addAllChildren(U source, U target, T resultValue) {
+        U sourceCursor = source;
+        U cursor = target;
+        U result = cursor;
 
-    private <U extends NodeValue> boolean equalsAsChildren(TreeNode<U> otherNode) {
-        return equalsCurrentNodeValues(otherNode)
-            && equalsChildren(otherNode.getChildren());
-    }
-
-    private <U extends NodeValue> boolean equalsChildren(LinkedList<TreeNode<U>> otherChildren) {
-        if (children.size() != otherChildren.size()) {
-            return false;
-        }
-        for (Pair<TreeNode<T>, TreeNode<U>> childPair:new MergedIterable<>(children, otherChildren)) {
-            if (!childPair.getLeft().equalsAsChildren(childPair.getRight())) {
-                return false;
+        while (
+            (
+                (
+                    cursor.getParent().isPresent()
+                    && !cursor.getValue().equals(source.getValue())
+                )
+                && (
+                    sourceCursor.getParent().isPresent()
+                    && !sourceCursor.getValue().equals(source.getValue())
+                )
+            )
+                || sourceCursor.getChildren().size() > cursor.getChildren().size()
+        ) {
+            if (sourceCursor.getChildren().size() == cursor.getChildren().size()) {
+                cursor = cursor.getParent().get();
+                sourceCursor = sourceCursor.getParent().get();
+                if (!result.getValue().equals(resultValue)) {
+                    result = result.getParent().get();
+                }
+            } else {
+                sourceCursor = sourceCursor.getChildren().get(cursor.getChildren().size());
+                cursor = cursor.addChild(sourceCursor.getValue());
+                if (!result.getValue().equals(resultValue)) {
+                    result = result.getChildren().getLast();
+                }
             }
         }
-        return true;
-    }
-
-    public boolean equals(Object other) {
-        if (other == null) {
-            return false;
-        }
-        if (other instanceof TreeNode) {
-            if (this == other) {
-                return true;
-            }
-            // Confirm that the two nodes represent the same move and that they have their
-            // trees match if you start from the top.
-            return equalsCurrentNodeValues((TreeNode<?>) other)
-                && getFirstAncestor().equalsAsChildren(((TreeNode<?>) other).getFirstAncestor());
-        }
-        return false;
-    }
-
-    private String firstAncestorString() {
-        return getFirstAncestor().asChildString(this);
-    }
-
-    private String valueString(TreeNode<T> currentNode) {
-        if (equalsCurrentNodeValues(currentNode)) {
-            return String.format("<%s>", getValue().shortString());
-        }
-        return getValue().shortString();
-    }
-
-    private Optional<String> childrenString(TreeNode<T> currentNode) {
-        if (children.isEmpty()) {
-            return Optional.empty();
-        }
-        TreeNode<T> firstChild = children.getFirst();
-        List<TreeNode<T>> remainingChildren = children.subList(1, children.size());
-        if (remainingChildren.isEmpty()) {
-            return Optional.of(" " + firstChild.asChildString(currentNode));
-        }
-        return Optional.of(
-            " "
-                + firstChild.valueString(currentNode)
-                + " ("
-                + remainingChildren.stream().map(c -> c.asChildString(currentNode)).collect(Collectors.joining(") ("))
-                + ")"
-                + firstChild.childrenString(currentNode).orElse("")
-        );
-    }
-
-    private String asChildString(TreeNode<T> currentNode) {
-        return childrenString(currentNode)
-            .map(cStr -> String.format("%s%s", valueString(currentNode), cStr))
-            .orElse(valueString(currentNode));
-    }
-
-    public String toString() {
-        return String.format(
-            "%s %s",
-            firstAncestorString(), value.longString()
-        );
+        return result;
     }
 }

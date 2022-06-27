@@ -24,7 +24,6 @@ import org.dexenjaeger.chess.models.moves.SinglePieceMove;
 import org.dexenjaeger.chess.models.moves.ZeroMove;
 import org.dexenjaeger.chess.models.pieces.Piece;
 import org.dexenjaeger.chess.models.pieces.PieceType;
-import org.dexenjaeger.chess.utils.TreeNode;
 
 public class GameService {
     private final BoardService boardService;
@@ -151,19 +150,6 @@ public class GameService {
         ));
     }
 
-    public int countMainlineMoves(Game game) {
-        TreeNode<GameSnapshot> cursor = game.getGameNode().getFirstAncestor();
-        Side startingSide = cursor.getValue().getMove().getSide().other();
-        int count = 0;
-        while (!cursor.getChildren().isEmpty()) {
-            cursor = cursor.getChildren().getFirst();
-            if (cursor.getValue().getMove().getSide() == startingSide) {
-                count += 1;
-            }
-        }
-        return count;
-    }
-
     public Game detachGameState(Game game) {
         GameSnapshot gameSnapshot = game.getGameNode().getValue();
         return Game.init(new GameSnapshot(
@@ -174,5 +160,9 @@ public class GameService {
                 gameSnapshot.getCommentary()
             ))
             .addCastlingRights(game.getCastlingRights());
+    }
+
+    public Game copy(Game game) {
+        return Game.init(game.getGameNode()).addCastlingRights(game.getCastlingRights());
     }
 }

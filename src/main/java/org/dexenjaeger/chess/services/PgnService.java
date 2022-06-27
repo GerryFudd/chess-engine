@@ -19,8 +19,8 @@ import org.dexenjaeger.chess.models.moves.SimpleMove;
 import org.dexenjaeger.chess.models.pgn.PgnMove;
 import org.dexenjaeger.chess.models.pieces.PieceType;
 import org.dexenjaeger.chess.services.pgn.PgnMoveExtractor;
+import org.dexenjaeger.chess.utils.HashablePrintableTreeNode;
 import org.dexenjaeger.chess.utils.OptionalsUtil;
-import org.dexenjaeger.chess.utils.TreeNode;
 
 public class PgnService {
     // This service implements a parser for the spec outlined here:
@@ -314,7 +314,7 @@ public class PgnService {
         return game;
     }
 
-    public TreeNode<GameSnapshot> fromPgnMoves(String pgnTurnList) {
+    public HashablePrintableTreeNode<GameSnapshot> fromPgnMoves(String pgnTurnList) {
         return gameFromPgn(pgnTurnList).getGameNode().getFirstAncestor();
     }
 

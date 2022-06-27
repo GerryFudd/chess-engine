@@ -19,7 +19,7 @@ import org.dexenjaeger.chess.models.moves.CastleType;
 import org.dexenjaeger.chess.models.moves.EnPassantCapture;
 import org.dexenjaeger.chess.models.moves.Move;
 import org.dexenjaeger.chess.models.moves.ZeroMove;
-import org.dexenjaeger.chess.utils.TreeNode;
+import org.dexenjaeger.chess.utils.HashablePrintableTreeNode;
 import org.junit.jupiter.api.Test;
 
 class GameServiceTest {
@@ -32,7 +32,7 @@ class GameServiceTest {
     void startGameTest() {
         Game initializedGame = gameService.startGame();
         assertEquals(
-            new TreeNode<>(new GameSnapshot(
+            new HashablePrintableTreeNode<>(new GameSnapshot(
                 0, new ZeroMove(BLACK), BoardService.standardGameBoard(), 0, null
             ), null, null),
             initializedGame.getGameNode()
@@ -118,7 +118,7 @@ class GameServiceTest {
         assertEquals(expectedBoard, detachedGame.getCurrentBoard());
         assertEquals(game.getCastlingRights(), detachedGame.getCastlingRights());
         assertEquals(
-            new TreeNode<>(
+            new HashablePrintableTreeNode<>(
                 new GameSnapshot(
                     5, new ZeroMove(WHITE), game.getCurrentBoard(), 0, null
                 ),
@@ -137,7 +137,7 @@ class GameServiceTest {
         assertEquals(expectedBoard, detachedGame.getCurrentBoard());
         assertEquals(game.getCastlingRights(), detachedGame.getCastlingRights());
         assertEquals(
-            new TreeNode<>(
+            new HashablePrintableTreeNode<>(
                 new GameSnapshot(4, new ZeroMove(BLACK), game.getCurrentBoard(), 2, null),
                 null, null
             ),
@@ -151,6 +151,57 @@ class GameServiceTest {
         Game detachedGame = gameService.detachGameState(game.goToFirstMove());
 
         assertEquals(gameService.startGame(), detachedGame);
+    }
+
+    @Test
+    void copyTest_accuratelyStartsFromCurrent() {
+        Game game = pgnService.gameFromPgn("1. d4 d5 2. c4 e5 3. Nf3 e4 4. Nfd2 Nf6 5. f4");
+        Game copiedGame = gameService.copy(game);
+
+        Board expectedBoard = fenService.readPieceLocations("rnbqkb1r/ppp2ppp/5n2/3p4/2PPpP2/8/PP1NP1PP/RNBQKB1R");
+        assertEquals(expectedBoard, copiedGame.getCurrentBoard());
+        assertEquals(game.getCastlingRights(), copiedGame.getCastlingRights());
+        assertEquals(
+            game.getGameNode(),
+            copiedGame.getGameNode()
+        );
+    }
+
+    @Test
+    void copyTest_accuratelyStartsFromParent() {
+        Game game = pgnService.gameFromPgn("1. d4 d5 2. c4 e5 3. Nf3 e4 4. Nfd2 Nf6 5. f4").goToParentMove();
+        Game copiedGame = gameService.copy(game);
+
+        Board expectedBoard = fenService.readPieceLocations("rnbqkb1r/ppp2ppp/5n2/3p4/2PPp3/8/PP1NPPPP/RNBQKB1R");
+        assertEquals(expectedBoard, copiedGame.getCurrentBoard());
+        assertEquals(game.getCastlingRights(), copiedGame.getCastlingRights());
+        assertEquals(
+            game.getGameNode(),
+            copiedGame.getGameNode()
+        );
+    }
+
+    @Test
+    void copyTest_followsBranches() {
+        Game game = pgnService.gameFromPgn("1. d4 d5 2. c4 (e3 Nf6) e5 3. Nf3 e4 4. Nfd2 Nf6 5. f4").goToParentMove();
+        Game copiedGame = gameService.copy(game);
+
+        Board expectedBoard = fenService.readPieceLocations("rnbqkb1r/ppp2ppp/5n2/3p4/2PPp3/8/PP1NPPPP/RNBQKB1R");
+        assertEquals(expectedBoard, copiedGame.getCurrentBoard());
+        assertEquals(game.getCastlingRights(), copiedGame.getCastlingRights());
+        assertEquals(
+            game.getGameNode(),
+            copiedGame.getGameNode()
+        );
+    }
+
+    @Test
+    void copyTest_accuratelyErasesEverythingElse() {
+        Game game = pgnService.gameFromPgn("1. d4 d5 2. c4 e5 3. Nf3 e4 4. Nfd2 Nf6 5. f4");
+        Game copiedGame = gameService.copy(game.goToFirstMove());
+
+        assertEquals(gameService.startGame().getGameNode().getValue(), copiedGame.getGameNode().getValue());
+        assertEquals(game.getGameNode(), copiedGame.getGameNode());
     }
 
     @Test
